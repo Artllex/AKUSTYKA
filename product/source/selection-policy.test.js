@@ -1,0 +1,2 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {edgeOnly} from './src/selection-policy.js';
+test('Caps Lock blocks faces; Shift, Alt and Ctrl do not stand in for Caps Lock',()=>{assert.equal(edgeOnly({getModifierState:k=>k==='CapsLock'}),true);for(const key of ['Shift','Alt','Control'])assert.equal(edgeOnly({getModifierState:k=>k===key}),false);assert.equal(edgeOnly({getModifierState:()=>false}),false);});

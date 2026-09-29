@@ -1,0 +1,23 @@
+{
+  "name": "akustyka-room-editor",
+  "version": "0.24.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1 --port 4173 --strictPort",
+    "build": "vite build",
+    "test": "node --test",
+    "start": "npm run build && electron .",
+    "package:windows": "npm run build && node scripts/package-windows.mjs"
+  },
+  "dependencies": {
+    "three": "^0.180.0"
+  },
+  "devDependencies": {
+    "@electron/packager": "^20.3.0",
+    "electron": "^44.4.5",
+    "vite": "^7.1.0"
+  },
+  "main": "desktop/main.cjs",
+  "license": "MIT"
+}

@@ -1,0 +1,19 @@
+# Local project administration
+/.project-control/
+/AI/
+/management/
+/project-control.yaml
+/desktop.ini
+/START.cmd
+# Generated Windows builds and local runtime data
+/product/builds/
+/product/environment/
+/product/operations/
+/product/releases/
+/product/runtime/
+/product/test_installation/
+node_modules/
+dist/
+*.log
+.env
+.env.*
