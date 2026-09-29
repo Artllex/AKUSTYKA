@@ -39,3 +39,17 @@ button:disabled{opacity:.4;cursor:default}
 #axis-gizmo{position:absolute;left:20px;bottom:45px;width:210px;z-index:10;padding:10px;background:#10171ef2;border:1px solid #40525e;border-radius:10px;user-select:none}#axis-gizmo-svg{display:block;width:100%;height:180px;touch-action:none}#axis-gizmo-svg [data-axis]{cursor:grab}#axis-gizmo-svg [data-axis]:active{cursor:grabbing}#axis-gizmo-svg [data-axis]:focus-visible{outline:none;stroke:#ffdc7233}#axis-value-row label{font-size:12px;margin:0 0 6px}#axis-value-row>div{display:flex;align-items:center;border:1px solid #40525e;border-radius:6px;background:#1d2a34;padding-right:10px;font-size:12px}#axis-distance{width:100%;min-width:0;font:inherit;font-size:14px;color:#e7eef3;background:transparent;border:0;padding:9px;outline-color:#74dcc2}
 
 #axis-distance:focus,#axis-distance:focus-visible{outline:none}#axis-value-row>div:focus-within{border-color:#74dcc2}
+
+#axis-rotation-row label{font-size:12px;margin:0 0 6px}#axis-rotation-row>div{display:flex;align-items:center;border:1px solid #40525e;border-radius:6px;background:#1d2a34;overflow:hidden;font-size:14px}#axis-rotation-row>div:focus-within{border-color:#74dcc2}#axis-rotation{width:100%;min-width:0;font:inherit;color:#e7eef3;background:transparent;border:0;padding:9px;outline:none}#axis-rotation-row button{border:0;border-radius:0;padding:6px 12px;font:inherit;font-size:22px;color:#ffdc72;background:#ffdc7214}#axis-rotation-row span{padding-right:7px}#axis-gizmo-svg [data-rotation]{cursor:ns-resize}
+
+#axis-transform-mode{width:100%;font:inherit;font-size:12px;padding:8px;border:1px solid #40525e;border-radius:6px;background:#1d2a34;color:#e7eef3;margin-bottom:4px}#axis-value-row{margin-top:12px}
+
+#axis-rotation-row>div,#axis-value-row>div{height:40px;box-sizing:border-box;border:1px solid #40525e;border-radius:6px;background:#1d2a34;font-size:14px}
+#axis-rotation-row button{height:100%;flex:0 0 28px;padding:0;font:inherit;font-size:18px;background:transparent;color:#b6c6d1}
+#axis-rotation-row button:hover{background:#ffffff0a;color:#e7eef3}
+.axis-rotation-value{display:flex;align-items:center;flex:1;min-width:0;padding-left:9px;gap:2px}
+#axis-rotation{flex:none;min-width:0;max-width:100%;padding:9px 0;font:inherit;font-size:14px;color:#e7eef3;background:transparent;border:0;outline:none}
+#axis-rotation-row .axis-rotation-value span{flex:none;padding:0;font:inherit;color:#e7eef3}
+#axis-distance{font-size:14px}
+
+#axis-mode-buttons{display:flex;gap:6px;margin-bottom:4px}#axis-mode-buttons button{flex:1;min-width:0;padding:8px 6px;font:inherit;font-size:12px;border:1px solid #40525e;border-radius:6px;background:#1d2a34;color:#e7eef3}#axis-mode-buttons button.active{border-color:#74dcc2;background:#74dcc21a;color:#74dcc2}
