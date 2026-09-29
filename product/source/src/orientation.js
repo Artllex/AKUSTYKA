@@ -11,7 +11,7 @@ export function orientationDirections(camera){
  }));
 }
 export function createOrientation(host){
- host.innerHTML='<svg viewBox="0 0 170 150" role="img" aria-label="Orientacja kamery: północ, wschód, dół"><circle cx="85" cy="70" r="49" fill="none" stroke="#344956"/><g id="north"><line/><circle r="3"/><text>Północ N</text></g><g id="east"><line/><circle r="3"/><text>Wschód E</text></g><g id="down"><line/><circle r="3"/><text>Dół</text></g></svg>';
+ host.innerHTML='<svg viewBox="5 10 160 125" role="img" aria-label="Orientacja kamery: północ, wschód, dół"><circle cx="85" cy="70" r="49" fill="none" stroke="#344956"/><g id="north"><line/><circle r="3"/><text>Północ N</text></g><g id="east"><line/><circle r="3"/><text>Wschód E</text></g><g id="down"><line/><circle r="3"/><text>Dół</text></g></svg>';
  const colors={north:'#8ddac6',east:'#efa180',down:'#93baf5'};
  const groups=Object.entries(DIRECTIONS).map(([name,axis])=>({name,axis:new THREE.Vector3(...axis),node:host.querySelector('#'+name)}));
  
