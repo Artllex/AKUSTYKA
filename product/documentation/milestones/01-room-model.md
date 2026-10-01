@@ -620,3 +620,7 @@ Obie boczne stopki mają przy pionowej ramie wysokość 7,8 cm (o 50% większą 
 ## Połączenie stopek z pionową ramą — 0.71.0
 
 Przednie krawędzie bocznych ścianek stopek są cofnięte za dolną belkę i wsunięte do środka względem bocznych zagięć pionowych szyn. Nie wystają nad belką obok szyn. Skos i wysokości 7,8/5,2 cm pozostają bez zmian.
+
+## Przywrócenie pierwotnej nawigacji kamery — 0.72.0
+
+Przybliżanie i przesuwanie znów korzystają ze standardowego sterowania OrbitControls, jak w wersji 0.63.0. Usunięto późniejsze przeliczanie tempa ruchu zależne od odległości. Przywrócono wcześniejszą minimalną odległość kamery 15 cm; przybliżanie gestem nad obiektami pozostaje dostępne.

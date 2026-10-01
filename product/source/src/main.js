@@ -30,7 +30,6 @@ import {setupFeaturesPanel} from './features-panel.js';
 import * as THREE from 'three';
 
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
-import {navigationSpan,panSpeedForSpan,zoomScaleForSpan} from './navigation-scale.js';
 
 import {createDocument,DEFAULT_ROOM,roomFromCentimeters,roomMetrics,usesDefaultListeningLayout,placeDefaultListeningLayout} from './model.js';
 
@@ -100,13 +99,7 @@ const perspective=new THREE.PerspectiveCamera(42,1,0.01,200);
 
 let camera=perspective,controls,view,featureViews=[],listenerViews=[],monitorViews=[],rackViews=[],tweeterRays=null,reflectionView=null,selected=null,projection=null,selectedObjectId=null;
 
-class SteadyOrbitControls extends OrbitControls{
- setNavigationReference(){this.referenceSpan=navigationSpan(this.object,this.target);this.update();}
- _getZoomScale(delta){return zoomScaleForSpan(delta,navigationSpan(this.object,this.target),this.referenceSpan);}
- update(...args){if(this.referenceSpan)this.panSpeed=panSpeedForSpan(navigationSpan(this.object,this.target),this.referenceSpan);return super.update(...args);}
-}
-
-function bindControls(target){controls?.dispose();controls=new SteadyOrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.minDistance=0.03;controls.maxDistance=60;controls.maxPolarAngle=Math.PI;controls.enableRotate=!projection;controls.target.copy(target);controls.setNavigationReference();}
+function bindControls(target){controls?.dispose();controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.minDistance=0.15;controls.maxDistance=60;controls.maxPolarAngle=Math.PI;controls.enableRotate=!projection;controls.target.copy(target);controls.update();}
 
 const format=(n,d=1)=>n.toLocaleString('pl-PL',{minimumFractionDigits:d,maximumFractionDigits:d});
 
