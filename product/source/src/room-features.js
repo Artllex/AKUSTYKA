@@ -119,14 +119,14 @@ export function createRoomFeatureViews(room,features){
  const s=features.switch,S=create('switch'),plate=S.mat(0xe9e8df),toggle=S.mat(0xc7c6bb);
  S.box('switch-plate',[s.width,s.height,s.depth],[s.center,s.bottom+s.height/2,room.length-s.depth/2],plate);
  S.box('switch-key',[s.width*.58,s.height*.58,0.003],[s.center,s.bottom+s.height/2,room.length-s.depth-0.0015],toggle);
- const L=create('ceiling-light'),housing=L.mat(0xe9ebea,{side:THREE.DoubleSide}),diffuser=L.mat(0xf7f3e9,{emissive:0xffedc9,emissiveIntensity:0.35}),glow=L.mat(0xe0f8f3,{emissive:0xa8e9ed,emissiveIntensity:0.85,side:THREE.DoubleSide});
+ const L=create('ceiling-light'),housing=L.mat(0xe9ebea,{side:THREE.DoubleSide}),diffuser=L.mat(0xf7f8f5,{emissive:0xffffff,emissiveIntensity:0.8,toneMapped:false}),glow=L.mat(0xe0f8f3,{emissive:0xa8e9ed,emissiveIntensity:0.85,side:THREE.DoubleSide});
  function lampPart(name,geometry,material,y){const part=new THREE.Mesh(geometry,material);part.name=name;part.position.set(room.width/2,y,room.length/2);L.group.add(part);return part;}
- // 38 cm opaque upper collar, 36 cm luminous lower collar, 6 cm total height.
- lampPart('govee-h60a6-body',new THREE.CylinderGeometry(.19,.19,.045,64,1,true),housing,room.height-.0225);
- lampPart('govee-h60a6-body-rim',new THREE.RingGeometry(.17,.19,64),housing,room.height-.045).rotation.x=Math.PI/2;
- lampPart('govee-h60a6-diffuser',new THREE.CylinderGeometry(.17,.17,.002,64),diffuser,room.height-.044);
- lampPart('govee-h60a6-glow-ring',new THREE.CylinderGeometry(.18,.18,.015,64,1,true),glow,room.height-.0525);
- lampPart('govee-h60a6-glow-lip',new THREE.RingGeometry(.168,.18,64),glow,room.height-.06).rotation.x=Math.PI/2;
+ // The 36 cm illuminated collar touches the ceiling. Below it, the 38 cm
+ // opaque collar surrounds a flat, luminous disk flush with its underside.
+ lampPart('govee-h60a6-glow-ring',new THREE.CylinderGeometry(.18,.18,.015,64,1,true),glow,room.height-.0075);
+ lampPart('govee-h60a6-body',new THREE.CylinderGeometry(.19,.19,.045,64,1,true),housing,room.height-.0375);
+ lampPart('govee-h60a6-body-rim',new THREE.RingGeometry(.17,.19,64),housing,room.height-.06).rotation.x=Math.PI/2;
+ lampPart('govee-h60a6-diffuser',new THREE.CylinderGeometry(.17,.17,.002,64),diffuser,room.height-.059);
  for(const [item,pivot] of [[result[0],[d.center,0,room.length]],[result[1],[w.center,w.bottom,0]],[result[2],[r.center,r.bottom,0]],[result[3],[s.center,s.bottom,room.length]],[result[4],[room.width/2,room.height,room.length/2]]]){const origin=new THREE.Vector3(...pivot);for(const child of item.group.children)child.position.sub(origin);item.group.position.copy(origin);item.group.updateMatrixWorld(true);}
  return result;
 }
