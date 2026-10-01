@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 // Millimetres from the supplied RECTA drawing, converted to model metres.
-export const RECTA_HANDLE=Object.freeze({plateWidth:.052,plateHeight:.040,plateDepth:.006,reach:.137,projection:.057,tipHeight:.018,tipDepth:.011,lockDrop:.072});
+export const RECTA_HANDLE=Object.freeze({plateWidth:.052,plateHeight:.040,plateDepth:.006,reach:.137,pivotOffset:.016,projection:.063,projectionBeyondPlate:.057,tipHeight:.011,tipDepth:.018,lockDrop:.072});
 
 function roundedPlate(withKeyhole){
  const w=.050,h=.038,r=.003,s=new THREE.Shape();
@@ -14,17 +14,30 @@ function roundedPlate(withKeyhole){
 }
 
 function leverGeometry(outward){
- const stations=[[0,.019,.014,.013],[-.012,.032,.014,.012],[-.031,.046,.011,.009],[-.045,.050,.0095,.006],[-.085,.050,.009,.0055],[-.130,.050,.009,.0055],[-RECTA_HANDLE.reach,.050,.009,.0055]];
- const curve=new THREE.CatmullRomCurve3(stations.map(([x,z])=>new THREE.Vector3(x,0,outward*z)),false,'centripetal');
- const sides=16,steps=48,positions=[],indices=[];
+ // Each station follows the side elevation: near/far depth, then half-width
+ // from the top drawing. The thick portion belongs only to the short elbow.
+ const p=RECTA_HANDLE.pivotOffset;
+ const stations=[[p,.006,.013,.010],[p-.006,.008,.048,.011],[p-.012,.012,.060,.011],[p-.020,.022,.062,.0095],[p-.030,.033,.063,.0075],[p-.040,.041,.063,.0058],[p-.060,.043,.063,.0055],[p-.100,.044,.063,.0055],[p-RECTA_HANDLE.reach,.045,.063,.0055]];
+ const sides=20,steps=64,positions=[],indices=[];
  for(let i=0;i<=steps;i++){
-  const t=i/steps,p=curve.getPoint(t),tangent=curve.getTangent(t),across=new THREE.Vector3(tangent.z,0,-tangent.x).normalize();
-  const at=t*(stations.length-1),index=Math.min(stations.length-2,Math.floor(at)),fraction=at-index;
-  const height=THREE.MathUtils.lerp(stations[index][2],stations[index+1][2],fraction),depth=THREE.MathUtils.lerp(stations[index][3],stations[index+1][3],fraction);
-  for(let j=0;j<sides;j++){const angle=j*2*Math.PI/sides,point=p.clone().addScaledVector(across,Math.cos(angle)*depth);point.y+=Math.sin(angle)*height;positions.push(...point.toArray());}
+  const x=p-RECTA_HANDLE.reach*i/steps;
+  let section=stations.length-2;
+  for(let k=0;k<stations.length-1;k++)if(x>=stations[k+1][0]){section=k;break;}
+  const a=stations[section],b=stations[section+1],fraction=(a[0]-x)/(a[0]-b[0]);
+  const near=THREE.MathUtils.lerp(a[1],b[1],fraction),far=THREE.MathUtils.lerp(a[2],b[2],fraction),halfWidth=THREE.MathUtils.lerp(a[3],b[3],fraction),halfDepth=(far-near)/2,mid=(far+near)/2,radius=Math.min(halfWidth,halfDepth)*.25;
+  for(let corner=0;corner<4;corner++)for(let q=0;q<5;q++){
+   const angle=(corner+q/4)*Math.PI/2;
+   const cy=(corner===0||corner===3?1:-1)*(halfWidth-radius);
+   const cz=(corner<2?1:-1)*(halfDepth-radius);
+   positions.push(x,cy+radius*Math.cos(angle),outward*(mid+cz+radius*Math.sin(angle)));
+  }
  }
- for(let i=0;i<steps;i++)for(let j=0;j<sides;j++){const a=i*sides+j,b=i*sides+(j+1)%sides,c=(i+1)*sides+j,d=(i+1)*sides+(j+1)%sides;indices.push(a,b,c,b,d,c);}
- for(const [end,reverse] of [[0,true],[steps,false]]){const center=curve.getPoint(end/steps),centerIndex=positions.length/3;positions.push(...center.toArray());for(let j=0;j<sides;j++){const a=end*sides+j,b=end*sides+(j+1)%sides;indices.push(...(reverse?[centerIndex,b,a]:[centerIndex,a,b]));}}
+ for(let i=0;i<steps;i++)for(let j=0;j<sides;j++){const a=i*sides+j,b=i*sides+(j+1)%sides,c=(i+1)*sides+j,d=(i+1)*sides+(j+1)%sides;indices.push(...(outward>0?[a,c,b,b,c,d]:[a,b,c,b,d,c]));}
+ for(const [end,root] of [[0,true],[steps,false]]){
+  const station=root?stations[0]:stations.at(-1),centerIndex=positions.length/3;
+  positions.push(station[0],0,outward*(station[1]+station[2])/2);
+  for(let j=0;j<sides;j++){const a=end*sides+j,b=end*sides+(j+1)%sides;indices.push(...((root===(outward>0))?[centerIndex,a,b]:[centerIndex,b,a]));}
+ }
  const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));geometry.setIndex(indices);geometry.computeVertexNormals();return geometry;
 }
 
@@ -35,6 +48,5 @@ export function addRectaDoorHardware(group,material,openingMaterial,{x,y,doorFac
   plate.position.set(x,centerY,doorFace+outward*.001);plate.rotation.y=outward<0?Math.PI:0;group.add(plate);
   if(keyhole){const opening=new THREE.Mesh(new THREE.CircleGeometry(1,32),openingMaterial);opening.name=`door-lock-opening${suffix}`;opening.scale.set(.0065,.014,1);opening.position.set(x,centerY,doorFace+outward*.0015);opening.rotation.y=outward<0?Math.PI:0;group.add(opening);}
  }
- const spindle=new THREE.Mesh(new THREE.CylinderGeometry(.012,.012,.018,20),material);spindle.name=`door-handle-spindle${suffix}`;spindle.rotation.x=Math.PI/2;spindle.position.set(x,y,doorFace+outward*.015);group.add(spindle);
  const lever=new THREE.Mesh(leverGeometry(outward),material);lever.name=`door-handle${suffix}`;lever.position.set(x,y,doorFace);group.add(lever);
 }

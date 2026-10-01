@@ -88,13 +88,19 @@ test('RECTA hardware has measured matte rosettes, keyhole and shaped levers on b
   assert.ok(plate&&lock&&lever&&opening);
   const size=bounds(plate.name).getSize(new THREE.Vector3());close(size.x,RECTA_HANDLE.plateWidth);close(size.y,RECTA_HANDLE.plateHeight);close(size.z,RECTA_HANDLE.plateDepth);
   close(plate.position.y-lock.position.y,RECTA_HANDLE.lockDrop);
-  close(lever.getWorldPosition(new THREE.Vector3()).x-bounds(lever.name).min.x,RECTA_HANDLE.reach);
-  const positions=lever.geometry.getAttribute('position'),tip=[];for(let i=0;i<positions.count;i++)if(positions.getX(i)<-RECTA_HANDLE.reach+.001)tip.push(positions.getY(i));
-  close(Math.max(...tip)-Math.min(...tip),RECTA_HANDLE.tipHeight);
+  close(bounds(lever.name).max.x-bounds(lever.name).min.x,RECTA_HANDLE.reach);
+  const positions=lever.geometry.getAttribute('position'),tipY=[],tipZ=[];for(let i=0;i<positions.count;i++)if(positions.getX(i)<RECTA_HANDLE.pivotOffset-RECTA_HANDLE.reach+.001){tipY.push(positions.getY(i));tipZ.push(positions.getZ(i));}
+  close(Math.max(...tipY)-Math.min(...tipY),RECTA_HANDLE.tipHeight);
+  close(Math.max(...tipZ)-Math.min(...tipZ),RECTA_HANDLE.tipDepth);
+  const rootZ=[];for(let i=0;i<positions.count;i++)if(Math.abs(positions.getX(i)-RECTA_HANDLE.pivotOffset)<1e-6)rootZ.push(positions.getZ(i));
+  assert.ok(Math.max(...rootZ)-Math.min(...rootZ)<.012,'the lever must leave the rosette as a narrow shank');
+  const shaftZ=[];for(let i=0;i<positions.count;i++)if(Math.abs(positions.getX(i)-(RECTA_HANDLE.pivotOffset-.09))<.001)shaftZ.push(Math.abs(positions.getZ(i)));
+  assert.ok(Math.min(...shaftZ)>.04,'the straight grip must remain thin and away from the rosette');
   assert.equal(lock.geometry.parameters.shapes.holes.length,1);
   assert.ok(lever.material.roughness>.7);
   const doorFace=suffix?DEFAULT_ROOM.length:bounds('door-leaf').min.z;
   close(suffix?bounds(lever.name).max.z-doorFace:doorFace-bounds(lever.name).min.z,RECTA_HANDLE.projection);
+  close(RECTA_HANDLE.projection-RECTA_HANDLE.plateDepth,RECTA_HANDLE.projectionBeyondPlate);
  }
  views.forEach(view=>view.dispose());
 });
