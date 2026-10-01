@@ -80,6 +80,19 @@ try{renderer=new THREE.WebGLRenderer({antialias:true});}catch(error){$('error').
 
 renderer.setPixelRatio(Math.min(devicePixelRatio,2));host.append(renderer.domElement);renderer.setClearColor(0x16212b);
 
+// Uchwyty geometrii leżą nad płótnem, więc gest touchpada trafia w SVG.
+// Przekaż go do OrbitControls razem z pozycją kursora i modyfikatorami.
+$('edit-overlay').addEventListener('wheel',event=>{
+ const wheel=new WheelEvent('wheel',{
+  bubbles:false,cancelable:true,deltaX:event.deltaX,deltaY:event.deltaY,
+  deltaZ:event.deltaZ,deltaMode:event.deltaMode,clientX:event.clientX,
+  clientY:event.clientY,ctrlKey:event.ctrlKey,shiftKey:event.shiftKey,
+  altKey:event.altKey,metaKey:event.metaKey
+ });
+ renderer.domElement.dispatchEvent(wheel);
+ if(wheel.defaultPrevented)event.preventDefault();
+},{passive:false});
+
 const scene=new THREE.Scene();scene.add(new THREE.HemisphereLight(0xe7f4ff,0x3b4b5e,2.5));const light=new THREE.DirectionalLight(0xffffff,2);light.position.set(3,8,5);scene.add(light);
 
 const perspective=new THREE.PerspectiveCamera(42,1,0.01,200);
