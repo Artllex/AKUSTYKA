@@ -54,17 +54,20 @@ export function createRackView(record){
  bar('lower-front-rail',width,0.052,0.003,0,0.036,railBaseZ+0.002,steel);
  bar('lower-rail-return',width,0.003,0.016,0,0.061,railBaseZ+0.008,edge);
  bar('upper-cross-member',width,0.012,0.003,0,height-0.006,railZ(height),steel);
+ const screwRim=new THREE.MeshStandardMaterial({color:0x62666a,metalness:0.72,roughness:0.38});
  for(const x of [-width/2+0.019,width/2-0.019])for(const y of [0.023,0.048]){
-  const screw=mesh('front-screw',new THREE.SphereGeometry(0.0027,8,6),edge,x,y,railBaseZ+0.003);
-  screw.userData.collision=false;
+  const rim=mesh('front-screw',new THREE.CylinderGeometry(0.0043,0.0043,0.0012,16),screwRim,x,y,railBaseZ-0.0002);
+  rim.rotation.x=Math.PI/2;rim.userData.collision=false;
+  const recess=mesh('front-screw-recess',new THREE.CylinderGeometry(0.0026,0.0026,0.0013,16),opening,x,y,railBaseZ-0.0011);
+  recess.rotation.x=Math.PI/2;recess.userData.collision=false;
  }
  if(typeof document!=='undefined'){
-  const canvas=document.createElement('canvas');canvas.width=512;canvas.height=128;
-  const ctx=canvas.getContext('2d');ctx.fillStyle='#ffffff';ctx.strokeStyle='#ffffff';ctx.lineWidth=8;
-  ctx.beginPath();ctx.arc(104,64,37,0.2*Math.PI,1.85*Math.PI);ctx.stroke();
-  ctx.textAlign='center';ctx.font='bold 55px sans-serif';ctx.fillText('R',104,83);
-  ctx.textAlign='left';ctx.font='bold 57px sans-serif';ctx.fillText('RIVECO',158,84);
-  const texture=new THREE.CanvasTexture(canvas),label=new THREE.Mesh(new THREE.PlaneGeometry(0.065,0.016),new THREE.MeshBasicMaterial({map:texture,transparent:true,side:THREE.DoubleSide}));
+  const canvas=document.createElement('canvas');canvas.width=256;canvas.height=256;
+  const ctx=canvas.getContext('2d');ctx.fillStyle='#ffffff';ctx.strokeStyle='#ffffff';ctx.lineWidth=13;ctx.lineCap='round';
+  ctx.beginPath();ctx.arc(128,96,68,-2.5,2.3);ctx.stroke();
+  ctx.textAlign='center';ctx.font='italic bold 132px sans-serif';ctx.fillText('R',126,145);
+  ctx.font='bold 29px sans-serif';ctx.fillText('RIVECO',128,228);
+  const texture=new THREE.CanvasTexture(canvas),label=new THREE.Mesh(new THREE.PlaneGeometry(0.040,0.040),new THREE.MeshBasicMaterial({map:texture,transparent:true,side:THREE.DoubleSide}));
   label.name='brand';label.position.set(0,0.036,railBaseZ+0.0001);label.rotation.y=Math.PI;label.userData.collision=false;group.add(label);geometries.push(label.geometry);
  }
  group.position.set(record.position.x,record.position.y,record.position.z);group.rotation.y=record.yaw;group.updateMatrixWorld(true);

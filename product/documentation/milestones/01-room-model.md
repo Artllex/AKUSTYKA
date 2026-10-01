@@ -584,3 +584,7 @@ Obie boczne stopki mają być najwyższe przy szynach i zwężać się ku wolnym
 ## Korekta orientacji stopek — 0.62.0
 
 Pionowe szyny znajdują się z tyłu stojaka, a stopki biegną od nich ku przodowi. Ich wolne końce są niższe od części przy szynach. Poprzedni model miał zamienione przód i tył stojaka, dlatego mimo zmiany współrzędnych skos nadal wyglądał odwrotnie w widoku pokoju.
+
+## Oznaczenie i śruby dolnej belki — 0.63.0
+
+Na środku dolnej belki jest duży biały symbol RIVECO z małym napisem pod spodem, zgodnie ze zdjęciem użytkownika. Po obu końcach belki są po dwie widoczne od przodu śruby z metalowymi obwódkami i ciemnymi środkami.
