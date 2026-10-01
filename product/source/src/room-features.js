@@ -59,19 +59,28 @@ export function createRoomFeatureViews(room,features){
   function box(name,size,position,material){const mesh=new THREE.Mesh(new THREE.BoxGeometry(...size),material);mesh.name=name;mesh.position.set(...position);group.add(mesh);return mesh;}
   const item={group,dispose(){group.traverse(o=>o.geometry?.dispose());materials.forEach(m=>m.dispose());}};result.push(item);return {group,mat,box};
  }
- const d=features.door,D=create('door'),cashmere=D.mat(0xd2c9bd),trim=D.mat(0xd8d0c5),glass=D.mat(0xe9e7e1,{transparent:true,opacity:.82,roughness:.3}),black=D.mat(0x151515,{metalness:.08,roughness:.82}),lockOpening=D.mat(0x030303,{roughness:1}),steel=D.mat(0xadb8b9,{metalness:.75,roughness:.25});
+ const d=features.door,D=create('door'),cashmere=D.mat(0xcdc3b9),trim=D.mat(0xd4cabe),panel=D.mat(0xc9bfb4),rail=D.mat(0xddd3c7),groove=D.mat(0xb9aea1),black=D.mat(0x151515,{metalness:.08,roughness:.82}),lockOpening=D.mat(0x030303,{roughness:1}),steel=D.mat(0xadb8b9,{metalness:.75,roughness:.25});
  const doorLeft=d.center-d.width/2,doorRight=d.center+d.width/2,openingWidth=d.width-d.jambLeft-d.jambRight;
- const leafWidth=Math.min(.844,openingWidth+.023),leafHeight=Math.min(2.03,d.height-d.lintel),leafBottom=d.height-d.lintel-leafHeight,leafFront=room.length-.038,glassWidth=Math.min(.58,leafWidth-.20),glassHeight=.035;
+ const leafWidth=Math.min(.844,openingWidth+.023),leafHeight=Math.min(2.03,d.height-d.lintel),leafBottom=d.height-d.lintel-leafHeight,leafFront=room.length-.038,panelWidth=leafWidth-.204;
  const leafShape=new THREE.Shape();leafShape.moveTo(-leafWidth/2,0);leafShape.lineTo(leafWidth/2,0);leafShape.lineTo(leafWidth/2,leafHeight);leafShape.lineTo(-leafWidth/2,leafHeight);leafShape.closePath();
- const glassBands=[.14,.47,.82,1.17,1.52,1.87].filter(fromTop=>fromTop+glassHeight/2<leafHeight-.06);
- for(const fromTop of glassBands){
-  const y=leafHeight-fromTop,hole=new THREE.Path();hole.moveTo(-glassWidth/2,y-glassHeight/2);hole.lineTo(-glassWidth/2,y+glassHeight/2);hole.lineTo(glassWidth/2,y+glassHeight/2);hole.lineTo(glassWidth/2,y-glassHeight/2);hole.closePath();leafShape.holes.push(hole);
- }
  const leaf=new THREE.Mesh(new THREE.ExtrudeGeometry(leafShape,{depth:.038,bevelEnabled:false}),cashmere);leaf.name='door-leaf';leaf.position.set(d.center,leafBottom,leafFront);D.group.add(leaf);
- for(const fromTop of glassBands){
-  const y=leafBottom+leafHeight-fromTop;
-  D.box('door-glass-band',[glassWidth,glassHeight,.004],[d.center,y,room.length-.019],glass);
-  for(const side of [-1,1])D.box('door-glass-edge',[.004,glassHeight+.007,.006],[d.center+side*glassWidth/2,y,leafFront-.003],trim);
+ // VINCI 10 has solid recessed fields, framed by 102 mm side stiles and six
+ // narrow horizontal rails. The same pattern is visible from both sides.
+ const railOffsets=[.14,.47,.82,1.17,1.52,1.87].filter(fromTop=>fromTop<leafHeight-.06);
+ const boundaries=[0,...railOffsets,leafHeight];
+ for(const outward of [-1,1]){
+  const faceZ=outward<0?leafFront:room.length;
+  const at=depth=>faceZ+outward*depth;
+  for(let i=0;i<boundaries.length-1;i++){
+   const top=boundaries[i],bottom=boundaries[i+1],fieldHeight=bottom-top-.014;
+   if(fieldHeight>0)D.box('door-recessed-panel',[panelWidth,fieldHeight,.001],[d.center,leafBottom+leafHeight-(top+bottom)/2,at(.0006)],panel);
+  }
+  for(const side of [-1,1])D.box('door-stile',[.102,leafHeight,.002],[d.center+side*(leafWidth/2-.051),leafBottom+leafHeight/2,at(.001)],trim);
+  for(const fromTop of railOffsets){
+   const y=leafBottom+leafHeight-fromTop;
+   D.box('door-rail-groove',[panelWidth,.014,.001],[d.center,y,at(.0012)],groove);
+   D.box('door-rail',[panelWidth,.009,.002],[d.center,y,at(.0023)],rail);
+  }
  }
  D.box('door-jamb-left',[d.jambLeft,d.height,d.depth],[doorLeft+d.jambLeft/2,d.height/2,room.length-d.depth/2],trim);
  D.box('door-jamb-right',[d.jambRight,d.height,d.depth],[doorRight-d.jambRight/2,d.height/2,room.length-d.depth/2],trim);
