@@ -11,6 +11,7 @@ export function createDeskView(record){
  const geometries=[];
  function mesh(name,geometry,material,x=0,y=0,z=0){const m=new THREE.Mesh(geometry,material);m.name=name;m.position.set(x,y,z);group.add(m);geometries.push(geometry);return m;}
  function box(name,w,h,d,x,y,z,material=board){return mesh(name,new THREE.BoxGeometry(w,h,d),material,x,y,z);}
+ const sideRear=-0.290;
  const topY=D.worktop.top-D.worktop.thickness/2;
  const workZ=(D.depth-D.worktop.depth)/2;
  box('worktop',D.worktop.width,D.worktop.thickness,D.worktop.depth,0,topY,workZ);
@@ -29,13 +30,13 @@ export function createDeskView(record){
  // at knee height, then returns forward to form the broad foot at floor level.
  for(const sign of [-1,1]){
   const shape=new THREE.Shape();
-  shape.moveTo(-0.290,0);
+  shape.moveTo(sideRear,0);
   shape.lineTo(0.250,0);
   shape.lineTo(0.250,0.018);
   shape.bezierCurveTo(0.125,0.135,0.095,0.260,0.125,0.335);
   shape.bezierCurveTo(0.145,0.455,0.315,0.500,0.315,0.610);
   shape.lineTo(0.315,D.worktop.top-D.worktop.thickness);
-  shape.lineTo(-0.290,D.worktop.top-D.worktop.thickness);
+  shape.lineTo(sideRear,D.worktop.top-D.worktop.thickness);
   shape.closePath();
   const g=new THREE.ExtrudeGeometry(shape,{depth:0.018,bevelEnabled:false,curveSegments:24});
   g.rotateY(-Math.PI/2);
@@ -51,9 +52,9 @@ export function createDeskView(record){
   const hole=new THREE.Path();hole.absarc(x,0.706,0.025,0,Math.PI*2,true);back.holes.push(hole);
  }
  const backGeometry=new THREE.ExtrudeGeometry(back,{depth:0.012,bevelEnabled:false,curveSegments:20});
- mesh('rear-panel-three-cable-holes',backGeometry,board,0,0,-D.depth/2+0.025);
- box('cable-trough',1.51,0.012,0.095,0,0.48,-0.286);
- box('rear-lower-crossbar',1.50,0.12,0.018,0,0.44,-0.332);
+ mesh('rear-panel-three-cable-holes',backGeometry,board,0,0,sideRear);
+ box('cable-trough',1.51,0.012,0.095,0,0.48,sideRear+0.095/2);
+ box('rear-lower-crossbar',1.50,0.12,0.018,0,0.44,sideRear+0.018/2);
  // Fasteners on the outer face follow the pattern visible in the side photo.
  for(const sign of [-1,1])for(const [z,y] of [[-0.060,0.690],[-0.060,0.505],[-0.205,0.430],[-0.085,0.430],[-0.235,0.335]]){
   const screw=mesh('side-screw',new THREE.CylinderGeometry(0.0035,0.0035,0.001,12),metal,sign*(D.width/2-0.0175),y,z);

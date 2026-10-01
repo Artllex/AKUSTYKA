@@ -32,6 +32,11 @@ test('ComboDesk 88 has published envelope, distinct tiers, three rack bays and c
  assert.deepEqual([tray.geometry.parameters.width,tray.geometry.parameters.depth],[1.56,.3]);
  const back=group.getObjectByName('rear-panel-three-cable-holes');
  assert.equal(back.geometry.parameters.shapes.holes.length,3);
+ const sideBack=Math.min(...sides.map(side=>new THREE.Box3().setFromObject(side).min.z));
+ for(const name of ['rear-panel-three-cable-holes','cable-trough','rear-lower-crossbar']){
+  const element=group.getObjectByName(name),rear=new THREE.Box3().setFromObject(element).min.z;
+  assert.ok(Math.abs(rear-sideBack)<1e-6,`${name} must end flush with the side panels`);
+ }
  const shelf=group.getObjectByName('upper-shelf');
  assert.equal(shelf.geometry.parameters.depth,.268);
  assert.ok(shelf.position.y>group.getObjectByName('worktop').position.y);
