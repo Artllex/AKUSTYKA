@@ -24,14 +24,15 @@ export function updateDistanceLabels(group,camera){
 }
 
 export function hoverDistanceLabel(groups,camera,cursor,width,height){
- let closest=null,best=10*10;
+ let closest=null,closestLine=null,best=10*10;
  for(const group of groups){
   if(!group?.visible)continue;
   for(const line of group.children){
    const label=line.userData.distanceLabel;
    if(!label)continue;
    label.visible=false;
-   if(!cursor||!line.visible)continue;
+   if(line.userData.hoverOnly)line.visible=false;
+   if(!cursor||(!line.visible&&!line.userData.hoverOnly))continue;
    const start=line.userData.origin??line.userData.start;
    const end=line.userData.target??line.userData.end;
    if(!start||!end)continue;
@@ -42,9 +43,9 @@ export function hoverDistanceLabel(groups,camera,cursor,width,height){
    const dx=bx-ax,dy=by-ay,denominator=dx*dx+dy*dy;
    const t=denominator?Math.max(0,Math.min(1,((cursor.x-ax)*dx+(cursor.y-ay)*dy)/denominator)):0;
    const distance=(cursor.x-ax-t*dx)**2+(cursor.y-ay-t*dy)**2;
-   if(distance<best){best=distance;closest=label;}
+   if(distance<best){best=distance;closest=label;closestLine=line;}
   }
  }
- if(closest)closest.visible=true;
+ if(closest){closest.visible=true;if(closestLine.userData.hoverOnly)closestLine.visible=true;}
  return closest;
 }

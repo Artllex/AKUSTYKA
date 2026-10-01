@@ -672,3 +672,7 @@ Pola odległości tweeter–ucho, pozycji X/Y/Z i obrotu stosują każdą popraw
 ## Rzut z obiektami nad płaszczyzną — 0.84.0
 
 Przycisk „Pokaż obiekty” w panelu rzutów przełącza widok samej wybranej płaszczyzny oraz widok tej płaszczyzny z wyposażeniem po stronie kamery. Działa w rzucie od wnętrza i od zewnątrz; pozostałe ściany, lasery i ostrzeżenia odstępu nie pojawiają się w rzucie. Wybrany tryb obowiązuje przy kolejnych rzutach, a powrót do Widoku 3D przywraca zwykłą widoczność obiektów.
+
+## Odległość między monitorami — 0.85.0
+
+Niebieski laser mierzy odległość między środkami tweeterów. Laser i karta pomiaru pojawiają się jednocześnie tylko podczas najechania kursorem na przebieg odcinka; po odsunięciu kursora znikają. Pomiar aktualizuje się po zmianie położenia monitorów.
