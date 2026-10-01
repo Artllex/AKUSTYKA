@@ -16,7 +16,7 @@ export function addTwoLevelWindow(view,opening){
  const lower={width:DESIGN.lowerWidth*sx,height:DESIGN.lowerHeight*sy,bottom:DESIGN.lowerBottom*sy};
  const upper={width:DESIGN.upperWidth*sx,height:DESIGN.upperHeight*sy,bottom:DESIGN.upperBottom*sy};
  const frame=view.mat(0xe8e9e5,{roughness:.45,side:THREE.DoubleSide});
- const sash=view.mat(0xf3f4f1,{roughness:.4,side:THREE.DoubleSide});
+ const sash=view.mat(0xf3f4f1,{roughness:.4,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1});
  const glass=view.mat(0xcbdde1,{metalness:.12,roughness:.18,transparent:true,opacity:.91,side:THREE.DoubleSide});
  const hardware=view.mat(0xc4c8c5,{metalness:.55,roughness:.3});
  const rearZ=-opening.depth+.016,frameDepth=.024;
@@ -30,8 +30,8 @@ export function addTwoLevelWindow(view,opening){
  const sashMarginX=.02*sx,sashMarginY=.012*sy;
  const sashShape=rectangle(-upper.width/2-sashMarginX,upper.bottom-sashMarginY,upper.width/2+sashMarginX,upper.bottom+upper.height+sashMarginY);
  sashShape.holes.push(rectangle(-upper.width/2,upper.bottom,upper.width/2,upper.bottom+upper.height,true));
- const sashMesh=new THREE.Mesh(new THREE.ExtrudeGeometry(sashShape,{depth:.007,bevelEnabled:false,curveSegments:1}),sash);
- sashMesh.name='window-upper-tilt-sash';sashMesh.position.set(opening.center,opening.bottom,rearZ+frameDepth+.001);view.group.add(sashMesh);
+ const sashMesh=new THREE.Mesh(new THREE.ShapeGeometry(sashShape),sash);
+ sashMesh.name='window-upper-tilt-sash';sashMesh.position.set(opening.center,opening.bottom,rearZ+frameDepth);view.group.add(sashMesh);
  const handleX=opening.center-upper.width/2-.035*sx,handleY=opening.bottom+upper.bottom+upper.height*.47,handleZ=rearZ+frameDepth+.015;
  view.box('window-upper-handle-base',[.012*sx,.046*sy,.008],[handleX,handleY,handleZ],hardware);
  view.box('window-upper-handle',[.008*sx,.09*sy,.012],[handleX,handleY-.026*sy,handleZ+.008],hardware);

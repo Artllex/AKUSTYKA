@@ -36,7 +36,7 @@ export function createRoom(room,features,transforms={}){
   mesh.name=name;mesh.position.set(...position);mesh.rotation.set(...rotation);mesh.userData.outward=new THREE.Vector3(...normal);if(name==='floor')applyFolignoFloor(mesh);group.add(mesh);surfaces.push(mesh);
  }
  surface('floor',w,l,[w/2,0,l/2],[-Math.PI/2,0,0],[0,-1,0],0x4c6572);
- surface('ceiling',w,l,[w/2,h,l/2],[Math.PI/2,0,0],[0,1,0],0xadc1c9);
+ surface('ceiling',w,l,[w/2,h,l/2],[Math.PI/2,0,0],[0,1,0],WALL_PAINT_COLOR);
  surface('wall-front',w,h,[w/2,h/2,0],[0,0,0],[0,0,-1],WALL_PAINT_COLOR);
  surface('wall-back',w,h,[w/2,h/2,l],[0,0,0],[0,0,1],WALL_PAINT_COLOR);
  surface('wall-left',l,h,[0,h/2,l/2],[0,Math.PI/2,0],[-1,0,0],WALL_PAINT_COLOR);

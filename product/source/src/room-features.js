@@ -108,7 +108,7 @@ export function createRoomFeatureViews(room,features){
   if(baseHeight>0)W.box('niche-step',[w.width,baseHeight,w.stepDepth],[w.center,w.bottom+baseHeight/2,-w.depth+w.stepDepth/2],stepMaterial);
   W.box('niche-sill',[w.width,sillThickness,w.stepDepth+.015],[w.center,w.bottom+w.stepHeight-sillThickness/2,-w.depth+(w.stepDepth+.015)/2],sillMaterial);
  }
- W.box('niche-roof',[w.width,0.01,w.depth],[w.center,w.bottom+w.height+0.005,-w.depth/2],reveal).userData.collision=false;
+ W.box('window-niche-ceiling',[w.width,0.01,w.depth],[w.center,w.bottom+w.height+0.004,-w.depth/2],reveal).userData.collision=false;
  addTwoLevelWindow(W,w);
 
  const r=features.radiator,R=create('radiator'),enamel=R.mat(0xe0e2dc),pipe=R.mat(0xbec5c1,{metalness:0.5});

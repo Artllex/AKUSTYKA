@@ -4,6 +4,11 @@ import * as THREE from 'three';
 import {createDocument,DEFAULT_ROOM} from './src/model.js';
 import {parseRoomDocument} from './src/bench.js';
 import {createRoom} from './src/room-view.js';
+import {createMeshRoom} from './src/mesh-view.js';
+import {createFootprintRoom} from './src/surface-view.js';
+import {initialRoomMesh} from './src/mesh-model.js';
+import {initialFootprint} from './src/surface-model.js';
+import {WALL_PAINT_COLOR} from './src/wall-paint.js';
 import {defaultRoomFeatures,normalizeRoomFeatures,createRoomFeatureViews} from './src/room-features.js';
 import {surfaceProjection} from './src/projection.js';
 import {RECTA_HANDLE} from './src/recta-handle.js';
@@ -37,7 +42,11 @@ test('window and door are true wall openings and retain projection dimensions',(
 });
 test('niche holds an upper tilt pane and a wider fixed lower pane with measured clear openings',()=>{
  const features=defaultRoomFeatures(DEFAULT_ROOM),views=createRoomFeatureViews(DEFAULT_ROOM,features),recess=views.find(v=>v.group.name==='window').group;
- assert.ok(recess.getObjectByName('recess-back'));assert.equal(features.window.bottom,0);assert.equal(features.window.depth,0.151);assert.equal(features.window.stepDepth,0.065);assert.equal(features.window.stepHeight,0.08);assert.ok(Math.abs(features.window.height-2.22)<1e-9);assert.ok(recess.getObjectByName('niche-roof'));
+ assert.ok(recess.getObjectByName('recess-back'));assert.equal(features.window.bottom,0);assert.equal(features.window.depth,0.151);assert.equal(features.window.stepDepth,0.065);assert.equal(features.window.stepHeight,0.08);assert.ok(Math.abs(features.window.height-2.22)<1e-9);
+ const nicheCeiling=recess.getObjectByName('window-niche-ceiling');assert.ok(nicheCeiling);recess.updateMatrixWorld(true);
+ const roofBounds=new THREE.Box3().setFromObject(nicheCeiling);
+ assert.ok(Math.abs(roofBounds.min.y-2.219)<1e-7&&Math.abs(roofBounds.max.z)<1e-7);
+ assert.ok(new THREE.Raycaster(new THREE.Vector3(features.window.center,2.1,-.075),new THREE.Vector3(0,1,0)).intersectObject(nicheCeiling).length>0);
  const step=recess.getObjectByName('niche-step'),sill=recess.getObjectByName('niche-sill');assert.ok(step&&sill);recess.updateMatrixWorld(true);
  const baseBox=new THREE.Box3().setFromObject(step),sillBox=new THREE.Box3().setFromObject(sill);
  assert.ok(Math.abs(baseBox.min.z+.151)<1e-7&&Math.abs(baseBox.max.z+.086)<1e-7&&Math.abs(baseBox.max.y-.065)<1e-7);
@@ -53,11 +62,17 @@ test('niche holds an upper tilt pane and a wider fixed lower pane with measured 
  recess.updateMatrixWorld(true);const upperSize=new THREE.Box3().setFromObject(upper).getSize(new THREE.Vector3()),lowerSize=new THREE.Box3().setFromObject(lower).getSize(new THREE.Vector3());
  assert.ok(Math.abs(upperSize.x-.831)<1e-7&&Math.abs(upperSize.y-.893)<1e-7);assert.ok(Math.abs(lowerSize.x-.923)<1e-7&&Math.abs(lowerSize.y-.835)<1e-7);
  const frameMesh=recess.getObjectByName('window-continuous-frame');assert.ok(frameMesh&&recess.getObjectByName('window-upper-tilt-sash'));
+ const sashBounds=new THREE.Box3().setFromObject(recess.getObjectByName('window-upper-tilt-sash')),frameBounds=new THREE.Box3().setFromObject(frameMesh);
+ assert.ok(sashBounds.max.z<=frameBounds.max.z+1e-8,'the upper sash trim is flush with the frame');
  assert.equal(recess.getObjectByName('window-outer-jamb'),undefined);
  const hitFrame=(x,y)=>new THREE.Raycaster(new THREE.Vector3(x,y,.5),new THREE.Vector3(0,0,-1)).intersectObject(frameMesh).length>0;
  for(const [x,y] of [[features.window.center,2.11],[features.window.center-.45,1.6],[features.window.center+.48,.6],[features.window.center,1.09],[features.window.center,.08]])assert.ok(hitFrame(x,y),'continuous frame covers the outside and mullion');
  for(const [x,y] of [[features.window.center,1.6],[features.window.center,.6]])assert.equal(hitFrame(x,y),false,'the measured glazing remains open in the frame');
  for(const v of views)v.dispose();
+});
+test('room and niche ceilings use the wall paint in every room view',()=>{
+ const doc=createDocument(),views=[createRoom(doc.room,doc.roomFeatures),createMeshRoom(doc.room,initialRoomMesh(doc)),createFootprintRoom(doc.room,initialFootprint(doc),doc.roomFeatures)];
+ for(const view of views){const ceiling=view.surfaces.find(s=>s.name==='ceiling');assert.ok(ceiling);assert.equal(ceiling.material.color.getHex(),WALL_PAINT_COLOR);view.dispose();}
 });
 test('front wall closes the niche above 222 cm while the lower opening stays clear',()=>{
  const features=defaultRoomFeatures(DEFAULT_ROOM),room=createRoom(DEFAULT_ROOM,features),wall=room.surfaces.find(s=>s.name==='wall-front');room.group.updateMatrixWorld(true);
