@@ -10,7 +10,7 @@ export function createRackView(record){
  const {width,depth,height,leanDegrees,mountingHeight}=RACK_15U;
  const lean=Math.tan(leanDegrees*Math.PI/180),railBaseY=0.060;
  // The front cross-member and uprights face the room; the feet extend behind them.
- const railBaseZ=-depth/2+0.024;
+ const railBaseZ=-depth/2+0.003;
  const railZ=y=>railBaseZ+lean*(y-railBaseY);
  const geometries=[];
  function mesh(name,geometry,material,x=0,y=0,z=0){const part=new THREE.Mesh(geometry,material);part.name=name;part.position.set(x,y,z);group.add(part);geometries.push(geometry);return part;}

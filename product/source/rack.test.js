@@ -30,6 +30,8 @@ test('15U rack stands on the floor inside the rear right corner and keeps its mo
  const rail=view.group.getObjectByName('mounting-rail'),positions=rail.geometry.attributes.position;
  assert.ok(rail.position.z<0,'uprights and front rail must face the room, with the feet behind');
  assert.ok(lowerRail.position.z<0,'branded cross-member must be at the front');
+ assert.ok(rail.position.z+RACK_15U.depth/2<0.005,'upright base must align with the front edge of the stand');
+ assert.ok(Math.abs(rail.position.z-lowerRail.position.z)<0.003,'upright and lower cross-member must meet in one depth plane');
  let lower=0,upper=0,lowerCount=0,upperCount=0;
  for(let i=0;i<positions.count;i++){
   if(positions.getY(i)<0){lower+=positions.getZ(i);lowerCount++;}

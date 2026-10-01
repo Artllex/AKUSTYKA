@@ -600,3 +600,7 @@ Przybliżanie i przesuwanie kamerą zwalniają stopniowo w miarę zbliżania do 
 ## Orientacja stojaka w tylnym rogu — 0.65.0
 
 Dolna belka z logo i pionowe szyny są zwrócone do wnętrza pokoju. Stopki biegną od ramy ku tylnej ścianie i zwężają się w tym kierunku, zamiast wysuwać się do środka pokoju.
+
+## Wyrównanie pionowej ramy z dolną belką — 0.66.0
+
+Podstawy pionowych szyn znajdują się tuż przy przedniej krawędzi stopek, w jednej płaszczyźnie głębokości z dolną belką. Usunięto wcześniejsze odsunięcie szyn o 2,4 cm w głąb podstawy. Wymiary zewnętrzne stojaka pozostają 50 × 30 × 73 cm.
