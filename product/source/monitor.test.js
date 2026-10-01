@@ -21,9 +21,18 @@ test('MM27 cabinet has real scale and five colored surface centers per monitor',
  assert.deepEqual(MM27_DRIVERS.slice(3).map(d=>d.normal),[[-1,0,0],[1,0,0]]);view.dispose();
 });
 test('Gen2 finish has silver front and rear plates, side cones and amplifier details',()=>{
- const view=createStudioMonitor(createMonitorPair(DEFAULT_ROOM)[0]);
+ const record=createMonitorPair(DEFAULT_ROOM)[0];record.position={x:0,y:0,z:0};record.yaw=0;
+ const view=createStudioMonitor(record);
  const part=name=>view.group.getObjectByName(name);
  assert.ok(part('baffle').material.color.getHex()>0x999999);
+ const frontZ=part('cabinet').position.z+MM27.cabinet.depth/2;
+ const baffleZ=new THREE.Box3().setFromObject(part('baffle')).max.z;
+ assert.ok(baffleZ>frontZ,'the pale baffle must be visible in front of the black cabinet');
+ for(const id of ['midbass-top','tweeter','midbass-bottom']){
+  const face=part('driver-'+id);
+  assert.ok(new THREE.Box3().setFromObject(face.getObjectByName('diaphragm')).max.z>baffleZ,`${id} must remain visible on the baffle`);
+ }
+ assert.ok(new THREE.Box3().setFromObject(part('tweeter-panel')).max.z>baffleZ);
  assert.ok(part('rear-plate').material.color.getHex()>0x999999);
  assert.ok(part('tweeter-panel'));
  assert.equal(view.group.children.filter(child=>child.name==='heatsink-fin').length,16);
