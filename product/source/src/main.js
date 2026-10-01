@@ -237,16 +237,6 @@ $('reset').onclick=()=>{doc.room={...DEFAULT_ROOM};doc.roomShape=null;doc.roomMe
 
 const raycaster=new THREE.Raycaster();let down;
 
-// Surface picking belongs to the viewport, not to the SVG handles that happen
-// to be drawn above it. Handle Alt at the shared parent before either child.
-host.addEventListener('pointerdown',e=>{
- if(!e.altKey||e.ctrlKey||e.button!==0||edgeOnly(e)||e.target.closest('button,input,label,#edit-popup,#edit-tools,#axis-gizmo,.view-tools,#distance-label,#edge-insert'))return;
- e.preventDefault();e.stopImmediatePropagation();
- down=null;
- const surface=pickSurface(e);
- if(surface){clearMeasurement();selectObject(null);select(surface);viewportEditor.pick(surface);}
-},true);
-
 document.addEventListener('keydown',e=>{if(e.key==='Control')host.classList.add('camera-pan-modifier');});
 document.addEventListener('keyup',e=>{if(e.key==='Control')host.classList.remove('camera-pan-modifier');});
 window.addEventListener('blur',()=>host.classList.remove('camera-pan-modifier'));

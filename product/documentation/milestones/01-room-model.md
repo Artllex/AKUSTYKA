@@ -656,3 +656,7 @@ Poprzednia zmiana ustawiła Ctrl + lewy przycisk na PAN, lecz OrbitControls zami
 ## Alt + zaznaczenie powierzchni — 0.80.0
 
 Alt + kliknięcie jest obsługiwane przez cały obszar widoku przed nakładką punktów i krawędzi. Wybiera powierzchnię pokoju pod kursorem również przez wyposażenie i uchwyty geometrii; nie uruchamia przy tym obracania kamery ani przeciągania uchwytu. Weryfikacja aplikacji obejmuje kliknięcie w płótno 3D oraz w nakładkę, a także zwolnienie Alt przed puszczeniem myszy.
+
+## Alt + przeciągnięcie: ramka zaznaczenia — 0.81.0
+
+Alt + przeciągnięcie lewym przyciskiem myszy rysuje rozciąganą ramkę w widoku pokoju, także gdy gest zaczyna się nad uchwytem geometrii. Ramka zaznacza wierzchołki lub krawędzie leżące w jej obszarze zgodnie z aktywnym typem zaznaczenia. W trybie powierzchni przełącza na wierzchołki. Ctrl + przeciągnięcie nadal przesuwa kamerę, a zwykłe kliknięcie nadal wybiera powierzchnię. Test gotowej aplikacji sprawdza rysowanie ramki, wiele zaznaczonych punktów oraz brak ruchu kamery.
