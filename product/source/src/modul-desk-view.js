@@ -11,7 +11,7 @@ export function createModulDeskView(record){
  function mesh(name,geometry,material,x=0,y=0,z=0){const item=new THREE.Mesh(geometry,material);item.name=name;item.position.set(x,y,z);group.add(item);geometries.push(geometry);return item;}
  function box(name,w,h,d,x,y,z,material=board){return mesh(name,new THREE.BoxGeometry(w,h,d),material,x,y,z);}
  // Top has the real cable opening near its rear edge.
- const top=new THREE.Shape();top.moveTo(-D.top.width/2,-.25);top.lineTo(D.top.width/2,-.25);top.lineTo(D.top.width/2,.35);top.lineTo(-D.top.width/2,.35);top.closePath();
+ const top=new THREE.Shape(),front=-D.top.frontZ,rear=front+D.top.depth;top.moveTo(-D.top.width/2,front);top.lineTo(D.top.width/2,front);top.lineTo(D.top.width/2,rear);top.lineTo(-D.top.width/2,rear);top.closePath();
  const hole=new THREE.Path();hole.absarc(0,.17,.028,0,Math.PI*2,true);top.holes.push(hole);
  const topGeometry=new THREE.ExtrudeGeometry(top,{depth:D.top.thickness,bevelEnabled:false,curveSegments:24});topGeometry.rotateX(-Math.PI/2);
  mesh('main-top-with-cable-hole',topGeometry,board,0,D.height-D.top.thickness,0);

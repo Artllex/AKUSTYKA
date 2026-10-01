@@ -164,6 +164,12 @@ app.whenReady().then(async()=>{
   if(!objectView.visible)throw new Error(JSON.stringify(objectView));result.objectView=objectView;
 
   await fs.writeFile(path.join(out,'windows-app.png'),(await window.webContents.capturePage()).toPNG());
+  await window.webContents.executeJavaScript(`(()=>{document.getElementById('file-new').click();document.getElementById('top').click();})()`);
+  await new Promise(resolve=>setTimeout(resolve,700));
+  await fs.writeFile(path.join(out,'desk-a-top.png'),(await window.webContents.capturePage()).toPNG());
+  await window.webContents.executeJavaScript(`(()=>{const choice=document.getElementById('desk-choice');choice.value='desk-modul-2025';choice.dispatchEvent(new Event('change',{bubbles:true}));})()`);
+  await new Promise(resolve=>setTimeout(resolve,700));
+  await fs.writeFile(path.join(out,'desk-b-top.png'),(await window.webContents.capturePage()).toPNG());
 
   await fs.writeFile(path.join(out,'result.json'),JSON.stringify({...result,errors,executable:process.execPath},null,2));console.log('WINDOWS_SMOKE_PASS '+out);app.exit(0);
 

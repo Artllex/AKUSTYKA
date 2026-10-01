@@ -12,13 +12,14 @@ import {parseRoomDocument} from './src/bench.js';
 test('A and B share the same forward edge by the mannequin; exactly one desk is present',()=>{
  const doc=createDocument(),a=doc.objects.find(o=>o.type==='studio-desk');
  assert.equal(a.id,THOMANN_DESK_ID);
- const aView=createDeskView(a),aBounds=new THREE.Box3().setFromObject(aView.group);
+ const aView=createDeskView(a),aTop=new THREE.Box3().setFromObject(aView.group.getObjectByName('worktop'));
  chooseDesk(doc,MODUL_DESK_ID);
  assert.equal(doc.objects.filter(o=>o.type==='studio-desk').length,1);
  assert.equal(selectedDeskId(doc),MODUL_DESK_ID);
- const b=doc.objects.find(o=>o.type==='studio-desk'),bView=createModulDeskView(b),bBounds=new THREE.Box3().setFromObject(bView.group);
+ const b=doc.objects.find(o=>o.type==='studio-desk'),bView=createModulDeskView(b),bBounds=new THREE.Box3().setFromObject(bView.group),bTop=new THREE.Box3().setFromObject(bView.group.getObjectByName('main-top-with-cable-hole'));
  assert.equal(b.yaw,0);
- assert.ok(Math.abs(aBounds.max.z-bBounds.max.z)<1e-6,'forward edges must coincide');
+ assert.ok(Math.abs(aTop.max.z-bTop.max.z)<1e-6,'the actual tabletop edges nearest the mannequin must coincide');
+ assert.ok(Math.abs(bBounds.max.z-bTop.max.z-.10)<1e-6,'the B side panel extends 10 cm beyond its top');
  assert.ok(Math.abs(a.position.x-b.position.x)<1e-9);
  assert.ok(Math.abs(bBounds.max.x-bBounds.min.x-D.width)<1e-6);
  assert.ok(Math.abs(bBounds.max.z-bBounds.min.z-D.depth)<1e-6);
@@ -47,6 +48,10 @@ test('choice persists through save and undo; prior two-desk rooms migrate to one
  assert.equal(selectedDeskId(migrated),THOMANN_DESK_ID);
  const bOnly=createDocument();bOnly.objects=bOnly.objects.filter(o=>o.type!=='studio-desk');bOnly.objects.push({ ...createModulDeskRecord(DEFAULT_ROOM),position:{x:DEFAULT_ROOM.width-.04-D.width/2,y:0,z:DEFAULT_ROOM.length-.365-D.depth/2},yaw:Math.PI });
  const moved=parseRoomDocument(JSON.stringify(bOnly));assert.deepEqual(moved.objects.find(o=>o.id===MODUL_DESK_ID).position,createModulDeskRecord(DEFAULT_ROOM).position);
+ const previousDefault=createDocument();previousDefault.objects=previousDefault.objects.filter(o=>o.type!=='studio-desk');previousDefault.objects.push({...createModulDeskRecord(DEFAULT_ROOM),position:{x:DEFAULT_ROOM.width/2,y:0,z:createDocument().objects.find(o=>o.id===THOMANN_DESK_ID).position.z+.716/2-D.depth/2}});
+ assert.deepEqual(parseRoomDocument(JSON.stringify(previousDefault)).objects.find(o=>o.id===MODUL_DESK_ID).position,createModulDeskRecord(DEFAULT_ROOM).position);
+ previousDefault.objects.find(o=>o.id===MODUL_DESK_ID).position.z+=.04;
+ assert.equal(parseRoomDocument(JSON.stringify(previousDefault)).objects.find(o=>o.id===MODUL_DESK_ID).position.z,previousDefault.objects.find(o=>o.id===MODUL_DESK_ID).position.z);
  const next={...DEFAULT_ROOM,width:3,length:4};moveDefaultModulDeskWithRoom(moved,next);
  assert.deepEqual(moved.objects.find(o=>o.id===MODUL_DESK_ID).position,createModulDeskRecord(next).position);
  const bare=parseRoomDocument(JSON.stringify({schemaVersion:1,units:'m',room:DEFAULT_ROOM,objects:[]}));assert.equal(bare.objects.length,0);

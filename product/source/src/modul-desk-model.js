@@ -3,7 +3,7 @@ import {COMBODESK_88,createDeskRecord} from './desk-model.js';
 // Overall envelope follows the supplied 2025 dimension drawing (metres).
 export const MODUL_STUDIO_DESK = Object.freeze({
  width:1.44,depth:.70,height:.76,
- top:Object.freeze({width:1.435,depth:.60,thickness:.018}),
+ top:Object.freeze({width:1.435,depth:.60,thickness:.018,frontZ:.25}),
  tray:Object.freeze({width:1.37,depth:.34,thickness:.018,drop:.10}),
  sideThickness:.018
 });
@@ -15,7 +15,7 @@ export function createModulDeskRecord(room){
  const first=createDeskRecord(room);
  const firstFront=first.position.z+(COMBODESK_88.depth-COMBODESK_88.worktop.depth)/2+COMBODESK_88.worktop.depth/2;
  return {id:MODUL_DESK_ID,type:'studio-desk',model:'modul-studio-desk-2025',
-  position:{x:first.position.x,y:0,z:firstFront-desk.depth/2},yaw:0};
+  position:{x:first.position.x,y:0,z:firstFront-desk.top.frontZ},yaw:0};
 }
 export function ensureModulDeskRecord(document){
  document.objects=document.objects.filter(record=>record.type!=='studio-desk'||record.id===MODUL_DESK_ID);
