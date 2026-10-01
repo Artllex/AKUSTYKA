@@ -8,6 +8,7 @@ export function createRackView(record){
  const opening=new THREE.MeshStandardMaterial({color:0x080a0c,roughness:0.96});
  const rubber=new THREE.MeshStandardMaterial({color:0x111316,roughness:0.95});
  const {width,depth,height,leanDegrees,mountingHeight}=RACK_15U;
+ const lowerBeamHeight=0.052,footBottom=0.011,footTop=footBottom+2*lowerBeamHeight;
  const lean=Math.tan(leanDegrees*Math.PI/180),railBaseY=0.060;
  // The front cross-member and uprights face the room; the feet extend behind them.
  const railBaseZ=-depth/2+0.003;
@@ -40,18 +41,18 @@ export function createRackView(record){
   // Folded side plates run the full depth; four low rubber pads touch floor.
   bar('foot-base',0.030,0.003,depth,sign*(width/2-0.015),0.0095,0,edge);
   const outline=new THREE.Shape();
-  for(const [index,[z,y]] of [[-depth/2,0.011],[-depth/2,0.078],[-0.055,0.13],[depth/2,0.20],[depth/2,0.011]].entries()){
+  for(const [index,[z,y]] of [[-depth/2,footBottom],[-depth/2,footTop],[depth/2,footTop],[depth/2,footBottom]].entries()){
    if(index===0)outline.moveTo(-z,y);else outline.lineTo(-z,y);
   }
   outline.closePath();
   const side=new THREE.ExtrudeGeometry(outline,{depth:0.0025,bevelEnabled:false,steps:1});side.rotateY(Math.PI/2);
-  mesh('tapered-foot-side',side,steel,sign<0?-width/2:width/2-0.0025);
+  mesh('foot-side-plate',side,steel,sign<0?-width/2:width/2-0.0025);
   for(const z of [-depth/2+0.018,depth/2-0.018]){
    mesh('rubber-foot',new THREE.CylinderGeometry(0.010,0.010,0.008,12),rubber,sign*(width/2-0.022),0.004,z);
   }
  }
  // Front low cross-member and slim upper cross-member leave the rack open.
- bar('lower-front-rail',width,0.052,0.003,0,0.036,railBaseZ+0.002,steel);
+ bar('lower-front-rail',width,lowerBeamHeight,0.003,0,0.036,railBaseZ+0.002,steel);
  bar('lower-rail-return',width,0.003,0.016,0,0.061,railBaseZ+0.008,edge);
  bar('upper-cross-member',width,0.012,0.003,0,height-0.006,railZ(height),steel);
  const screwRim=new THREE.MeshStandardMaterial({color:0x62666a,metalness:0.72,roughness:0.38});

@@ -611,4 +611,4 @@ W widoku 3D kamera może zbliżyć się do celu na 3 cm zamiast 15 cm. Przy cora
 
 ## Wysokość tylnych końców stopek — 0.67.0
 
-Pierwotne 10,4 cm w geometrii nie dawało dwukrotnej wysokości na widoku z wnętrza pokoju, ponieważ tylne końce są dalej od kamery niż przednia belka. W wersji 0.68.0 tylne końce bocznych stopek sięgają 20 cm, aby na tym widoku wyglądały na około dwa razy wyższe od dolnej belki. Pionowe szyny pozostają wyrównane z przednią belką.
+W wersji 0.68.0 błędnie podwyższono tylko tylne końce, tworząc klin. W wersji 0.69.0 obie boczne stopki mają poziomą górną krawędź na całej długości. Ich wysokość wynosi 10,4 cm, dokładnie dwa razy tyle co wysokość dolnej belki 5,2 cm. Pionowe szyny pozostają wyrównane z przednią belką.
