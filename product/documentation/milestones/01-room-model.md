@@ -648,3 +648,7 @@ Czerwona linia odstępu od ściany zaczyna się na faktycznie renderowanej bryle
 ## Sterowanie myszą i etykiety — 0.78.0
 
 Ctrl + przeciągnięcie lewym przyciskiem przesuwa widok, także po rozpoczęciu ruchu nad uchwytem geometrii. Alt + kliknięcie wybiera powierzchnię, a Alt + kliknięcia uchwytów mogą rozszerzać zaznaczenie. Shift + przeciągnięcie nie przełącza już kamery na przesuwanie. Etykiety odległości pozostają odsunięte ponad laser i czerwone linie w płaszczyźnie ekranu podczas obracania kamery.
+
+## Poprawka sterowania kamerą — 0.79.0
+
+Poprzednia zmiana ustawiła Ctrl + lewy przycisk na PAN, lecz OrbitControls zamienia PAN na ROTATE, gdy Ctrl jest wciśnięty. Teraz lewy przycisk pozostaje ROTATE, a sam OrbitControls przekształca Ctrl + przeciągnięcie w przesuwanie. W teście gotowej aplikacji sprawdzane jest faktyczne przesunięcie celu kamery bez zmiany jej kierunku, a także rzeczywiste Alt + kliknięcie powierzchni.

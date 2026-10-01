@@ -42,8 +42,29 @@ app.whenReady().then(async()=>{
 
   const clearanceCheck=await window.webContents.executeJavaScript(`(()=>{const d=document.getElementById('viewport').dataset;return {tooClose:Number(d.tooCloseMonitors),colors:d.tweeterRayColors,walls:d.wallClearanceWarnings,count:Number(d.wallClearanceCount),rays:d.rayDistances,wallDistances:d.wallDistances};})()`);
   if(clearanceCheck.tooClose!==2||clearanceCheck.colors!=='ff303d,ff303d'||clearanceCheck.count<2||!clearanceCheck.walls.includes('monitor-L:wall-front')||clearanceCheck.rays.split(' cm').length!==3||clearanceCheck.wallDistances.split(' cm').length<3)throw new Error(JSON.stringify(clearanceCheck));result.clearanceCheck=clearanceCheck;
-  const modifierCheck=await window.webContents.executeJavaScript(`(()=>{const host=document.getElementById('viewport'),canvas=host.querySelector('canvas'),handle=document.querySelector('#edit-overlay circle[data-kind="vertex"]');document.dispatchEvent(new KeyboardEvent('keydown',{key:'Control',bubbles:true}));const overlayDisabled=getComputedStyle(handle).pointerEvents==='none';const onHandle=new PointerEvent('pointerdown',{bubbles:true,cancelable:true,ctrlKey:true,pointerId:711,button:0});handle.dispatchEvent(onHandle);const handlePassed=!onHandle.defaultPrevented;const down=new PointerEvent('pointerdown',{bubbles:true,cancelable:true,ctrlKey:true,pointerId:712,button:0});canvas.dispatchEvent(down);const pan=host.dataset.cameraDragMode==='pan';canvas.dispatchEvent(new PointerEvent('pointerup',{bubbles:true,ctrlKey:true,pointerId:712,button:0}));document.dispatchEvent(new KeyboardEvent('keyup',{key:'Control',bubbles:true}));return {overlayDisabled,handlePassed,pan,restored:getComputedStyle(handle).pointerEvents!=='none'};})()`);
-  if(!Object.values(modifierCheck).every(Boolean))throw new Error(JSON.stringify(modifierCheck));result.modifierCheck=modifierCheck;
+  const pose=()=>window.webContents.executeJavaScript(`(()=>{const d=document.getElementById('viewport').dataset;return {position:d.cameraPosition.split(',').map(Number),target:d.cameraTarget.split(',').map(Number)};})()`);
+  const beforePan=await pose();
+  window.webContents.sendInputEvent({type:'keyDown',keyCode:'Control'});
+  window.webContents.sendInputEvent({type:'mouseMove',x:500,y:500});
+  window.webContents.sendInputEvent({type:'mouseDown',x:500,y:500,button:'left',modifiers:['control']});
+  window.webContents.sendInputEvent({type:'mouseMove',x:580,y:550,modifiers:['control']});
+  window.webContents.sendInputEvent({type:'mouseUp',x:580,y:550,button:'left',modifiers:['control']});
+  window.webContents.sendInputEvent({type:'keyUp',keyCode:'Control'});
+  await new Promise(resolve=>setTimeout(resolve,200));
+  const afterPan=await pose(),length=v=>Math.hypot(...v),difference=(a,b)=>a.map((v,i)=>v-b[i]);
+  const modifierCheck={targetMoved:length(difference(afterPan.target,beforePan.target)),orientationDrift:length(difference(difference(afterPan.position,afterPan.target),difference(beforePan.position,beforePan.target)))};
+  if(modifierCheck.targetMoved<0.01||modifierCheck.orientationDrift>0.01)throw new Error(JSON.stringify(modifierCheck));
+  await window.webContents.executeJavaScript(`document.getElementById('view-3d').click()`);
+  const altPoint=await window.webContents.executeJavaScript(`(()=>{const r=document.querySelector('#viewport canvas').getBoundingClientRect();return {x:Math.round(r.left+r.width*.45),y:Math.round(r.top+r.height*.25)};})()`);
+  window.webContents.sendInputEvent({type:'keyDown',keyCode:'Alt'});
+  window.webContents.sendInputEvent({type:'mouseMove',...altPoint});
+  window.webContents.sendInputEvent({type:'mouseDown',...altPoint,button:'left',modifiers:['alt']});
+  window.webContents.sendInputEvent({type:'mouseUp',...altPoint,button:'left',modifiers:['alt']});
+  window.webContents.sendInputEvent({type:'keyUp',keyCode:'Alt'});
+  modifierCheck.altSelection=await window.webContents.executeJavaScript(`(()=>{const host=document.getElementById('viewport');return {surface:host.dataset.meshSelection,title:document.getElementById('edit-title').textContent};})()`);
+  if(!modifierCheck.altSelection.surface||modifierCheck.altSelection.title!=='Powierzchnia')throw new Error(JSON.stringify(modifierCheck));
+  await window.webContents.executeJavaScript(`document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}))`);
+  result.modifierCheck=modifierCheck;
 
   const numericCheck=await window.webContents.executeJavaScript(`(()=>{const inputs=[...document.querySelectorAll('input[type="number"],#axis-rotation,#axis-distance,#edge-insert-value')],bad=inputs.filter(input=>{const row=input.closest('.numeric-field'),buttons=row&&[...row.children].filter(node=>node.tagName==='BUTTON');return !row||buttons.length!==2||!input.closest('.numeric-field-value');}).map(input=>input.id),distance=document.getElementById('axis-distance');return {count:inputs.length,bad,unitNextToValue:distance.nextElementSibling?.textContent==='cm'&&distance.nextElementSibling?.parentElement===distance.parentElement};})()`);
   if(numericCheck.count<50||numericCheck.bad.length||!numericCheck.unitNextToValue)throw new Error(JSON.stringify(numericCheck));result.numericCheck=numericCheck;
