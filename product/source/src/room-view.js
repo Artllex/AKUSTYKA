@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import {WALL_PAINT_COLOR} from './wall-paint.js';
+import {applyFolignoFloor} from './floor-finish.js';
 export function createRoom(room,features,transforms={}){
  const {width:w,length:l,height:h}=room;
  const niche=features?.window,shift=transforms.window??{},left=niche?Math.max(0,niche.center+(shift.x??0)-niche.width/2):0,right=niche?Math.min(w,niche.center+(shift.x??0)+niche.width/2):0,depth=niche&&niche.bottom+(shift.y??0)<=0.001&&right>left?niche.depth:0;
@@ -32,7 +33,7 @@ export function createRoom(room,features,transforms={}){
    geometry.dispose();geometry=new THREE.ShapeGeometry(wallShapes);geometry.parameters.width=width;geometry.parameters.height=height;
   }
   const mesh=new THREE.Mesh(geometry,new THREE.MeshStandardMaterial({color,side:THREE.DoubleSide,roughness:0.9}));
-  mesh.name=name;mesh.position.set(...position);mesh.rotation.set(...rotation);mesh.userData.outward=new THREE.Vector3(...normal);group.add(mesh);surfaces.push(mesh);
+  mesh.name=name;mesh.position.set(...position);mesh.rotation.set(...rotation);mesh.userData.outward=new THREE.Vector3(...normal);if(name==='floor')applyFolignoFloor(mesh);group.add(mesh);surfaces.push(mesh);
  }
  surface('floor',w,l,[w/2,0,l/2],[-Math.PI/2,0,0],[0,-1,0],0x4c6572);
  surface('ceiling',w,l,[w/2,h,l/2],[Math.PI/2,0,0],[0,1,0],0xadc1c9);
