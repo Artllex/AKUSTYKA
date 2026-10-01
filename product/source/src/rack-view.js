@@ -9,8 +9,8 @@ export function createRackView(record){
  const rubber=new THREE.MeshStandardMaterial({color:0x111316,roughness:0.95});
  const {width,depth,height,leanDegrees,mountingHeight}=RACK_15U;
  const lean=Math.tan(leanDegrees*Math.PI/180),railBaseY=0.060;
- // The uprights stand at the rear of the feet; their tops lean farther rearward.
- const railBaseZ=depth/2-0.024-lean*(height-railBaseY);
+ // The front cross-member and uprights face the room; the feet extend behind them.
+ const railBaseZ=-depth/2+0.024;
  const railZ=y=>railBaseZ+lean*(y-railBaseY);
  const geometries=[];
  function mesh(name,geometry,material,x=0,y=0,z=0){const part=new THREE.Mesh(geometry,material);part.name=name;part.position.set(x,y,z);group.add(part);geometries.push(geometry);return part;}
@@ -40,7 +40,7 @@ export function createRackView(record){
   // Folded side plates run the full depth; four low rubber pads touch floor.
   bar('foot-base',0.030,0.003,depth,sign*(width/2-0.015),0.0095,0,edge);
   const outline=new THREE.Shape();
-  for(const [index,[z,y]] of [[-depth/2,0.011],[-depth/2,0.016],[0.055,0.057],[depth/2,0.078],[depth/2,0.011]].entries()){
+  for(const [index,[z,y]] of [[-depth/2,0.011],[-depth/2,0.078],[-0.055,0.057],[depth/2,0.016],[depth/2,0.011]].entries()){
    if(index===0)outline.moveTo(-z,y);else outline.lineTo(-z,y);
   }
   outline.closePath();

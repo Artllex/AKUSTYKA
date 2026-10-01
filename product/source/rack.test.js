@@ -26,9 +26,10 @@ test('15U rack stands on the floor inside the rear right corner and keeps its mo
  assert.ok(screws.every(screw=>screw.position.z<lowerRail.position.z-lowerRail.geometry.parameters.depth/2),'screw heads must be visible on the front face');
  const foot=view.group.getObjectByName('tapered-foot-side'),footPositions=foot.geometry.attributes.position;
  const topAt=z=>{let top=-Infinity;for(let i=0;i<footPositions.count;i++)if(Math.abs(footPositions.getZ(i)-z)<1e-6)top=Math.max(top,footPositions.getY(i));return top;};
- assert.ok(topAt(-RACK_15U.depth/2)<topAt(RACK_15U.depth/2),'free front end must be lower than the rear upright end');
+ assert.ok(topAt(-RACK_15U.depth/2)>topAt(RACK_15U.depth/2),'free rear end must be lower than the front upright end');
  const rail=view.group.getObjectByName('mounting-rail'),positions=rail.geometry.attributes.position;
- assert.ok(rail.position.z>0,'uprights belong behind the free ends of the feet');
+ assert.ok(rail.position.z<0,'uprights and front rail must face the room, with the feet behind');
+ assert.ok(lowerRail.position.z<0,'branded cross-member must be at the front');
  let lower=0,upper=0,lowerCount=0,upperCount=0;
  for(let i=0;i<positions.count;i++){
   if(positions.getY(i)<0){lower+=positions.getZ(i);lowerCount++;}

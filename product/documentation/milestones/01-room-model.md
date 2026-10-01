@@ -592,3 +592,11 @@ Na środku dolnej belki jest duży biały symbol RIVECO z małym napisem pod spo
 ## Stała prędkość nawigacji — 0.64.0
 
 Przybliżanie gestem touchpada i przesuwanie kamery za pomocą Shift + przeciągnięcie myszy używają stałej skali ruchu względem pozycji początkowej widoku. Blisko obiektu kolejne gesty nie stają się coraz wolniejsze. Zasada obowiązuje także w rzucie prostopadłym.
+
+## Łagodne zwalnianie nawigacji — 0.65.0
+
+Przybliżanie i przesuwanie kamerą zwalniają stopniowo w miarę zbliżania do celu, ale znacznie słabiej niż przy proporcjonalnym skalowaniu odległością. Dotyczy to widoku 3D i rzutów prostopadłych.
+
+## Orientacja stojaka w tylnym rogu — 0.65.0
+
+Dolna belka z logo i pionowe szyny są zwrócone do wnętrza pokoju. Stopki biegną od ramy ku tylnej ścianie i zwężają się w tym kierunku, zamiast wysuwać się do środka pokoju.
