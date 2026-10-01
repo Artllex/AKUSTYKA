@@ -14,6 +14,7 @@ export function createRackView(record){
  const lean=Math.tan(leanDegrees*Math.PI/180),railBaseY=0.060;
  // The front cross-member and uprights face the room; the feet extend behind them.
  const railBaseZ=-depth/2+0.003;
+ const footFrontZ=railBaseZ+0.002;
  const railZ=y=>railBaseZ+lean*(y-railBaseY);
  const geometries=[];
  function mesh(name,geometry,material,x=0,y=0,z=0){const part=new THREE.Mesh(geometry,material);part.name=name;part.position.set(x,y,z);group.add(part);geometries.push(geometry);return part;}
@@ -40,15 +41,15 @@ export function createRackView(record){
    const mark=bar('upright-side-slot',0.001,0.028,0.006,sign*(width/2-0.0007),y,railZ(y)+0.012,opening);
    mark.userData.collision=false;
   }
-  // Folded side plates run the full depth; four low rubber pads touch floor.
+  // Side plates tuck behind the front rail and inside the upright returns.
   bar('foot-base',0.030,0.003,depth,sign*(width/2-0.015),0.0095,0,edge);
   const outline=new THREE.Shape();
-  for(const [index,[z,y]] of [[-depth/2,footBottom],[-depth/2,footTopAtUpright],[depth/2,footTopAtFarEnd],[depth/2,footBottom]].entries()){
+  for(const [index,[z,y]] of [[footFrontZ,footBottom],[footFrontZ,footTopAtUpright],[depth/2,footTopAtFarEnd],[depth/2,footBottom]].entries()){
    if(index===0)outline.moveTo(-z,y);else outline.lineTo(-z,y);
   }
   outline.closePath();
   const side=new THREE.ExtrudeGeometry(outline,{depth:0.0025,bevelEnabled:false,steps:1});side.rotateY(Math.PI/2);
-  mesh('foot-side-plate',side,steel,sign<0?-width/2:width/2-0.0025);
+  mesh('foot-side-plate',side,steel,sign<0?-width/2+0.005:width/2-0.0075);
   for(const z of [-depth/2+0.018,depth/2-0.018]){
    mesh('rubber-foot',new THREE.CylinderGeometry(0.010,0.010,0.008,12),rubber,sign*(width/2-0.022),0.004,z);
   }

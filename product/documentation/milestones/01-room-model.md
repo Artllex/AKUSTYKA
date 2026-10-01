@@ -616,3 +616,7 @@ W wersji 0.68.0 błędnie podwyższono tylko tylne końce, tworząc klin. W wers
 ## Stopki zwężające się od pionowej ramy — 0.70.0
 
 Obie boczne stopki mają przy pionowej ramie wysokość 7,8 cm (o 50% większą od dolnej belki), a na odległym końcu 5,2 cm (równą dolnej belce). Górna krawędź opada liniowo od ramy ku odległemu końcowi.
+
+## Połączenie stopek z pionową ramą — 0.71.0
+
+Przednie krawędzie bocznych ścianek stopek są cofnięte za dolną belkę i wsunięte do środka względem bocznych zagięć pionowych szyn. Nie wystają nad belką obok szyn. Skos i wysokości 7,8/5,2 cm pozostają bez zmian.

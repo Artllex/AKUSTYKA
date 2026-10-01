@@ -24,10 +24,14 @@ test('15U rack stands on the floor inside the rear right corner and keeps its mo
  assert.equal(view.group.getObjectsByProperty('name','front-screw-recess').length,4);
  const lowerRail=view.group.getObjectByName('lower-front-rail');
  assert.ok(screws.every(screw=>screw.position.z<lowerRail.position.z-lowerRail.geometry.parameters.depth/2),'screw heads must be visible on the front face');
+ const frontOfBeam=lowerRail.position.z-lowerRail.geometry.parameters.depth/2;
  for(const plate of view.group.getObjectsByProperty('name','foot-side-plate')){
   const vertices=plate.geometry.attributes.position;
   const topAtEnd=z=>{let top=-Infinity;for(let i=0;i<vertices.count;i++)if(Math.abs(vertices.getZ(i)-z)<1e-6)top=Math.max(top,vertices.getY(i));return top;};
-  assert.ok(Math.abs(topAtEnd(-RACK_15U.depth/2)-0.011-1.5*lowerRail.geometry.parameters.height)<1e-6,'upright end must be 50% taller than the lower beam');
+  let front=Infinity;for(let i=0;i<vertices.count;i++)front=Math.min(front,vertices.getZ(i));
+  assert.ok(front>frontOfBeam,'side plate must not protrude past the front of the lower beam');
+  assert.ok(Math.abs(plate.position.x)<RACK_15U.width/2-0.0025,'side plate must sit inside the upright return');
+  assert.ok(Math.abs(topAtEnd(front)-0.011-1.5*lowerRail.geometry.parameters.height)<1e-6,'upright end must be 50% taller than the lower beam');
   assert.ok(Math.abs(topAtEnd(RACK_15U.depth/2)-0.011-lowerRail.geometry.parameters.height)<1e-6,'far end must be the same height as the lower beam');
  }
  const rail=view.group.getObjectByName('mounting-rail'),positions=rail.geometry.attributes.position;
