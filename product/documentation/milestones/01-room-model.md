@@ -624,3 +624,7 @@ Przednie krawędzie bocznych ścianek stopek są cofnięte za dolną belkę i ws
 ## Przywrócenie pierwotnej nawigacji kamery — 0.72.0
 
 Przybliżanie i przesuwanie znów korzystają ze standardowego sterowania OrbitControls, jak w wersji 0.63.0. Usunięto późniejsze przeliczanie tempa ruchu zależne od odległości. Przywrócono wcześniejszą minimalną odległość kamery 15 cm; przybliżanie gestem nad obiektami pozostaje dostępne.
+
+## Skróty myszy w widoku — 0.73.0
+
+Alt + klik zaznacza powierzchnię pokoju (ścianę, podłogę lub sufit), także gdy przed nią stoi wyposażenie. Zwykłe kliknięcie powierzchni nie wybiera jej; nadal wybiera wyposażenie, krawędzie i wierzchołki. Ctrl + przeciągnięcie przesuwa kamerę, a Ctrl + klik drugiego obiektu lub powierzchni wykonuje pomiar odległości. Shift + przeciągnięcie znów obraca kamerę. Ctrl + klik uchwytu nadal dodaje go do zaznaczenia geometrii.
