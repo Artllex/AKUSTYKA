@@ -636,3 +636,7 @@ Nowy pokój domyślnie pokazuje pierwsze odbicia wszystkich przetworników obu m
 ## Klikanie powierzchni — 0.75.0
 
 Zwykły klik na widocznej powierzchni ponownie ją zaznacza i udostępnia rzut prostopadły. Alt + klik nadal wybiera powierzchnię nawet przez wyposażenie stojące przed nią. Wierzchołki i krawędzie zachowują pierwszeństwo w swoich uchwytach.
+
+## Odległość monitorów od słuchacza i ścian — 0.76.0
+
+Instrukcja Barefoot MicroMain27 Gen2 zaleca minimum 100 cm od środka tweetera do miejsca odsłuchu. Kolor lasera każdego monitora jest czerwony poniżej tego progu i zielony od 100 cm. Pomiar używa bliższego ucha aktualnej pozycji manekina. Dla chłodzenia producent wymaga 12,7 cm wolnej przestrzeni między monitorem a dużą przeszkodą; dla każdej zbyt bliskiej ściany program rysuje czerwony odcinek od pełnej bryły monitora do rzeczywistej powierzchni ściany. Pomiar obejmuje ściany wnęki i zachowuje otwory w ścianach. Źródło: https://barefootsound.com/wp-content/uploads/2014/06/Barefoot_MicroMain27_Gen2_Users_Manual.pdf, sekcja 8 „Positioning”.

@@ -40,6 +40,9 @@ app.whenReady().then(async()=>{
 
   if(result.baseboardCount!==9||result.reflections!==115||result.tweeterRays!==2||result.headHits!==2||!result.raysVisible||result.monitorCount!==2||result.monitorOptions!==2||!result.listenerPanel||!result.earHeight.includes('118,5')||!result.canvas||!result.desktop||!result.dimensions.includes('247,7')||result.bench.join(',')!=='File,Edit,View'||errors.length)throw new Error(JSON.stringify({result,errors}));
 
+  const clearanceCheck=await window.webContents.executeJavaScript(`(()=>{const d=document.getElementById('viewport').dataset;return {tooClose:Number(d.tooCloseMonitors),colors:d.tweeterRayColors,walls:d.wallClearanceWarnings,count:Number(d.wallClearanceCount)};})()`);
+  if(clearanceCheck.tooClose!==2||clearanceCheck.colors!=='ff303d,ff303d'||clearanceCheck.count<2||!clearanceCheck.walls.includes('monitor-L:wall-front'))throw new Error(JSON.stringify(clearanceCheck));result.clearanceCheck=clearanceCheck;
+
   const numericCheck=await window.webContents.executeJavaScript(`(()=>{const inputs=[...document.querySelectorAll('input[type="number"],#axis-rotation,#axis-distance,#edge-insert-value')],bad=inputs.filter(input=>{const row=input.closest('.numeric-field'),buttons=row&&[...row.children].filter(node=>node.tagName==='BUTTON');return !row||buttons.length!==2||!input.closest('.numeric-field-value');}).map(input=>input.id),distance=document.getElementById('axis-distance');return {count:inputs.length,bad,unitNextToValue:distance.nextElementSibling?.textContent==='cm'&&distance.nextElementSibling?.parentElement===distance.parentElement};})()`);
   if(numericCheck.count<50||numericCheck.bad.length||!numericCheck.unitNextToValue)throw new Error(JSON.stringify(numericCheck));result.numericCheck=numericCheck;
 

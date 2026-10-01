@@ -62,6 +62,7 @@ import {ensureRackRecord,moveDefaultRackWithRoom} from './rack-model.js';
 import {updateLinkedMonitor,DEFAULT_MONITOR_LINKS} from './monitor-links.js';
 
 import {createTweeterRays} from './tweeter-rays.js';
+import {createMonitorWallWarnings} from './monitor-clearance.js';
 
 import {findMonitorCollisions,tintCollision} from './monitor-collisions.js';
 
@@ -98,7 +99,7 @@ const scene=new THREE.Scene();scene.add(new THREE.HemisphereLight(0xe7f4ff,0x3b4
 
 const perspective=new THREE.PerspectiveCamera(42,1,0.01,200);
 
-let camera=perspective,controls,view,featureViews=[],listenerViews=[],monitorViews=[],rackViews=[],tweeterRays=null,reflectionView=null,selected=null,projection=null,selectedObjectId=null;
+let camera=perspective,controls,view,featureViews=[],listenerViews=[],monitorViews=[],rackViews=[],tweeterRays=null,wallWarnings=null,reflectionView=null,selected=null,projection=null,selectedObjectId=null;
 
 function bindControls(target){controls?.dispose();controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.minDistance=0.15;controls.maxDistance=60;controls.maxPolarAngle=Math.PI;controls.enableRotate=!projection;controls.target.copy(target);controls.update();}
 
@@ -183,7 +184,7 @@ function resize(){const w=host.clientWidth,h=host.clientHeight;if(!w||!h)return;
 const projectionHidden=new WeakMap();
 function updateProjectionVisibility(){
  if(!view)return;
- const groups=[...featureViews,...listenerViews,...monitorViews,...rackViews].map(v=>v.group);if(tweeterRays)groups.push(tweeterRays.group);
+ const groups=[...featureViews,...listenerViews,...monitorViews,...rackViews].map(v=>v.group);if(tweeterRays)groups.push(tweeterRays.group);if(wallWarnings)groups.push(wallWarnings.group);
  for(const group of groups){if(projection){if(!projectionHidden.has(group))projectionHidden.set(group,group.visible);group.visible=false;}else if(projectionHidden.has(group)){group.visible=projectionHidden.get(group);projectionHidden.delete(group);}}
  if(projection){const surface=view.surfaces.find(s=>s.name===projection.surfaceName);for(const object of view.group.children)object.visible=object===surface||(object.name==='floor-outline'&&surface?.name==='floor')||(object===view.grid&&surface?.name==='floor'&&$('grid').checked);}
  host.dataset.visibleSceneEntities=String(groups.filter(g=>g.visible).length);
@@ -199,7 +200,7 @@ function refreshCollisions(){if(!view)return;const objects=scene.children.filter
 
 function refreshReflections(){if(reflectionView){scene.remove(reflectionView.group);reflectionView.dispose();}reflectionView=createReflectionView(monitorViews,listenerViews[0],doc.room,doc.reflections,view.surfaces);scene.add(reflectionView.group);host.dataset.reflectionCount=reflectionView.paths.length;reflectionPanel?.sync(reflectionView.paths.length);}
 
-function refreshTweeterRays(){if(tweeterRays){scene.remove(tweeterRays.group);tweeterRays.dispose();}tweeterRays=createTweeterRays(monitorViews,listenerViews[0],doc.room,doc.showTweeterRays,(doc.roomMesh||doc.roomShape)?view.surfaces:null);scene.add(tweeterRays.group);host.dataset.tweeterRayCount=tweeterRays.rayCount;host.dataset.tweeterHeadHits=tweeterRays.hitCount;$('tweeter-rays-visible').checked=doc.showTweeterRays;refreshReflections();refreshCollisions();refreshObjectSelection();}
+function refreshTweeterRays(){if(tweeterRays){scene.remove(tweeterRays.group);tweeterRays.dispose();}if(wallWarnings){scene.remove(wallWarnings.group);wallWarnings.dispose();}tweeterRays=createTweeterRays(monitorViews,listenerViews[0],doc.room,doc.showTweeterRays,(doc.roomMesh||doc.roomShape)?view.surfaces:null);wallWarnings=createMonitorWallWarnings(monitorViews,view.surfaces);scene.add(tweeterRays.group,wallWarnings.group);host.dataset.tweeterRayCount=tweeterRays.rayCount;host.dataset.tweeterHeadHits=tweeterRays.hitCount;host.dataset.tooCloseMonitors=tweeterRays.tooCloseCount;host.dataset.tweeterRayColors=tweeterRays.group.children.filter(o=>o.name.startsWith('ray-')).map(o=>o.material.color.getHexString()).join(',');host.dataset.wallClearanceWarnings=wallWarnings.warnings.map(w=>w.monitor+':'+w.wall).join(',');host.dataset.wallClearanceCount=wallWarnings.group.children.length;$('tweeter-rays-visible').checked=doc.showTweeterRays;refreshReflections();refreshCollisions();refreshObjectSelection();}
 
 function refreshListeners(){for(const listener of listenerViews){scene.remove(listener.group);listener.dispose();}listenerViews=[];if(!doc.objects.some(o=>o.type==='seated-listener'))doc.objects.push(createListenerRecord(doc.room));for(const record of doc.objects.filter(o=>o.type==='seated-listener')){const listener=createSeatedListener(record);applyObjectTransform(listener.group,doc.transforms);scene.add(listener.group);listenerViews.push(listener);}listenerPanel?.sync(listenerViews[0]?.getEarHeight());refreshTweeterRays();}
 
