@@ -6,6 +6,7 @@ import {parseRoomDocument} from './src/bench.js';
 import {createRoom} from './src/room-view.js';
 import {defaultRoomFeatures,normalizeRoomFeatures,createRoomFeatureViews} from './src/room-features.js';
 import {surfaceProjection} from './src/projection.js';
+import {RECTA_HANDLE} from './src/recta-handle.js';
 test('Govee H60A6 is centered on the ceiling at 38 cm diameter and 6 cm height',()=>{
  const views=createRoomFeatureViews(DEFAULT_ROOM,defaultRoomFeatures(DEFAULT_ROOM)),lamp=views.find(v=>v.group.name==='ceiling-light');assert.ok(lamp);
  const bounds=new THREE.Box3().setFromObject(lamp.group),center=bounds.getCenter(new THREE.Vector3()),size=bounds.getSize(new THREE.Vector3());
@@ -77,6 +78,25 @@ test('door frame, leaf and light switch match measured back-wall positions',()=>
  assert.equal(cast(glassY),0);assert.ok(cast(glassY+.08)>0);
  assert.ok(Math.abs(plate.getCenter(new THREE.Vector3()).y-1.219)<1e-6);
  for(const v of views)v.dispose();
+});
+test('RECTA hardware has measured matte rosettes, keyhole and shaped levers on both door faces',()=>{
+ const views=createRoomFeatureViews(DEFAULT_ROOM,defaultRoomFeatures(DEFAULT_ROOM)),door=views.find(v=>v.group.name==='door').group;
+ const bounds=name=>new THREE.Box3().setFromObject(door.getObjectByName(name));
+ const close=(actual,expected)=>assert.ok(Math.abs(actual-expected)<.002,`${actual} versus ${expected}`);
+ for(const suffix of ['', '-outside']){
+  const plate=door.getObjectByName('door-handle-plate'+suffix),lock=door.getObjectByName('door-lock-plate'+suffix),lever=door.getObjectByName('door-handle'+suffix),opening=door.getObjectByName('door-lock-opening'+suffix);
+  assert.ok(plate&&lock&&lever&&opening);
+  const size=bounds(plate.name).getSize(new THREE.Vector3());close(size.x,RECTA_HANDLE.plateWidth);close(size.y,RECTA_HANDLE.plateHeight);close(size.z,RECTA_HANDLE.plateDepth);
+  close(plate.position.y-lock.position.y,RECTA_HANDLE.lockDrop);
+  close(lever.getWorldPosition(new THREE.Vector3()).x-bounds(lever.name).min.x,RECTA_HANDLE.reach);
+  const positions=lever.geometry.getAttribute('position'),tip=[];for(let i=0;i<positions.count;i++)if(positions.getX(i)<-RECTA_HANDLE.reach+.001)tip.push(positions.getY(i));
+  close(Math.max(...tip)-Math.min(...tip),RECTA_HANDLE.tipHeight);
+  assert.equal(lock.geometry.parameters.shapes.holes.length,1);
+  assert.ok(lever.material.roughness>.7);
+  const doorFace=suffix?DEFAULT_ROOM.length:bounds('door-leaf').min.z;
+  close(suffix?bounds(lever.name).max.z-doorFace:doorFace-bounds(lever.name).min.z,RECTA_HANDLE.projection);
+ }
+ views.forEach(view=>view.dispose());
 });
 test('legacy untouched door migrates without changing custom door dimensions',()=>{
  const old=createDocument(),d=old.roomFeatures.door;Object.assign(d,{center:old.room.width*.25,width:Math.min(.85,old.room.width*.4),height:Math.min(2.05,old.room.height*.85),depth:.12});delete d.jambLeft;delete d.jambRight;delete d.revealRight;delete d.lintel;delete old.roomFeatures.switch;

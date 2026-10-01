@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import {WALL_PAINT_COLOR} from './wall-paint.js';
+import {addRectaDoorHardware} from './recta-handle.js';
 const DEFAULT_SWITCH_HEIGHT=.112;
 function defaultSwitchBottom(room){const doorTop=room.height-.505-.058,handleY=doorTop-.923;return handleY+.1-DEFAULT_SWITCH_HEIGHT/2;}
 export function defaultRoomFeatures(room){return {
@@ -58,7 +59,7 @@ export function createRoomFeatureViews(room,features){
   function box(name,size,position,material){const mesh=new THREE.Mesh(new THREE.BoxGeometry(...size),material);mesh.name=name;mesh.position.set(...position);group.add(mesh);return mesh;}
   const item={group,dispose(){group.traverse(o=>o.geometry?.dispose());materials.forEach(m=>m.dispose());}};result.push(item);return {group,mat,box};
  }
- const d=features.door,D=create('door'),cashmere=D.mat(0xd2c9bd),trim=D.mat(0xd8d0c5),glass=D.mat(0xe9e7e1,{transparent:true,opacity:.82,roughness:.3}),black=D.mat(0x171b1d,{metalness:.25,roughness:.38}),steel=D.mat(0xadb8b9,{metalness:.75,roughness:.25});
+ const d=features.door,D=create('door'),cashmere=D.mat(0xd2c9bd),trim=D.mat(0xd8d0c5),glass=D.mat(0xe9e7e1,{transparent:true,opacity:.82,roughness:.3}),black=D.mat(0x151515,{metalness:.08,roughness:.82}),lockOpening=D.mat(0x030303,{roughness:1}),steel=D.mat(0xadb8b9,{metalness:.75,roughness:.25});
  const doorLeft=d.center-d.width/2,doorRight=d.center+d.width/2,openingWidth=d.width-d.jambLeft-d.jambRight;
  const leafWidth=Math.min(.844,openingWidth+.023),leafHeight=Math.min(2.03,d.height-d.lintel),leafBottom=d.height-d.lintel-leafHeight,leafFront=room.length-.038,glassWidth=Math.min(.58,leafWidth-.20),glassHeight=.035;
  const leafShape=new THREE.Shape();leafShape.moveTo(-leafWidth/2,0);leafShape.lineTo(leafWidth/2,0);leafShape.lineTo(leafWidth/2,leafHeight);leafShape.lineTo(-leafWidth/2,leafHeight);leafShape.closePath();
@@ -77,12 +78,8 @@ export function createRoomFeatureViews(room,features){
  D.box('door-lintel',[d.width,d.lintel,d.depth],[d.center,d.height-d.lintel/2,room.length-d.depth/2],trim);
  // Looking at the back wall from inside the room, +X is screen-left.
  const handleX=d.center+leafWidth/2-.065,handleY=leafBottom+leafHeight-.923;
- D.box('door-handle-plate',[.044,.057,.008],[handleX,handleY,leafFront-.007],black);
- D.box('door-handle',[.125,.014,.014],[handleX-.055,handleY,leafFront-.025],black);
- D.box('door-lock-plate',[.044,.05,.008],[handleX,handleY-.072,leafFront-.007],black);
- D.box('door-handle-plate-outside',[.044,.057,.008],[handleX,handleY,room.length+.007],black);
- D.box('door-handle-outside',[.125,.014,.014],[handleX-.055,handleY,room.length+.025],black);
- D.box('door-lock-plate-outside',[.044,.05,.008],[handleX,handleY-.072,room.length+.007],black);
+ addRectaDoorHardware(D.group,black,lockOpening,{x:handleX,y:handleY,doorFace:leafFront,outward:-1});
+ addRectaDoorHardware(D.group,black,lockOpening,{x:handleX,y:handleY,doorFace:room.length,outward:1});
  for(const fromTop of [.252,1.042,1.774]){
   const y=leafBottom+leafHeight-fromTop,x=d.center-leafWidth/2-.002;
   D.box('door-hinge',[.016,.052,.02],[x,y,room.length-.023],steel);
