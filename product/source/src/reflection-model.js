@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import {MM27_DRIVERS} from './monitor-model.js';
 export const REFLECTION_KEYS=MM27_DRIVERS.flatMap(d=>['L','R'].map(channel=>channel+':'+d.id));
-export function defaultReflectionSettings(){return {visible:true,paths:false,ears:'both',selected:['L:tweeter','R:tweeter']};}
+export function defaultReflectionSettings(){return {visible:true,paths:false,ears:'both',selected:[...REFLECTION_KEYS]};}
 export function normalizeReflectionSettings(input){if(input===undefined)return defaultReflectionSettings();if(!input||typeof input.visible!=='boolean'||typeof input.paths!=='boolean'||!['both','left','right'].includes(input.ears)||!Array.isArray(input.selected)||input.selected.some(key=>!REFLECTION_KEYS.includes(key))||new Set(input.selected).size!==input.selected.length)throw new Error('Nieprawidłowe ustawienia pierwszych odbić.');return {...input,selected:[...input.selected]};}
 export function roomReflectionSurfaces(room){return [
  {id:'wall-left',axis:'x',plane:0,normal:new THREE.Vector3(1,0,0)},

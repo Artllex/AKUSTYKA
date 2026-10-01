@@ -54,7 +54,26 @@ button:disabled{opacity:.4;cursor:default}
 
 #axis-mode-buttons{display:flex;gap:6px;margin-bottom:0}#axis-mode-buttons button{flex:1;min-width:0;padding:8px 6px;font:inherit;font-size:12px;border:1px solid #40525e;border-radius:6px;background:#1d2a34;color:#e7eef3}#axis-mode-buttons button.active{border-color:#74dcc2;background:#74dcc21a;color:#74dcc2}
 
+/* Shared numeric field: the rotation control is the visual reference. */
+.numeric-field,#axis-rotation-row>div.numeric-field,#axis-value-row>div.numeric-field{display:flex;align-items:center;width:100%;height:40px;min-width:0;margin-top:8px;padding:0;border:1px solid #40525e;border-radius:6px;background:#1d2a34;overflow:hidden;color:#e7eef3;font-size:14px}
+.numeric-field:focus-within{border-color:#74dcc2}
+.numeric-field>.numeric-field-value{display:flex;align-items:center;flex:1;min-width:0;padding-left:9px;gap:2px}
+.numeric-field .numeric-field-value>input,.numeric-field #axis-distance,.numeric-field #axis-rotation{field-sizing:content;width:auto;min-width:2ch;max-width:calc(100% - 18px);height:38px;margin:0;padding:9px 0;border:0;border-radius:0;background:transparent;color:#e7eef3;font:inherit;font-size:14px;outline:none;box-shadow:none}
+.numeric-field input[type=number]{appearance:textfield;-moz-appearance:textfield}
+.numeric-field input[type=number]::-webkit-inner-spin-button,.numeric-field input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.numeric-field .numeric-field-unit{flex:none;padding:0;color:#e7eef3;font:inherit;white-space:nowrap}
+.numeric-field>button,.numeric-field>button.numeric-field-step,#axis-rotation-row .numeric-field>button{height:100%;flex:0 0 28px;margin:0;padding:0;border:0;border-radius:0;background:transparent;color:#b6c6d1;font:inherit;font-size:18px}
+.numeric-field>button:hover,#axis-rotation-row .numeric-field>button:hover{background:#ffffff0a;color:#e7eef3}
+
 #edge-insert{position:absolute;z-index:10;width:225px;padding:10px;background:#101b24f2;border:1px solid #74dcc2;border-radius:8px;box-shadow:0 5px 20px #0006}#edge-insert label{margin:0 0 6px;font-size:11px}#edge-insert .edge-insert-row{display:flex;gap:5px}#edge-insert input{width:118px;min-width:0;padding:7px 8px;background:#1d2a34;border:1px solid #40525e;border-radius:5px;color:#e7eef3;font:inherit;font-size:12px}#edge-insert button{flex:1;padding:6px;font-size:11px}#edge-insert small{font-size:9px;line-height:1.4;color:#91a8b4;margin-top:6px}#edge-insert input:invalid{border-color:#ef8181}
+
+#distance-form label div.numeric-field,#axis-rotation-row>div.numeric-field,#axis-value-row>div.numeric-field,#edge-insert .numeric-field,.edit-axis-fields .numeric-field{height:40px;padding:0}
+#distance-form .numeric-field #distance-input,#edge-insert .numeric-field .numeric-field-value>input,.edit-axis-fields .numeric-field .numeric-field-value>input{field-sizing:content;width:auto;min-width:2ch;max-width:calc(100% - 18px);height:38px;margin:0;padding:9px 0!important;border:0;background:transparent;color:#e7eef3;font:inherit!important;font-size:14px!important}
+#distance-form .numeric-field>#distance-minus,#distance-form .numeric-field>#distance-plus{height:100%;min-height:0;flex:0 0 28px;padding:0;background:transparent;color:#b6c6d1;font-size:18px}
+#distance-form .numeric-field>#distance-minus:hover,#distance-form .numeric-field>#distance-plus:hover{background:#ffffff0a;color:#e7eef3}
+#distance-form .numeric-field .numeric-field-unit{padding:0;font-size:14px}
+#edge-insert .numeric-field{flex:1;min-width:0;margin:0}#edge-insert .numeric-field>button.numeric-field-step{flex:0 0 24px;font-size:18px}#edge-insert .edge-insert-row>button{flex:0 0 auto}
+#axis-value-row>div.numeric-field:focus-within,#axis-rotation-row>div.numeric-field:focus-within,#distance-form label div.numeric-field:focus-within{border-color:#74dcc2}
 
 #monitor-side-distance{margin-top:18px;padding-bottom:18px;border-bottom:1px solid #2b3944}
 #monitor-side-distance label{margin-bottom:10px}

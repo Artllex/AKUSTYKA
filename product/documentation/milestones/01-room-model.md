@@ -628,3 +628,7 @@ Przybliżanie i przesuwanie znów korzystają ze standardowego sterowania OrbitC
 ## Skróty myszy w widoku — 0.73.0
 
 Alt + klik zaznacza powierzchnię pokoju (ścianę, podłogę lub sufit), także gdy przed nią stoi wyposażenie. Zwykłe kliknięcie powierzchni nie wybiera jej; nadal wybiera wyposażenie, krawędzie i wierzchołki. Ctrl + przeciągnięcie przesuwa kamerę, a Ctrl + klik drugiego obiektu lub powierzchni wykonuje pomiar odległości. Shift + przeciągnięcie znów obraca kamerę. Ctrl + klik uchwytu nadal dodaje go do zaznaczenia geometrii.
+
+## Wszystkie odbicia i wspólne pola liczbowe — 0.74.0
+
+Nowy pokój domyślnie pokazuje pierwsze odbicia wszystkich przetworników obu monitorów. Wybór „Tweetery” nadal pozwala ograniczyć widok. Pola liczbowe w panelach i nakładkach używają wspólnej kontrolki z przyciskami zmniejszania i zwiększania po bokach oraz jednostką bezpośrednio przy wartości; dotyczy to także przesunięcia X. Zachowano istniejące wartości w zapisanych dokumentach.

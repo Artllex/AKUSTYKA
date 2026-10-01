@@ -1,4 +1,5 @@
 import {setupFieldHistory} from './field-history.js';
+import {setupNumericFields} from './numeric-field.js';
 import {edgeOnly} from './selection-policy.js';
 import {createMeshRoom} from './mesh-view.js';
 import {createBaseboards} from './baseboards.js';
@@ -288,7 +289,7 @@ $('toggle-surface').hidden=true;
 
 new ResizeObserver(resize).observe(host);
 
-rebuild();fieldHistory=setupFieldHistory({history,read:()=>doc,editor:viewportEditor,context:()=>({object:selectedObjectId,monitor:$('monitor-select').value})});renderer.setAnimationLoop(()=>{controls.update();updateProjectionVisibility();if(!projection)view.updateVisibility(camera,$('cutaway').checked);if(reflectionView)for(const o of reflectionView.group.children)o.visible=!projection||(o.userData.surface===projection.surfaceName&&o.name!=='reflection-path');viewportEditor?.render();orientation.update(camera);renderer.render(scene,camera);});
+rebuild();fieldHistory=setupFieldHistory({history,read:()=>doc,editor:viewportEditor,context:()=>({object:selectedObjectId,monitor:$('monitor-select').value})});setupNumericFields();renderer.setAnimationLoop(()=>{controls.update();updateProjectionVisibility();if(!projection)view.updateVisibility(camera,$('cutaway').checked);if(reflectionView)for(const o of reflectionView.group.children)o.visible=!projection||(o.userData.surface===projection.surfaceName&&o.name!=='reflection-path');viewportEditor?.render();orientation.update(camera);renderer.render(scene,camera);});
 
 
 
