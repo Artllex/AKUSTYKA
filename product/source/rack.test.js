@@ -14,7 +14,20 @@ test('15U rack stands on the floor inside the rear right corner and keeps its mo
  assert.ok(bounds.min.z>0&&bounds.max.z<doc.room.length);
  assert.ok(Math.abs(bounds.min.y)<1e-8);
  assert.ok(Math.abs(bounds.max.y-RACK_15U.height)<1e-8);
+ assert.ok(Math.abs(bounds.max.x-bounds.min.x-RACK_15U.width)<1e-6);
+ assert.ok(Math.abs(bounds.max.z-bounds.min.z-RACK_15U.depth)<1e-6);
  assert.equal(view.group.getObjectsByProperty('name','rack-mount-hole').length,90);
+ assert.equal(view.group.getObjectsByProperty('name','rubber-foot').length,4);
+ assert.equal(view.group.getObjectsByProperty('name','tapered-foot-side').length,2);
+ const rail=view.group.getObjectByName('mounting-rail'),positions=rail.geometry.attributes.position;
+ let lower=0,upper=0,lowerCount=0,upperCount=0;
+ for(let i=0;i<positions.count;i++){
+  if(positions.getY(i)<0){lower+=positions.getZ(i);lowerCount++;}
+  else{upper+=positions.getZ(i);upperCount++;}
+ }
+ const tilt=Math.atan2(upper/upperCount-lower/lowerCount,RACK_15U.height-0.060)*180/Math.PI;
+ assert.ok(Math.abs(tilt-5)<0.01);
+ assert.equal(rail.geometry.parameters.width,0.026);
  view.dispose();
 });
 

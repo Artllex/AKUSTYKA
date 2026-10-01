@@ -572,3 +572,7 @@ Panel monitorów pozwala podać poziomą odległość między środkiem tweetera
 ## Stojak rack w tylnym rogu — 0.58.0
 
 Nowy pokój zawiera otwarty, dwusłupkowy stojak RIVECO 19″ 15U w tylnym prawym rogu, poza światłem drzwi. Szerokość modelu wynosi około 50 cm, głębokość około 30 cm, a wysokość około 71 cm; rozstaw jednostek montażowych odpowiada 15 × 44,45 mm. Wymiary zewnętrzne, których nie potwierdza dostępny opis wariantu, są przybliżeniem na podstawie zdjęcia. Stojak można zaznaczać i przemieszczać narzędziami obiektów. W starszym dokumencie można go dodać z panelu Obiekt; istniejące obiekty pozostają bez zmian. Domyślnie ustawiony stojak podąża za tylnym prawym rogiem po zmianie wymiarów pokoju.
+
+## Korekta stojaka RIVECO JAZZ 15U — 0.59.0
+
+Zgodnie z dostarczonym zdjęciem wymiarowym stojak ma 73 cm wysokości, 50 cm szerokości i 30 cm głębokości. Pionowe szyny są pochylone o 5° ku tyłowi. Mają wąskie, zagięte profile zamiast masywnych słupków; dolna belka jest wyższa od górnej. Podstawa składa się z dwóch cienkich stóp biegnących w głąb stojaka, ze skośnymi bocznymi ściankami i czterema gumowymi podkładkami. Wymiary zewnętrzne są potwierdzone przez użytkownika; szerokości profili i grubość blachy pozostają przybliżeniem wizualnym.

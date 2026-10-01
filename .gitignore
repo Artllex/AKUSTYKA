@@ -4,7 +4,6 @@
 /management/
 /project-control.yaml
 /desktop.ini
-/START.cmd
 # Generated Windows builds and local runtime data
 /product/builds/
 /product/environment/

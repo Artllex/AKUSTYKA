@@ -1,6 +1,6 @@
-// RIVECO open, two-post 19-inch / 15U rack. The listing confirms the rack
-// standard, while overall depth and frame allowances are visual estimates.
-export const RACK_15U={width:0.50,depth:0.30,height:0.71,mountingHeight:15*0.04445};
+// RIVECO JAZZ 15U: external dimensions from the supplied dimension drawing.
+// The narrow steel profiles and foot shapes follow the supplied product photo.
+export const RACK_15U=Object.freeze({width:0.50,depth:0.30,height:0.73,leanDegrees:5,mountingHeight:15*0.04445});
 
 export function createRackRecord(room){
  return {id:'rack-15u',type:'studio-rack',model:'riveco-open-15u',position:{x:room.width-0.03-RACK_15U.width/2,y:0,z:room.length-0.03-RACK_15U.depth/2},yaw:0};
