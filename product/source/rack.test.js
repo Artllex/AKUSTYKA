@@ -19,6 +19,9 @@ test('15U rack stands on the floor inside the rear right corner and keeps its mo
  assert.equal(view.group.getObjectsByProperty('name','rack-mount-hole').length,90);
  assert.equal(view.group.getObjectsByProperty('name','rubber-foot').length,4);
  assert.equal(view.group.getObjectsByProperty('name','tapered-foot-side').length,2);
+ const foot=view.group.getObjectByName('tapered-foot-side'),footPositions=foot.geometry.attributes.position;
+ const topAt=z=>{let top=-Infinity;for(let i=0;i<footPositions.count;i++)if(Math.abs(footPositions.getZ(i)-z)<1e-6)top=Math.max(top,footPositions.getY(i));return top;};
+ assert.ok(topAt(-RACK_15U.depth/2)>topAt(RACK_15U.depth/2),'foot side must narrow toward the rear');
  const rail=view.group.getObjectByName('mounting-rail'),positions=rail.geometry.attributes.position;
  let lower=0,upper=0,lowerCount=0,upperCount=0;
  for(let i=0;i<positions.count;i++){

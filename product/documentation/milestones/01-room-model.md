@@ -576,3 +576,7 @@ Nowy pokój zawiera otwarty, dwusłupkowy stojak RIVECO 19″ 15U w tylnym prawy
 ## Korekta stojaka RIVECO JAZZ 15U — 0.59.0
 
 Zgodnie z dostarczonym zdjęciem wymiarowym stojak ma 73 cm wysokości, 50 cm szerokości i 30 cm głębokości. Pionowe szyny są pochylone o 5° ku tyłowi. Mają wąskie, zagięte profile zamiast masywnych słupków; dolna belka jest wyższa od górnej. Podstawa składa się z dwóch cienkich stóp biegnących w głąb stojaka, ze skośnymi bocznymi ściankami i czterema gumowymi podkładkami. Wymiary zewnętrzne są potwierdzone przez użytkownika; szerokości profili i grubość blachy pozostają przybliżeniem wizualnym.
+
+## Kierunek zwężenia stopek i logo — 0.61.0
+
+Obie boczne stopki są najwyższe przy przednich szynach i zwężają się ku tyłowi stojaka. Na przedniej dolnej belce znajduje się białe oznaczenie RIVECO z symbolem, zwrócone ku wnętrzu pokoju.

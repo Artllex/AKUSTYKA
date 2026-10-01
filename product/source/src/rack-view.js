@@ -38,7 +38,7 @@ export function createRackView(record){
   // Folded side plates run the full depth; four low rubber pads touch floor.
   bar('foot-base',0.030,0.003,depth,sign*(width/2-0.015),0.0095,0,edge);
   const outline=new THREE.Shape();
-  for(const [index,[z,y]] of [[-depth/2,0.011],[-depth/2,0.052],[-0.105,0.052],[depth/2,0.078],[depth/2,0.011]].entries()){
+  for(const [index,[z,y]] of [[-depth/2,0.011],[-depth/2,0.078],[-0.105,0.057],[depth/2,0.016],[depth/2,0.011]].entries()){
    if(index===0)outline.moveTo(-z,y);else outline.lineTo(-z,y);
   }
   outline.closePath();
@@ -57,10 +57,13 @@ export function createRackView(record){
   screw.userData.collision=false;
  }
  if(typeof document!=='undefined'){
-  const canvas=document.createElement('canvas');canvas.width=256;canvas.height=64;
-  const ctx=canvas.getContext('2d');ctx.fillStyle='#d5d7d7';ctx.textAlign='center';ctx.font='bold 30px sans-serif';ctx.fillText('RIVECO',128,43);
-  const texture=new THREE.CanvasTexture(canvas),label=new THREE.Mesh(new THREE.PlaneGeometry(0.050,0.013),new THREE.MeshBasicMaterial({map:texture,transparent:true}));
-  label.name='brand';label.position.set(0,0.035,-depth/2+0.0002);label.userData.collision=false;group.add(label);geometries.push(label.geometry);
+  const canvas=document.createElement('canvas');canvas.width=512;canvas.height=128;
+  const ctx=canvas.getContext('2d');ctx.fillStyle='#ffffff';ctx.strokeStyle='#ffffff';ctx.lineWidth=8;
+  ctx.beginPath();ctx.arc(104,64,37,0.2*Math.PI,1.85*Math.PI);ctx.stroke();
+  ctx.textAlign='center';ctx.font='bold 55px sans-serif';ctx.fillText('R',104,83);
+  ctx.textAlign='left';ctx.font='bold 57px sans-serif';ctx.fillText('RIVECO',158,84);
+  const texture=new THREE.CanvasTexture(canvas),label=new THREE.Mesh(new THREE.PlaneGeometry(0.065,0.016),new THREE.MeshBasicMaterial({map:texture,transparent:true,side:THREE.DoubleSide}));
+  label.name='brand';label.position.set(0,0.036,-depth/2+0.0001);label.rotation.y=Math.PI;label.userData.collision=false;group.add(label);geometries.push(label.geometry);
  }
  group.position.set(record.position.x,record.position.y,record.position.z);group.rotation.y=record.yaw;group.updateMatrixWorld(true);
  return {group,dispose(){const textures=new Set(),materials=new Set();group.traverse(part=>{if(part.material){materials.add(part.material);if(part.material.map)textures.add(part.material.map);}});for(const geometry of geometries)geometry.dispose();for(const texture of textures)texture.dispose();for(const material of materials)material.dispose();}};

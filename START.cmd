@@ -1,2 +1,2 @@
 @echo off
-start "" "%~dp0product\builds\windows-0.60.0\AKUSTYKA-win32-x64\AKUSTYKA.exe"
+start "" "%~dp0product\builds\windows-0.61.0\AKUSTYKA-win32-x64\AKUSTYKA.exe"
