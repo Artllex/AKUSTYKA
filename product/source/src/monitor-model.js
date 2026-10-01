@@ -1,3 +1,4 @@
+import {createListenerRecord,defaultEarOffsetZ} from './listener-model.js';
 // Barefoot MM27 Gen2, SI units. Published cabinet/overall dimensions are exact
 // to the manufacturer's millimeter rounding. Undimensioned driver offsets are
 // estimated from the orthographic drawing, not measured acoustic centers.
@@ -20,10 +21,16 @@ export function normalizeMonitorRecord(record){
  if(record.model!==MM27.model||typeof record.id!=='string'||!record.id||!['L','R'].includes(record.channel)||!record.position||![record.position.x,record.position.y,record.position.z,record.yaw].every(Number.isFinite)||record.position.y<0||Math.max(...Object.values(record.position).map(Math.abs))>100||Math.abs(record.yaw)>Math.PI*2)throw new Error('Nieprawidłowe ustawienie monitora studyjnego.');
  return {...record,type:'studio-monitor',centersVisible:record.centersVisible!==false,position:{x:record.position.x,y:record.position.y,z:record.position.z}};
 }
-export function createMonitorPair(room){
- const spacing=Math.min(1.2,room.width*0.48),z=Math.min(0.65,room.length*0.22),listenerZ=room.length*0.45;
+export function createMonitorPair(room,listener=createListenerRecord(room)){
+ const earZ=listener.position.z+defaultEarOffsetZ(listener),earHalfWidth=.083*listener.stature/1.68;
+ // The tweeters are the front vertices. Each rearward side passes through an ear;
+ // its intersection is the third vertex, just behind the head.
+ const halfSpacing=Math.min(.54,room.width*.22),yawAngle=Math.PI/6,tweeterFront=MM27_DRIVERS.find(d=>d.id==='tweeter').center[2];
+ const tweeterZ=earZ-Math.sqrt(3)*(halfSpacing-earHalfWidth);
  return ['L','R'].map((channel,i)=>{
-  const x=room.width/2+(i===0?-1:1)*spacing/2;
-  return normalizeMonitorRecord({id:'monitor-'+channel,type:'studio-monitor',model:MM27.model,channel,position:{x,y:0.9245,z},yaw:Math.atan2(room.width/2-x,listenerZ-z),centersVisible:true});
+  const side=i===0?-1:1,yaw=-side*yawAngle;
+  const x=listener.position.x+side*halfSpacing-tweeterFront*Math.sin(yaw);
+  const z=tweeterZ-tweeterFront*Math.cos(yaw);
+  return normalizeMonitorRecord({id:'monitor-'+channel,type:'studio-monitor',model:MM27.model,channel,position:{x,y:0.9245,z},yaw,centersVisible:true});
  });
 }

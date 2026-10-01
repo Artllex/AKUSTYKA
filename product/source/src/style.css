@@ -53,3 +53,10 @@ button:disabled{opacity:.4;cursor:default}
 #axis-distance{font-size:14px}
 
 #axis-mode-buttons{display:flex;gap:6px;margin-bottom:0}#axis-mode-buttons button{flex:1;min-width:0;padding:8px 6px;font:inherit;font-size:12px;border:1px solid #40525e;border-radius:6px;background:#1d2a34;color:#e7eef3}#axis-mode-buttons button.active{border-color:#74dcc2;background:#74dcc21a;color:#74dcc2}
+
+#edge-insert{position:absolute;z-index:10;width:225px;padding:10px;background:#101b24f2;border:1px solid #74dcc2;border-radius:8px;box-shadow:0 5px 20px #0006}#edge-insert label{margin:0 0 6px;font-size:11px}#edge-insert .edge-insert-row{display:flex;gap:5px}#edge-insert input{width:118px;min-width:0;padding:7px 8px;background:#1d2a34;border:1px solid #40525e;border-radius:5px;color:#e7eef3;font:inherit;font-size:12px}#edge-insert button{flex:1;padding:6px;font-size:11px}#edge-insert small{font-size:9px;line-height:1.4;color:#91a8b4;margin-top:6px}#edge-insert input:invalid{border-color:#ef8181}
+
+#monitor-side-distance{margin-top:18px;padding-bottom:18px;border-bottom:1px solid #2b3944}
+#monitor-side-distance label{margin-bottom:10px}
+#monitor-side-distance input{font-size:16px;padding:10px}
+#monitor-side-distance button{width:100%}

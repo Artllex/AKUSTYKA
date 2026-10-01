@@ -500,3 +500,75 @@ Bez Caps Lock rysowane są tylko zaznaczone punkty i krawędzie. Niewidoczne obs
 Ctrl+Z oraz Ctrl+Y/Ctrl+Shift+Z przywracają model i wartości pól, także aktywnego pola. Historia obejmuje również niezastosowane wartości formularzy wymiarów, cech i obiektów. Aktualna edycja jest dołączana do historii przed cofnięciem. Stan edytora osi obejmuje punkt początkowy przesunięcia, wybraną oś i wartość, więc cofnięcie nie pozostawia starej liczby ani nie zmienia interpretacji następnego wpisu.
 
 Migawki pól i stanu edytora są tymczasowe i nie trafiają do plików pokoju. Pola monitorów i obiektów przywraca się tylko w zgodnym kontekście wybranego obiektu. Otwarcie i utworzenie dokumentu resetuje historię pól.
+
+## Dodawanie punktu na krawędzi — 0.41.0
+
+Kliknij wierzchołek, a następnie przesuń kursor po jednej z przylegających krawędzi. Żółty punkt pokazuje pozycję nowego wierzchołka. W polu można wpisać odległość od wybranego wierzchołka w centymetrach (np. 25 cm) lub procent długości krawędzi (np. 50%). Enter, kliknięcie punktu albo przycisku Dodaj wstawia wierzchołek. Punkt zostaje automatycznie zaznaczony, więc można go przesuwać w 3D. Sąsiadujące powierzchnie korzystają z tego samego punktu i pozostają połączone. Punkt musi leżeć wewnątrz krawędzi, minimum 0,2 cm od jej końców. Esc lub kliknięcie pustego miejsca anuluje podgląd i zaznaczenie. Ctrl+Z cofa wstawienie; Ctrl+Y ponawia.
+
+Przy wskazanej krawędzi można od razu zacząć wpisywać liczbę bez klikania pola. Pierwszy znak przenosi fokus do pola i zastępuje wartość podglądu. Dodanie punktu w rzucie prostopadłym oraz Ctrl+Z pozostawiają ten rzut aktywny.
+
+## Korekta wnęki i schodek — 0.43.0
+
+Wnęka przy przedniej ścianie zaczyna się 55,3 cm od lewej ściany i kończy 88,6 cm przed prawą. Jej szerokość wynosi 103,8 cm. Całkowita głębokość, mierzona od płaszczyzny przedniej ściany do tylnej ścianki, wynosi 15,1 cm. Schodek o wysokości 10 cm zajmuje tylne 6,5 cm tej głębokości: jego przednia krawędź leży 8,6 cm za płaszczyzną ściany. Nie ma szyby ani ramy okna. Parametry schodka są dostępne w panelu „Drzwi i okno”. Nowe pokoje i starsze dokumenty bez edytowanego obrysu używają skorygowanych wymiarów; starsze pliki z własną siatką zachowują zapisany obrys.
+
+## Wysokość wnęki — 0.44.0
+
+Schodek w tylnej części wnęki ma 8 cm wysokości. Wnęka kończy się na wysokości 222,0 cm od podłogi: 38,5 cm poniżej sufitu o wysokości 260,5 cm. Jej górna pozioma powierzchnia i pas pełnej ściany nad otworem należą do geometrii pokoju. Domyślna siatka zachowuje je przy dzieleniu krawędzi, przesuwaniu wierzchołków oraz dodawaniu wnęk i skosów na innych krawędziach.
+
+## Grzejnik — 0.45.0
+
+Grzejnik na przedniej ścianie ma szerokość 60,3 cm, wysokość 60 cm i grubość 10 cm. Jego dolna krawędź jest 14,7 cm nad podłogą, prawa krawędź 14,4 cm od prawej ściany. Tylna płaszczyzna jest odsunięta o 3 cm od ściany, więc przednia wystaje 13 cm w głąb pokoju. Cztery uchwyty, rozmieszczone parami u góry i na dole, łączą grzejnik ze ścianą. Wymiary i odstęp od ściany można zmieniać w panelu „Drzwi i okno”.
+
+## Drzwi i włącznik — 0.46.0
+
+Na tylnej ścianie lewa zewnętrzna krawędź framugi leży 2,8 cm od lewej ściany, a prawa 150,6 cm od prawej ściany. Prawa krawędź skrzydła drzwi jest 156,7 cm od prawej ściany. Lewa część framugi ma 2,8 cm, prawa 6,1 cm; wynikają one z podanych odległości. Framuga wystaje 1,5 cm w stronę pokoju. Jej górna krawędź jest 50,5 cm od sufitu, a górna krawędź skrzydła 56,3 cm od sufitu, więc górna część framugi ma 5,8 cm.
+
+Kwadratowy włącznik światła zajmuje zakres 130,8–142,0 cm od lewej ściany. Jego środek znajduje się 150 cm nad podłogą. Włącznik jest osobnym obiektem, który można zaznaczyć i przesuwać niezależnie od drzwi.
+
+## Listwa podłogowa — 0.47.0
+
+Wzdłuż wewnętrznego obwodu podłogi biegnie listwa o wysokości 4 cm i grubości 1,5 cm. Obejmuje również wnękę okna i dopasowuje się do zmian obrysu podłogi, w tym skośnych krawędzi. Na tylnej ścianie jest przerwana na całej szerokości zewnętrznego obrysu drzwi i framugi. Listwa jest elementem wykończenia powiązanym z geometrią pokoju, a nie osobnym obiektem do przesuwania.
+
+## Korekta prawej framugi — 0.48.0
+
+Oba widoczne boki framugi mają po 2,8 cm szerokości. Pomiędzy prawą krawędzią skrzydła a prawym bokiem framugi znajduje się osobny fragment ściany o szerokości 3,3 cm. Dzięki temu zewnętrzna krawędź framugi pozostaje 150,6 cm od prawej ściany, a prawa krawędź skrzydła 156,7 cm od niej. Starsze dokumenty z domyślnym prawym bokiem framugi o szerokości 6,1 cm są korygowane przy otwarciu.
+
+## Prawidłowa grubość obu boków framugi — 0.49.0
+
+Grubość każdego bocznego elementu framugi wynosi 6,1 cm (156,7 cm − 150,6 cm). Odległość 2,8 cm oznacza wyłącznie odstęp od lewej ściany do zewnętrznej krawędzi framugi. Lewy bok zajmuje zakres 2,8–8,9 cm, prawy 91,0–97,1 cm od lewej ściany. Skrzydło zajmuje zakres 8,9–91,0 cm. Nie ma dodatkowego fragmentu ściany między skrzydłem a prawą framugą. Poprzedni opis i model z 0.48.0 były błędne; dokumenty z tym modelem są korygowane przy otwarciu.
+
+## Łączenia listew — 0.50.0
+
+Listwy zachowują przekrój 4 × 1,5 cm i tworzą wspólne, docięte narożniki. Sąsiednie odcinki używają tych samych punktów styku na zewnętrznej i wewnętrznej krawędzi. Nie powstają szczeliny na rogach wypukłych wnęki ani na skośnych krawędziach po edycji obrysu.
+
+## Skrzydło Voster Vinci 10 — 0.51.0
+
+Skrzydło drzwi odpowiada wariantowi Voster Vinci 10, prawe, w kolorze kaszmir. Ma katalogowe wymiary 84,4 × 203 × 3,8 cm, sześć poziomych pasów mlecznego szkła o szerokości 58 cm i wysokości 3,5 cm, trzy srebrne zawiasy po prawej oraz czarną klamkę i szyld zamka po lewej stronie patrząc od wnętrza pokoju. Skrzydło przylgowe zachodzi na zmierzone światło ościeżnicy po 1,15 cm z obu stron; jej położenie i obie szerokości 6,1 cm pozostają zgodne z pomiarami użytkownika. Nad podłogą pozostaje szczelina 1,2 cm, dzięki czemu górna krawędź skrzydła zachowuje zmierzoną wysokość.
+
+## Pierwsze odbicia i geometria wnęki — 0.52.0
+
+Wnęka okna, jej boczne ścianki, sufit i schodek są powierzchniami pokoju. Obliczanie pierwszych odbić korzysta z rzeczywistej, ograniczonej geometrii tych powierzchni, także po przejściu do edytowalnej siatki pokoju. Dawna płaszczyzna przedniej ściany nie generuje odbić w obszarze otworu. Osobna wizualizacja wnęki jest ukryta, gdy te powierzchnie są częścią pokoju.
+
+## Lampa sufitowa Govee H60A6 — 0.53.0
+
+Na środku sufitu znajduje się okrągły plafon Govee Ceiling Light Pro H60A6 (H60A6301). Model ma średnicę 38 cm i wysokość 6 cm, jasny dyfuzor oraz subtelny pierścień. Pozostaje osobnym obiektem sceny, który można zaznaczyć.
+
+## Kierunek otwierania drzwi i wysokość włącznika — 0.54.0
+
+Od strony pokoju klamka znajduje się po lewej, a trzy zawiasy po prawej. Skrzydło jest osadzone po stronie wnętrza pokoju.
+
+## Korekta wysokości włącznika — 0.55.0
+
+Klamka pozostaje w oryginalnym położeniu modelu, 111,9 cm nad podłogą. Środek włącznika obniżono do 121,9 cm, czyli 10 cm nad klamką. Dolna krawędź kwadratowej płytki jest na wysokości 116,3 cm. Starszy dokument z niezmienionym domyślnym włącznikiem na 150 cm jest przenoszony na nową wysokość; ręcznie zmienione położenie zostaje zachowane.
+
+## Pozycja odsłuchowa i trójkąt monitorów — 0.56.0
+
+W domyślnej pozie z lekkim pochyleniem oboje uszu manekina znajduje się na 34% długości pokoju, licząc od przedniej ściany. Środki tweeterów są dwoma przednimi wierzchołkami trójkąta równobocznego o boku 108 cm. Trzeci wierzchołek wypada 14,4 cm za linią uszu; obie boczne krawędzie przechodzą przez odpowiednie uszy. Monitory są zwrócone wzdłuż tych krawędzi. Układ jest przeliczany dla nowego pokoju i przy zmianie jego wymiarów, jeżeli pozycje odsłuchowe nie zostały ręcznie zmienione. Starsze dokumenty z nietkniętym pierwotnym ustawieniem są przenoszone na nowy układ.
+
+## Odległość monitorów wzdłuż boków trójkąta — 0.57.0
+
+Panel monitorów pozwala podać poziomą odległość między środkiem tweetera a odpowiednim uchem w centymetrach. Zmiana przesuwa monitor po linii łączącej te punkty, zachowując jego wysokość i obrót. Przy spiętej odległości oba monitory otrzymują tę samą wartość; po rozpięciu można ustawiać je osobno.
+
+## Stojak rack w tylnym rogu — 0.58.0
+
+Nowy pokój zawiera otwarty, dwusłupkowy stojak RIVECO 19″ 15U w tylnym prawym rogu, poza światłem drzwi. Szerokość modelu wynosi około 50 cm, głębokość około 30 cm, a wysokość około 71 cm; rozstaw jednostek montażowych odpowiada 15 × 44,45 mm. Wymiary zewnętrzne, których nie potwierdza dostępny opis wariantu, są przybliżeniem na podstawie zdjęcia. Stojak można zaznaczać i przemieszczać narzędziami obiektów. W starszym dokumencie można go dodać z panelu Obiekt; istniejące obiekty pozostają bez zmian. Domyślnie ustawiony stojak podąża za tylnym prawym rogiem po zmianie wymiarów pokoju.

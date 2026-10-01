@@ -2,12 +2,22 @@ import {normalizeRoomMesh} from './mesh-model.js';
 import {normalizeFootprint} from './surface-model.js';
 import {normalizeTransforms} from './object-transform.js';
 import {normalizeRoomFeatures} from './room-features.js';
-import {normalizeListenerRecord} from './listener-model.js';
-import {normalizeMonitorRecord} from './monitor-model.js';
+import {normalizeListenerRecord,createListenerRecord,DEFAULT_LISTENER_SETTINGS} from './listener-model.js';
+import {normalizeMonitorRecord,createMonitorPair,MM27} from './monitor-model.js';
 import {normalizeMonitorLinks} from './monitor-links.js';
 import {normalizeReflectionSettings} from './reflection-model.js';
 import {DEFAULT_ROOM,roomFromCentimeters} from './model.js';
-export function parseRoomDocument(text){const data=JSON.parse(text);if(data.schemaVersion!==1||data.units!=='m'||!Array.isArray(data.objects))throw new Error('Nieobsługiwany format dokumentu AKUSTYKA.');for(const object of data.objects){if(!object||typeof object!=='object'||typeof object.type!=='string')throw new Error('Nieprawidłowy obiekt sceny.');if(object.type==='seated-listener')Object.assign(object,normalizeListenerRecord(object));if(object.type==='studio-monitor')Object.assign(object,normalizeMonitorRecord(object));}const {width,length,height}=data.room??{};const room=roomFromCentimeters(width*100,length*100,height*100);if(data.showTweeterRays!==undefined&&typeof data.showTweeterRays!=='boolean')throw new Error('Nieprawidłowa widoczność promieni.');return {...data,room,roomShape:normalizeFootprint(data.roomShape),roomMesh:normalizeRoomMesh(data.roomMesh),transforms:normalizeTransforms(data.transforms),roomFeatures:normalizeRoomFeatures(data.roomFeatures,room),showTweeterRays:data.showTweeterRays??true,reflections:normalizeReflectionSettings(data.reflections),monitorLinks:normalizeMonitorLinks(data.monitorLinks,data.objects,room)};}
+function migrateLegacyListeningLayout(data,room){
+ const listener=data.objects.find(o=>o.type==='seated-listener'),pair=['L','R'].map(channel=>data.objects.find(o=>o.type==='studio-monitor'&&o.channel===channel));
+ const close=(a,b)=>Math.abs(a-b)<1e-8;
+ if(!listener||pair.some(o=>!o)||['listener-1','monitor-L','monitor-R'].some(id=>data.transforms?.[id])||!Object.entries(DEFAULT_LISTENER_SETTINGS).every(([key,value])=>close(listener[key],value)))return;
+ if(!close(listener.position.x,room.width/2)||!close(listener.position.z,room.length*.45)||!close(listener.yaw,0))return;
+ const spacing=Math.min(1.2,room.width*.48),z=Math.min(.65,room.length*.22);
+ if(!pair.every((monitor,i)=>{const x=room.width/2+(i===0?-1:1)*spacing/2;return monitor.model===MM27.model&&close(monitor.position.x,x)&&close(monitor.position.y,.9245)&&close(monitor.position.z,z)&&close(monitor.yaw,Math.atan2(room.width/2-x,room.length*.45-z));}))return;
+ const nextListener=createListenerRecord(room),nextPair=createMonitorPair(room,nextListener);listener.position=nextListener.position;
+ for(let i=0;i<2;i++){pair[i].position=nextPair[i].position;pair[i].yaw=nextPair[i].yaw;}
+}
+export function parseRoomDocument(text){const data=JSON.parse(text);if(data.schemaVersion!==1||data.units!=='m'||!Array.isArray(data.objects))throw new Error('Nieobsługiwany format dokumentu AKUSTYKA.');for(const object of data.objects){if(!object||typeof object!=='object'||typeof object.type!=='string')throw new Error('Nieprawidłowy obiekt sceny.');if(object.type==='seated-listener')Object.assign(object,normalizeListenerRecord(object));if(object.type==='studio-monitor')Object.assign(object,normalizeMonitorRecord(object));}const {width,length,height}=data.room??{};const room=roomFromCentimeters(width*100,length*100,height*100);if(data.showTweeterRays!==undefined&&typeof data.showTweeterRays!=='boolean')throw new Error('Nieprawidłowa widoczność promieni.');migrateLegacyListeningLayout(data,room);return {...data,room,roomShape:normalizeFootprint(data.roomShape),roomMesh:normalizeRoomMesh(data.roomMesh),transforms:normalizeTransforms(data.transforms),roomFeatures:normalizeRoomFeatures(data.roomFeatures,room,{migrateDefaultNiche:!data.roomMesh&&!data.roomShape}),showTweeterRays:data.showTweeterRays??true,reflections:normalizeReflectionSettings(data.reflections),monitorLinks:normalizeMonitorLinks(data.monitorLinks,data.objects,room)};}
 export function createRoomHistory(initial=DEFAULT_ROOM){let entries=[{...initial}],index=0;return {push(room){if(JSON.stringify(room)===JSON.stringify(entries[index]))return;entries=entries.slice(0,index+1);entries.push({...room});index++;},undo(){if(index>0)index--;return {...entries[index]};},redo(){if(index<entries.length-1)index++;return {...entries[index]};},reset(room){entries=[{...room}];index=0;},get canUndo(){return index>0;},get canRedo(){return index<entries.length-1;}};}
 export function setupBench(actions){
  const $=id=>document.getElementById(id);

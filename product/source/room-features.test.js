@@ -6,6 +6,13 @@ import {parseRoomDocument} from './src/bench.js';
 import {createRoom} from './src/room-view.js';
 import {defaultRoomFeatures,normalizeRoomFeatures,createRoomFeatureViews} from './src/room-features.js';
 import {surfaceProjection} from './src/projection.js';
+test('Govee H60A6 is centered on the ceiling at 38 cm diameter and 6 cm height',()=>{
+ const views=createRoomFeatureViews(DEFAULT_ROOM,defaultRoomFeatures(DEFAULT_ROOM)),lamp=views.find(v=>v.group.name==='ceiling-light');assert.ok(lamp);
+ const bounds=new THREE.Box3().setFromObject(lamp.group),center=bounds.getCenter(new THREE.Vector3()),size=bounds.getSize(new THREE.Vector3());
+ assert.ok(Math.abs(center.x-DEFAULT_ROOM.width/2)<1e-8);assert.ok(Math.abs(center.z-DEFAULT_ROOM.length/2)<1e-8);
+ assert.ok(Math.abs(size.x-.38)<1e-8);assert.ok(Math.abs(size.z-.38)<1e-8);assert.ok(Math.abs(bounds.max.y-DEFAULT_ROOM.height)<1e-8);assert.ok(Math.abs(size.y-.06)<1e-8);
+ for(const view of views)view.dispose();
+});
 test('window and door are true wall openings and retain projection dimensions',()=>{
  const features=defaultRoomFeatures(DEFAULT_ROOM),room=createRoom(DEFAULT_ROOM,features);room.group.updateMatrixWorld(true);
  for(const [name,opening,z,direction] of [['wall-front',features.window,0,-1],['wall-back',features.door,DEFAULT_ROOM.length,1]]){
@@ -16,15 +23,23 @@ test('window and door are true wall openings and retain projection dimensions',(
  }
  room.dispose();
 });
-test('floor recess has a back and sides with no window or sill',()=>{
+test('niche has an 8 cm rear step, a soffit at 222 cm, and no window glass',()=>{
  const features=defaultRoomFeatures(DEFAULT_ROOM),views=createRoomFeatureViews(DEFAULT_ROOM,features),recess=views.find(v=>v.group.name==='window').group;
- assert.ok(recess.getObjectByName('recess-back'));assert.equal(recess.getObjectByName('window-sill'),undefined);assert.equal(recess.getObjectByName('window-upper-glass'),undefined);assert.equal(features.window.bottom,0);assert.equal(features.window.depth,0.086);
+ assert.ok(recess.getObjectByName('recess-back'));assert.equal(recess.getObjectByName('window-sill'),undefined);assert.equal(recess.getObjectByName('window-upper-glass'),undefined);assert.equal(features.window.bottom,0);assert.equal(features.window.depth,0.151);assert.equal(features.window.stepDepth,0.065);assert.equal(features.window.stepHeight,0.08);assert.ok(Math.abs(features.window.height-2.22)<1e-9);assert.ok(recess.getObjectByName('niche-roof'));const step=recess.getObjectByName('niche-step');assert.ok(step);const box=new THREE.Box3().setFromObject(step);assert.ok(Math.abs(box.min.z+0.151)<1e-8);assert.ok(Math.abs(box.max.z+0.086)<1e-8);assert.ok(Math.abs(box.max.y-0.08)<1e-8);
  for(const v of views)v.dispose();
+});
+test('front wall closes the niche above 222 cm while the lower opening stays clear',()=>{
+ const features=defaultRoomFeatures(DEFAULT_ROOM),room=createRoom(DEFAULT_ROOM,features),wall=room.surfaces.find(s=>s.name==='wall-front');room.group.updateMatrixWorld(true);
+ const hitAt=y=>new THREE.Raycaster(new THREE.Vector3(features.window.center,y,1),new THREE.Vector3(0,0,-1)).intersectObject(wall).length;
+ assert.equal(hitAt(2),0);assert.ok(hitAt(2.4)>0);
+ const ceiling=new THREE.Box3().setFromObject(room.surfaces.find(s=>s.name==='ceiling'));
+ assert.ok(Math.abs(ceiling.min.z)<1e-6);
+ room.dispose();
 });
 test('room features save and load, migrate legacy and reject missing or out-of-bounds values',()=>{
  const doc=createDocument();assert.deepEqual(parseRoomDocument(JSON.stringify(doc)).roomFeatures,doc.roomFeatures);
  delete doc.roomFeatures;assert.deepEqual(parseRoomDocument(JSON.stringify(doc)).roomFeatures,defaultRoomFeatures(doc.room));
- const invalid=defaultRoomFeatures(DEFAULT_ROOM);invalid.window.width=5;assert.throws(()=>normalizeRoomFeatures(invalid,DEFAULT_ROOM));delete invalid.window.width;assert.throws(()=>normalizeRoomFeatures(invalid,DEFAULT_ROOM));
+ const invalid=defaultRoomFeatures(DEFAULT_ROOM);invalid.window.width=5;assert.throws(()=>normalizeRoomFeatures(invalid,DEFAULT_ROOM));delete invalid.window.width;assert.throws(()=>normalizeRoomFeatures(invalid,DEFAULT_ROOM));const badStep=defaultRoomFeatures(DEFAULT_ROOM);badStep.window.stepDepth=.2;assert.throws(()=>normalizeRoomFeatures(badStep,DEFAULT_ROOM));
 });
 import {distanceBetweenObjects} from './src/object-distance.js';
 test('window exact left and right wall clearances are 55.3 and 88.6 cm',()=>{
@@ -34,8 +49,58 @@ test('window exact left and right wall clearances are 55.3 and 88.6 cm',()=>{
  assert.ok(Math.abs(distanceBetweenObjects(window,room.surfaces.find(s=>s.name==='wall-right')).distance-0.886)<1e-6);
  for(const v of views)v.dispose();room.dispose();
 });
-test('niche extends floor shape and outline by exactly 8.6 cm only within its width',()=>{
+test('radiator dimensions, wall projection, right clearance and mounting brackets',()=>{
+ const f=defaultRoomFeatures(DEFAULT_ROOM),r=f.radiator,views=createRoomFeatureViews(DEFAULT_ROOM,f),radiator=views.find(v=>v.group.name==='radiator').group;
+ assert.ok(Math.abs(r.width-.603)<1e-9);assert.equal(r.height,.60);assert.equal(r.bottom,.147);assert.equal(r.depth,.10);assert.equal(r.standoff,.03);
+ assert.ok(Math.abs(DEFAULT_ROOM.width-(r.center+r.width/2)-.144)<1e-9);
+ const body=new THREE.Box3().setFromObject(radiator.getObjectByName('radiator-body'));
+ for(const [actual,expected] of [[body.min.x,r.center-r.width/2],[body.max.x,r.center+r.width/2],[body.min.y,.147],[body.max.y,.747],[body.min.z,.03],[body.max.z,.125]])assert.ok(Math.abs(actual-expected)<1e-6);
+ const envelope=new THREE.Box3().setFromObject(radiator);assert.ok(Math.abs(envelope.max.z-.13)<1e-6);
+ assert.equal(radiator.children.filter(x=>x.name==='radiator-wall-plate').length,4);
+ assert.equal(radiator.children.filter(x=>x.name==='radiator-bracket').length,4);
+ for(const v of views)v.dispose();
+});
+test('door frame, leaf and light switch match measured back-wall positions',()=>{
+ const f=defaultRoomFeatures(DEFAULT_ROOM),views=createRoomFeatureViews(DEFAULT_ROOM,f),door=views.find(v=>v.group.name==='door').group,lightSwitch=views.find(v=>v.group.name==='switch').group;
+ const bounds=name=>new THREE.Box3().setFromObject(door.getObjectByName(name));
+ const left=bounds('door-jamb-left'),right=bounds('door-jamb-right'),lintel=bounds('door-lintel'),leaf=bounds('door-leaf'),plate=new THREE.Box3().setFromObject(lightSwitch.getObjectByName('switch-plate'));
+ for(const [actual,expected] of [[left.min.x,.028],[left.max.x,.089],[right.min.x,.910],[right.max.x,.971],[right.max.x-right.min.x,.061],[left.max.x-left.min.x,.061],[leaf.min.x,.0775],[leaf.max.x,.9215],[leaf.min.y,.012],[leaf.max.y,2.042],[leaf.min.z,DEFAULT_ROOM.length-.038],[DEFAULT_ROOM.width-right.max.x,1.506],[DEFAULT_ROOM.width-right.min.x,1.567],[lintel.max.y,DEFAULT_ROOM.height-.505],[left.min.z,DEFAULT_ROOM.length-.015],[plate.min.x,1.308],[plate.max.x,1.420],[plate.min.y,1.163],[plate.max.y,1.275]])assert.ok(Math.abs(actual-expected)<1e-6);
+ assert.equal(door.getObjectByName('door-reveal-right'),undefined);
+ assert.equal(door.children.filter(x=>x.name==='door-hinge').length,3);
+ assert.equal(door.children.filter(x=>x.name==='door-hinge-outside').length,3);
+ assert.equal(door.children.filter(x=>x.name==='door-glass-band').length,6);
+ assert.ok(door.getObjectByName('door-handle-outside'));
+ assert.ok(door.getObjectByName('door-handle').position.x>door.getObjectByName('door-jamb-right').position.x-.3);
+ assert.ok(door.children.every(x=>x.name!=='door-hinge'||x.position.x<door.getObjectByName('door-handle').position.x));
+ assert.ok(Math.abs(plate.getCenter(new THREE.Vector3()).y-door.getObjectByName('door-handle').getWorldPosition(new THREE.Vector3()).y-.1)<1e-8);
+ door.updateMatrixWorld(true);const center=f.door.center,glassY=2.042-.47,cast=y=>new THREE.Raycaster(new THREE.Vector3(center,y,DEFAULT_ROOM.length-1),new THREE.Vector3(0,0,1)).intersectObject(door.getObjectByName('door-leaf')).length;
+ assert.equal(cast(glassY),0);assert.ok(cast(glassY+.08)>0);
+ assert.ok(Math.abs(plate.getCenter(new THREE.Vector3()).y-1.219)<1e-6);
+ for(const v of views)v.dispose();
+});
+test('legacy untouched door migrates without changing custom door dimensions',()=>{
+ const old=createDocument(),d=old.roomFeatures.door;Object.assign(d,{center:old.room.width*.25,width:Math.min(.85,old.room.width*.4),height:Math.min(2.05,old.room.height*.85),depth:.12});delete d.jambLeft;delete d.jambRight;delete d.revealRight;delete d.lintel;delete old.roomFeatures.switch;
+ const loaded=parseRoomDocument(JSON.stringify(old));assert.deepEqual(loaded.roomFeatures.door,defaultRoomFeatures(old.room).door);assert.deepEqual(loaded.roomFeatures.switch,defaultRoomFeatures(old.room).switch);
+ d.width=.8;const custom=parseRoomDocument(JSON.stringify(old));assert.equal(custom.roomFeatures.door.width,.8);
+});
+test('saved default switch moves below its old position while custom heights remain unchanged',()=>{
+ const old=createDocument();old.roomFeatures.switch.bottom=1.444;
+ assert.ok(Math.abs(parseRoomDocument(JSON.stringify(old)).roomFeatures.switch.bottom-1.163)<1e-9);
+ old.roomFeatures.switch.bottom=1.3;
+ assert.equal(parseRoomDocument(JSON.stringify(old)).roomFeatures.switch.bottom,1.3);
+});
+test('saved mismatched frame widths migrate to 6.1 cm on both sides',()=>{
+ const doc=createDocument();doc.roomFeatures.door.jambLeft=.028;doc.roomFeatures.door.jambRight=.061;
+ let loaded=parseRoomDocument(JSON.stringify(doc));assert.equal(loaded.roomFeatures.door.jambLeft,.061);assert.equal(loaded.roomFeatures.door.jambRight,.061);
+ doc.roomFeatures.door.jambRight=.028;doc.roomFeatures.door.revealRight=.033;
+ loaded=parseRoomDocument(JSON.stringify(doc));assert.equal(loaded.roomFeatures.door.jambLeft,.061);assert.equal(loaded.roomFeatures.door.jambRight,.061);assert.equal(loaded.roomFeatures.door.revealRight,undefined);
+});
+test('niche extends the floor outline by 15.1 cm only within its width',()=>{
  const features=defaultRoomFeatures(DEFAULT_ROOM),room=createRoom(DEFAULT_ROOM,features);room.group.updateMatrixWorld(true);const floor=room.surfaces.find(s=>s.name==='floor'),ray=x=>new THREE.Raycaster(new THREE.Vector3(x,1,-0.07),new THREE.Vector3(0,-1,0)).intersectObject(floor);
  assert.ok(ray(features.window.center).length>0);assert.equal(ray(0.1).length,0);
- const bounds=new THREE.Box3().setFromObject(room.group.getObjectByName('floor-outline'));assert.ok(Math.abs(bounds.min.z+0.086)<1e-8);assert.ok(Math.abs(bounds.max.z-DEFAULT_ROOM.length)<1e-6);room.dispose();
+ const bounds=new THREE.Box3().setFromObject(room.group.getObjectByName('floor-outline'));assert.ok(Math.abs(bounds.min.z+0.151)<1e-8);assert.ok(Math.abs(bounds.max.z-DEFAULT_ROOM.length)<1e-6);room.dispose();
 });
+
+test('old default niche depth migrates to corrected dimensions',()=>{const doc=createDocument();doc.roomFeatures.window.depth=.086;delete doc.roomFeatures.window.stepDepth;delete doc.roomFeatures.window.stepHeight;const loaded=parseRoomDocument(JSON.stringify(doc));assert.equal(loaded.roomFeatures.window.depth,.151);assert.equal(loaded.roomFeatures.window.stepDepth,.065);assert.equal(loaded.roomFeatures.window.stepHeight,.08);assert.ok(Math.abs(loaded.roomFeatures.window.height-2.22)<1e-9);});
+
+test('older edited mesh keeps its own depth during migration',()=>{const doc=createDocument();doc.roomFeatures.window.depth=.086;delete doc.roomFeatures.window.stepDepth;delete doc.roomFeatures.window.stepHeight;doc.roomMesh={vertices:[{x:0,y:0,z:0},{x:1,y:0,z:0},{x:0,y:1,z:0},{x:0,y:0,z:1}],faces:[{id:'a',indices:[0,2,1]},{id:'b',indices:[0,1,3]},{id:'c',indices:[0,3,2]},{id:'d',indices:[1,2,3]}]};const loaded=parseRoomDocument(JSON.stringify(doc));assert.equal(loaded.roomFeatures.window.depth,.086);assert.equal(loaded.roomFeatures.window.stepDepth,.065);});
