@@ -50,8 +50,12 @@ export function createRoom(room,features,transforms={}){
   }
   if(top<h-1e-6)surface('niche-roof',width,depth,[center,top,-depth/2],[Math.PI/2,0,0],[0,1,0],WALL_PAINT_COLOR);
   if(stepHeight>0&&stepDepth>0){
-   surface('niche-step-top',width,stepDepth,[center,stepHeight,-depth+stepDepth/2],[-Math.PI/2,0,0],[0,-1,0],WALL_PAINT_COLOR);
-   surface('niche-step-front',width,stepHeight,[center,stepHeight/2,front],[0,0,0],[0,0,-1],WALL_PAINT_COLOR);
+   const sillThickness=Math.min(.015,stepHeight),baseHeight=stepHeight-sillThickness,sillFront=front+.015;
+   surface('niche-step-top',width,stepDepth+.015,[center,stepHeight,-depth+(stepDepth+.015)/2],[-Math.PI/2,0,0],[0,-1,0],WALL_PAINT_COLOR);
+   if(baseHeight>0)surface('niche-step-front',width,baseHeight,[center,baseHeight/2,front],[0,0,0],[0,0,-1],WALL_PAINT_COLOR);
+   surface('niche-sill-front',width,sillThickness,[center,stepHeight-sillThickness/2,sillFront],[0,0,0],[0,0,-1],WALL_PAINT_COLOR);
+   surface('niche-sill-underside',width,.015,[center,baseHeight,front+.0075],[-Math.PI/2,0,0],[0,-1,0],WALL_PAINT_COLOR);
+   for(const [name,x,normal] of [['niche-sill-left',left,[-1,0,0]],['niche-sill-right',right,[1,0,0]]])surface(name,.015,sillThickness,[x,stepHeight-sillThickness/2,front+.0075],[0,Math.PI/2,0],normal,WALL_PAINT_COLOR);
   }
  }
  const outlinePoints=[];const nicheTop=depth>0?Math.min(h,niche.bottom+niche.height+(shift.y??0)):h;
@@ -72,6 +76,10 @@ export function addNicheStepToMeshRoom(view,stepHeight,stepDepth){
   const mesh=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshStandardMaterial({color:WALL_PAINT_COLOR,side:THREE.DoubleSide,roughness:.9}));
   mesh.name=name;mesh.position.set(...position);mesh.rotation.set(...rotation);mesh.userData.outward=new THREE.Vector3(...outward);view.group.add(mesh);view.surfaces.push(mesh);
  }
- add('niche-step-top',width,stepDepth,[center,stepHeight,back+stepDepth/2],[-Math.PI/2,0,0],[0,-1,0]);
- add('niche-step-front',width,stepHeight,[center,stepHeight/2,front],[0,0,0],[0,0,-1]);
+ const sillThickness=Math.min(.015,stepHeight),baseHeight=stepHeight-sillThickness;
+ add('niche-step-top',width,stepDepth+.015,[center,stepHeight,back+(stepDepth+.015)/2],[-Math.PI/2,0,0],[0,-1,0]);
+ if(baseHeight>0)add('niche-step-front',width,baseHeight,[center,baseHeight/2,front],[0,0,0],[0,0,-1]);
+ add('niche-sill-front',width,sillThickness,[center,stepHeight-sillThickness/2,front+.015],[0,0,0],[0,0,-1]);
+ add('niche-sill-underside',width,.015,[center,baseHeight,front+.0075],[-Math.PI/2,0,0],[0,-1,0]);
+ for(const [name,x,normal] of [['niche-sill-left',center-width/2,[-1,0,0]],['niche-sill-right',center+width/2,[1,0,0]]])add(name,.015,sillThickness,[x,stepHeight-sillThickness/2,front+.0075],[0,Math.PI/2,0],normal);
 }

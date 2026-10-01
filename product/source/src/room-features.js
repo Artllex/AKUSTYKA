@@ -102,7 +102,11 @@ export function createRoomFeatureViews(room,features){
   if(hasStep)W.box('window-reveal-side-lower',[0.01,w.stepHeight,w.depth-w.stepDepth],[x,w.bottom+w.stepHeight/2,-(w.depth-w.stepDepth)/2],reveal);
  }
  W.box('recess-back',[w.width,w.height-(hasStep?w.stepHeight:0),0.01],[w.center,w.bottom+(hasStep?w.stepHeight:0)+(w.height-(hasStep?w.stepHeight:0))/2,-w.depth-0.005],reveal);
- if(hasStep)W.box('niche-step',[w.width,w.stepHeight,w.stepDepth],[w.center,w.bottom+w.stepHeight/2,-w.depth+w.stepDepth/2],stepMaterial);
+ if(hasStep){
+  const sillThickness=Math.min(.015,w.stepHeight),baseHeight=w.stepHeight-sillThickness;
+  if(baseHeight>0)W.box('niche-step',[w.width,baseHeight,w.stepDepth],[w.center,w.bottom+baseHeight/2,-w.depth+w.stepDepth/2],stepMaterial);
+  W.box('niche-sill',[w.width,sillThickness,w.stepDepth+.015],[w.center,w.bottom+w.stepHeight-sillThickness/2,-w.depth+(w.stepDepth+.015)/2],stepMaterial);
+ }
  W.box('niche-roof',[w.width,0.01,w.depth],[w.center,w.bottom+w.height+0.005,-w.depth/2],reveal).userData.collision=false;
  // Two glazing lights share the existing opening. The upper tilt sash has
  // thicker stiles than the fixed lower pane, hence their different clear widths.
