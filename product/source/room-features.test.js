@@ -97,8 +97,12 @@ test('RECTA hardware has measured matte rosettes, keyhole and shaped levers on b
   const positions=lever.geometry.getAttribute('position'),tipY=[],tipZ=[];for(let i=0;i<positions.count;i++)if(positions.getX(i)<RECTA_HANDLE.pivotOffset-RECTA_HANDLE.reach+.001){tipY.push(positions.getY(i));tipZ.push(positions.getZ(i));}
   close(Math.max(...tipY)-Math.min(...tipY),RECTA_HANDLE.tipHeight);
   close(Math.max(...tipZ)-Math.min(...tipZ),RECTA_HANDLE.tipDepth);
-  const rootZ=[];for(let i=0;i<positions.count;i++)if(Math.abs(positions.getX(i)-RECTA_HANDLE.pivotOffset)<1e-6)rootZ.push(positions.getZ(i));
-  assert.ok(Math.max(...rootZ)-Math.min(...rootZ)>.035,'the attachment must be solid rather than pinched at the rosette');
+  const section=distance=>{const depths=[];for(let i=0;i<positions.count;i++)if(Math.abs(positions.getX(i)-(RECTA_HANDLE.pivotOffset-distance))<1e-6)depths.push(Math.abs(positions.getZ(i)));return [Math.min(...depths),Math.max(...depths)];};
+  const root=section(0),mount=section(.009),shoulder=section(.029),grip=section(.036);
+  assert.ok(root[0]<=.007&&root[1]<=.009,'the outline must start at the rosette');
+  assert.ok(mount[0]<.008&&mount[1]>.061,'the mounting must be filled to full projection within 9 mm');
+  assert.ok(shoulder[0]<.008&&shoulder[1]>.061,'the full body must continue beneath the 29 mm shoulder');
+  assert.ok(grip[0]>.037&&grip[1]>.061,'the shoulder must turn into the thin arm');
   const shaftZ=[];for(let i=0;i<positions.count;i++)if(Math.abs(positions.getX(i)-(RECTA_HANDLE.pivotOffset-.09))<.001)shaftZ.push(Math.abs(positions.getZ(i)));
   assert.ok(Math.min(...shaftZ)>.04,'the straight grip must remain thin and away from the rosette');
   assert.equal(lock.geometry.parameters.shapes.holes.length,1);
