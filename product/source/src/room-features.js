@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import {WALL_PAINT_COLOR} from './wall-paint.js';
 const DEFAULT_SWITCH_HEIGHT=.112;
 function defaultSwitchBottom(room){const doorTop=room.height-.505-.058,handleY=doorTop-.923;return handleY+.1-DEFAULT_SWITCH_HEIGHT/2;}
 export function defaultRoomFeatures(room){return {
@@ -87,7 +88,7 @@ export function createRoomFeatureViews(room,features){
   D.box('door-hinge',[.016,.052,.02],[x,y,room.length-.023],steel);
   D.box('door-hinge-outside',[.016,.052,.02],[x,y,room.length+.01],steel);
  }
- const w=features.window,W=create('window'),reveal=W.mat(0x9aafb8),stepMaterial=W.mat(0x718d9a);
+ const w=features.window,W=create('window'),reveal=W.mat(WALL_PAINT_COLOR),stepMaterial=W.mat(WALL_PAINT_COLOR);
  const middle=w.bottom+w.height/2,hasStep=w.stepDepth>0&&w.stepHeight>0;
  for(const side of [-1,1]){
   const x=w.center+side*(w.width/2-0.005);

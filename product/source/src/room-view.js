@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import {WALL_PAINT_COLOR} from './wall-paint.js';
 export function createRoom(room,features,transforms={}){
  const {width:w,length:l,height:h}=room;
  const niche=features?.window,shift=transforms.window??{},left=niche?Math.max(0,niche.center+(shift.x??0)-niche.width/2):0,right=niche?Math.min(w,niche.center+(shift.x??0)+niche.width/2):0,depth=niche&&niche.bottom+(shift.y??0)<=0.001&&right>left?niche.depth:0;
@@ -35,21 +36,21 @@ export function createRoom(room,features,transforms={}){
  }
  surface('floor',w,l,[w/2,0,l/2],[-Math.PI/2,0,0],[0,-1,0],0x4c6572);
  surface('ceiling',w,l,[w/2,h,l/2],[Math.PI/2,0,0],[0,1,0],0xadc1c9);
- surface('wall-front',w,h,[w/2,h/2,0],[0,0,0],[0,0,-1],0x9aafb8);
- surface('wall-back',w,h,[w/2,h/2,l],[0,0,0],[0,0,1],0x9aafb8);
- surface('wall-left',l,h,[0,h/2,l/2],[0,Math.PI/2,0],[-1,0,0],0x7895a3);
- surface('wall-right',l,h,[w,h/2,l/2],[0,Math.PI/2,0],[1,0,0],0x7895a3);
+ surface('wall-front',w,h,[w/2,h/2,0],[0,0,0],[0,0,-1],WALL_PAINT_COLOR);
+ surface('wall-back',w,h,[w/2,h/2,l],[0,0,0],[0,0,1],WALL_PAINT_COLOR);
+ surface('wall-left',l,h,[0,h/2,l/2],[0,Math.PI/2,0],[-1,0,0],WALL_PAINT_COLOR);
+ surface('wall-right',l,h,[w,h/2,l/2],[0,Math.PI/2,0],[1,0,0],WALL_PAINT_COLOR);
  if(depth>0){
   const center=(left+right)/2,width=right-left,top=Math.min(h,niche.bottom+niche.height+(shift.y??0)),stepHeight=niche.stepHeight,stepDepth=niche.stepDepth,front=-depth+stepDepth;
-  surface('niche-back',width,top-stepHeight,[center,(top+stepHeight)/2,-depth],[0,0,0],[0,0,-1],0x9aafb8);
+  surface('niche-back',width,top-stepHeight,[center,(top+stepHeight)/2,-depth],[0,0,0],[0,0,-1],WALL_PAINT_COLOR);
   for(const [name,x,normal] of [['niche-left',left,[-1,0,0]],['niche-right',right,[1,0,0]]]){
-   surface(name,depth,top-stepHeight,[x,(top+stepHeight)/2,-depth/2],[0,Math.PI/2,0],normal,0x9aafb8);
-   if(stepHeight>0&&depth>stepDepth)surface(name+'-lower',depth-stepDepth,stepHeight,[x,stepHeight/2,front/2],[0,Math.PI/2,0],normal,0x9aafb8);
+   surface(name,depth,top-stepHeight,[x,(top+stepHeight)/2,-depth/2],[0,Math.PI/2,0],normal,WALL_PAINT_COLOR);
+   if(stepHeight>0&&depth>stepDepth)surface(name+'-lower',depth-stepDepth,stepHeight,[x,stepHeight/2,front/2],[0,Math.PI/2,0],normal,WALL_PAINT_COLOR);
   }
-  if(top<h-1e-6)surface('niche-roof',width,depth,[center,top,-depth/2],[Math.PI/2,0,0],[0,1,0],0x9aafb8);
+  if(top<h-1e-6)surface('niche-roof',width,depth,[center,top,-depth/2],[Math.PI/2,0,0],[0,1,0],WALL_PAINT_COLOR);
   if(stepHeight>0&&stepDepth>0){
-   surface('niche-step-top',width,stepDepth,[center,stepHeight,-depth+stepDepth/2],[-Math.PI/2,0,0],[0,-1,0],0x718d9a);
-   surface('niche-step-front',width,stepHeight,[center,stepHeight/2,front],[0,0,0],[0,0,-1],0x718d9a);
+   surface('niche-step-top',width,stepDepth,[center,stepHeight,-depth+stepDepth/2],[-Math.PI/2,0,0],[0,-1,0],WALL_PAINT_COLOR);
+   surface('niche-step-front',width,stepHeight,[center,stepHeight/2,front],[0,0,0],[0,0,-1],WALL_PAINT_COLOR);
   }
  }
  const outlinePoints=[];const nicheTop=depth>0?Math.min(h,niche.bottom+niche.height+(shift.y??0)):h;
@@ -67,7 +68,7 @@ export function addNicheStepToMeshRoom(view,stepHeight,stepDepth){
  const roof=view.surfaces.find(s=>s.name==='niche-roof');if(!roof||stepHeight<=0||stepDepth<=0)return;
  view.group.updateMatrixWorld(true);const bounds=new THREE.Box3().setFromObject(roof),width=bounds.max.x-bounds.min.x,center=(bounds.min.x+bounds.max.x)/2,back=bounds.min.z,front=back+stepDepth;
  function add(name,w,h,position,rotation,outward){
-  const mesh=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshStandardMaterial({color:0x718d9a,side:THREE.DoubleSide,roughness:.9}));
+  const mesh=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshStandardMaterial({color:WALL_PAINT_COLOR,side:THREE.DoubleSide,roughness:.9}));
   mesh.name=name;mesh.position.set(...position);mesh.rotation.set(...rotation);mesh.userData.outward=new THREE.Vector3(...outward);view.group.add(mesh);view.surfaces.push(mesh);
  }
  add('niche-step-top',width,stepDepth,[center,stepHeight,back+stepDepth/2],[-Math.PI/2,0,0],[0,-1,0]);
