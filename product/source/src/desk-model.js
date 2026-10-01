@@ -9,6 +9,7 @@ export function createDeskRecord(room){
   position:{x:room.width/2,y:0,z:COMBODESK_88.depth/2+0.16+0.27},yaw:0};
 }
 export function ensureDeskRecord(document){
+ document.objects=document.objects.filter(record=>record.type!=='studio-desk'||record.id==='desk-combodesk-88');
  if(!document.objects.some(record=>record.id==='desk-combodesk-88'))document.objects.push(createDeskRecord(document.room));
  return document;
 }

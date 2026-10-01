@@ -1,3 +1,5 @@
+import {COMBODESK_88,createDeskRecord} from './desk-model.js';
+
 // Overall envelope follows the supplied 2025 dimension drawing (metres).
 export const MODUL_STUDIO_DESK = Object.freeze({
  width:1.44,depth:.70,height:.76,
@@ -9,12 +11,14 @@ export const MODUL_DESK_ID='desk-modul-2025';
 
 export function createModulDeskRecord(room){
  const desk=MODUL_STUDIO_DESK;
- // The rear wall has a door on the left and the RIVECO rack in the right corner.
- // Keep the desk to the right of the door, ahead of the rack, facing the listener.
+ // Match the forward edge of the Thomann worktop facing the listener.
+ const first=createDeskRecord(room);
+ const firstFront=first.position.z+(COMBODESK_88.depth-COMBODESK_88.worktop.depth)/2+COMBODESK_88.worktop.depth/2;
  return {id:MODUL_DESK_ID,type:'studio-desk',model:'modul-studio-desk-2025',
-  position:{x:room.width-.04-desk.width/2,y:0,z:room.length-.365-desk.depth/2},yaw:Math.PI};
+  position:{x:first.position.x,y:0,z:firstFront-desk.depth/2},yaw:0};
 }
 export function ensureModulDeskRecord(document){
+ document.objects=document.objects.filter(record=>record.type!=='studio-desk'||record.id===MODUL_DESK_ID);
  if(!document.objects.some(record=>record.id===MODUL_DESK_ID))document.objects.push(createModulDeskRecord(document.room));
  return document;
 }

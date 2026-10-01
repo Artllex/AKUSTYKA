@@ -61,8 +61,9 @@ import {createRackView} from './rack-view.js';
 import {ensureRackRecord,moveDefaultRackWithRoom} from './rack-model.js';
 import {createDeskView} from './desk-view.js';
 import {createModulDeskView} from './modul-desk-view.js';
-import {ensureDeskRecord,moveDefaultDeskWithRoom} from './desk-model.js';
-import {MODUL_DESK_ID,ensureModulDeskRecord,moveDefaultModulDeskWithRoom} from './modul-desk-model.js';
+import {moveDefaultDeskWithRoom} from './desk-model.js';
+import {MODUL_DESK_ID,moveDefaultModulDeskWithRoom} from './modul-desk-model.js';
+import {THOMANN_DESK_ID,chooseDesk,selectedDeskId} from './desk-choice.js';
 
 import {updateLinkedMonitor,DEFAULT_MONITOR_LINKS} from './monitor-links.js';
 
@@ -84,7 +85,7 @@ import './style.css';
 
 const $=id=>document.getElementById(id),host=$('viewport');
 
-const doc=createDocument();const history=createDocumentHistory(doc);let bench,listenerPanel,monitorPanel,reflectionPanel,featuresPanel,objectPanel,surfacePanel,viewportEditor,fieldHistory,rackAddButton,deskAddButton,modulDeskAddButton;const orientation=createOrientation($('orientation'));let renderer;
+const doc=createDocument();const history=createDocumentHistory(doc);let bench,listenerPanel,monitorPanel,reflectionPanel,featuresPanel,objectPanel,surfacePanel,viewportEditor,fieldHistory,rackAddButton;const orientation=createOrientation($('orientation'));let renderer;
 
 try{renderer=new THREE.WebGLRenderer({antialias:true});}catch(error){$('error').hidden=false;$('error').textContent='Nie można uruchomić widoku 3D. Sprawdź obsługę WebGL w przeglądarce.';throw error;}
 
@@ -226,7 +227,7 @@ function project(side){if(!selected)return;projection=surfaceProjection(selected
 
 function refreshCollisions(){if(!view)return;const objects=scene.children.filter(o=>o.isGroup&&!o.userData.helper&&o!==view.group&&o!==tweeterRays?.group),collisions=findMonitorCollisions(monitorViews,objects,doc.room,(doc.roomMesh||doc.roomShape)?view.surfaces:null);for(const object of objects)tintCollision(object,collisions.targets.has(object));for(const surface of view.surfaces){const active=collisions.surfaces.has(surface.name);tintCollision(surface,active);if(!active)surface.material.emissive.setHex(surface===selected?0x17483e:0);}host.dataset.collisionSurfaces=[...collisions.surfaces].sort().join(',');host.dataset.collisionObjects=[...collisions.targets].map(o=>o.userData.recordId??o.userData.id??o.name).sort().join(',');}
 
-function refreshReflections(){if(reflectionView){scene.remove(reflectionView.group);reflectionView.dispose();}reflectionView=createReflectionView(monitorViews,listenerViews[0],doc.room,doc.reflections,view.surfaces,[...featureViews,...rackViews,...deskViews].map(item=>item.group));scene.add(reflectionView.group);host.dataset.reflectionCount=reflectionView.paths.length;host.dataset.deskReflectionCount=reflectionView.paths.filter(path=>path.surface.startsWith('object:desk-combodesk-88:')).length;reflectionPanel?.sync(reflectionView.paths.length);}
+function refreshReflections(){if(reflectionView){scene.remove(reflectionView.group);reflectionView.dispose();}reflectionView=createReflectionView(monitorViews,listenerViews[0],doc.room,doc.reflections,view.surfaces,[...featureViews,...rackViews,...deskViews].map(item=>item.group));scene.add(reflectionView.group);host.dataset.reflectionCount=reflectionView.paths.length;host.dataset.deskReflectionCount=reflectionView.paths.filter(path=>path.surface.startsWith('object:desk-combodesk-88:')).length;host.dataset.activeDeskReflectionCount=reflectionView.paths.filter(path=>path.surface.startsWith('object:'+selectedDeskId(doc)+':')).length;reflectionPanel?.sync(reflectionView.paths.length);}
 
 function refreshTweeterRays(){if(tweeterRays){scene.remove(tweeterRays.group);tweeterRays.dispose();}if(wallWarnings){scene.remove(wallWarnings.group);wallWarnings.dispose();}if(monitorSpan){scene.remove(monitorSpan.group);monitorSpan.dispose();}monitorSpan=createMonitorSpan(monitorViews);tweeterRays=createTweeterRays(monitorViews,listenerViews[0],doc.room,doc.showTweeterRays,(doc.roomMesh||doc.roomShape)?view.surfaces:null);wallWarnings=createMonitorWallWarnings(monitorViews,view.surfaces);scene.add(tweeterRays.group,wallWarnings.group,monitorSpan.group);host.dataset.monitorSpanDistance=monitorSpan.distance?.toFixed(4)??"";host.dataset.tweeterRayCount=tweeterRays.rayCount;host.dataset.tweeterHeadHits=tweeterRays.hitCount;host.dataset.tooCloseMonitors=tweeterRays.tooCloseCount;host.dataset.tweeterRayColors=tweeterRays.group.children.filter(o=>o.name.startsWith('ray-')).map(o=>o.material.color.getHexString()).join(',');host.dataset.rayDistances=tweeterRays.group.children.filter(o=>o.name.startsWith('distance-ray-')).map(o=>o.userData.label).join(',');host.dataset.wallClearanceWarnings=wallWarnings.warnings.map(w=>w.monitor+':'+w.wall).join(',');host.dataset.wallClearanceCount=wallWarnings.warnings.length;host.dataset.wallDistances=wallWarnings.group.children.filter(o=>o.name.startsWith('wall-distance-')).map(o=>o.userData.label).join(',');host.dataset.rearCenterDistances=wallWarnings.group.children.filter(o=>o.name.startsWith('rear-center-distance-')).map(o=>o.userData.label).join(',');host.dataset.rearCenterTooClose=String(wallWarnings.rearClearances.filter(r=>r.center.distance<0.127-1e-7).length);$('tweeter-rays-visible').checked=doc.showTweeterRays;refreshReflections();refreshCollisions();refreshObjectSelection();}
 
@@ -236,7 +237,7 @@ function refreshMonitors(){for(const monitor of monitorViews){scene.remove(monit
 
 function refreshRacks(){for(const rack of rackViews){scene.remove(rack.group);rack.dispose();}rackViews=doc.objects.filter(o=>o.type==='studio-rack').map(record=>{const rack=createRackView(record);applyObjectTransform(rack.group,doc.transforms);scene.add(rack.group);return rack;});host.dataset.rackCount=rackViews.length;if(rackAddButton)rackAddButton.hidden=!!rackViews.length;refreshCollisions();refreshObjectSelection();}
 
-function refreshDesks(){for(const desk of deskViews){scene.remove(desk.group);desk.dispose();}deskViews=doc.objects.filter(o=>o.type==='studio-desk').map(record=>{const desk=record.id===MODUL_DESK_ID?createModulDeskView(record):createDeskView(record);applyObjectTransform(desk.group,doc.transforms);scene.add(desk.group);return desk;});host.dataset.deskCount=deskViews.length;host.dataset.modulDeskCount=deskViews.filter(d=>d.group.name===MODUL_DESK_ID).length;if(deskAddButton)deskAddButton.hidden=doc.objects.some(o=>o.id==='desk-combodesk-88');if(modulDeskAddButton)modulDeskAddButton.hidden=doc.objects.some(o=>o.id===MODUL_DESK_ID);refreshCollisions();refreshObjectSelection();}
+function refreshDesks(){for(const desk of deskViews){scene.remove(desk.group);desk.dispose();}deskViews=doc.objects.filter(o=>o.type==='studio-desk').map(record=>{const desk=record.id===MODUL_DESK_ID?createModulDeskView(record):createDeskView(record);applyObjectTransform(desk.group,doc.transforms);scene.add(desk.group);return desk;});host.dataset.deskCount=deskViews.length;host.dataset.modulDeskCount=deskViews.filter(d=>d.group.name===MODUL_DESK_ID).length;$('desk-choice').value=selectedDeskId(doc)??THOMANN_DESK_ID;refreshCollisions();refreshObjectSelection();}
 
 function buildRoom(transforms=doc.transforms){
  const roomView=doc.roomMesh?createMeshRoom(doc.room,doc.roomMesh):doc.roomShape?createFootprintRoom(doc.room,doc.roomShape,doc.roomFeatures):createRoom(doc.room,doc.roomFeatures,transforms);
@@ -302,8 +303,7 @@ function commitObjectTransform(id,transform,recordHistory=true){doc.transforms=u
 
 objectPanel=setupObjectPanel({read:()=>selectedObjectId?{label:objectLabel(selectedObjectId),transform:doc.transforms[selectedObjectId]}:null,change(transform){if(selectedObjectId)commitObjectTransform(selectedObjectId,transform);},clear:()=>selectObject(null),showError});
 rackAddButton=document.createElement('button');rackAddButton.type='button';rackAddButton.textContent='Dodaj stojak RIVECO 19″ 15U';rackAddButton.hidden=doc.objects.some(o=>o.id==='rack-15u');rackAddButton.onclick=()=>{ensureRackRecord(doc);history.push(doc);refreshRacks();refreshReflections();bench.refresh(history);};$('object-panel').append(rackAddButton);
-deskAddButton=document.createElement('button');deskAddButton.type='button';deskAddButton.textContent='Dodaj biurko Thomann ComboDesk 88';deskAddButton.hidden=doc.objects.some(o=>o.id==='desk-combodesk-88');deskAddButton.onclick=()=>{ensureDeskRecord(doc);history.push(doc);refreshDesks();refreshReflections();bench.refresh(history);};$('object-panel').append(deskAddButton);
-modulDeskAddButton=document.createElement('button');modulDeskAddButton.type='button';modulDeskAddButton.textContent='Dodaj biurko modul Studio Desk 2025';modulDeskAddButton.hidden=doc.objects.some(o=>o.id===MODUL_DESK_ID);modulDeskAddButton.onclick=()=>{ensureModulDeskRecord(doc);history.push(doc);refreshDesks();refreshReflections();bench.refresh(history);};$('object-panel').append(modulDeskAddButton);
+$('desk-choice').onchange=()=>{const old=selectedDeskId(doc),next=$('desk-choice').value;chooseDesk(doc,next);if(selectedObjectId===old)selectedObjectId=next;history.push(doc);refreshDesks();refreshReflections();updateProjectionVisibility();bench.refresh(history);};
 
 surfacePanel=setupSurfacePanel({read:()=>doc.roomShape??initialFootprint(doc),change(points,commit){
 
