@@ -8,7 +8,7 @@ import {initialRoomMesh} from './src/mesh-model.js';
 import {DEFAULT_ROOM} from './src/model.js';
 import {FOLIGNO_PLANK,FOLIGNO_SAMPLE} from './src/floor-finish.js';
 
-test('Foligno floor keeps one physical texture scale across all room geometries',()=>{
+test('Foligno planks run along room length at one scale across all room geometries',()=>{
  assert.deepEqual(FOLIGNO_PLANK,{length:1.291,width:.193,thickness:.008});
  const footprint=[{x:0,z:0},{x:DEFAULT_ROOM.width,z:0},{x:DEFAULT_ROOM.width,z:DEFAULT_ROOM.length},{x:0,z:DEFAULT_ROOM.length}];
  const views=[createRoom(DEFAULT_ROOM),createFootprintRoom(DEFAULT_ROOM,footprint),createMeshRoom(DEFAULT_ROOM,initialRoomMesh({room:DEFAULT_ROOM,roomShape:footprint}))];
@@ -19,8 +19,8 @@ test('Foligno floor keeps one physical texture scale across all room geometries'
   assert.equal(floor.material.color.getHex(),0xffffff);
   for(let i=0;i<positions.count;i++){
    const world=floor.localToWorld(new THREE.Vector3().fromBufferAttribute(positions,i));
-   assert.ok(Math.abs(uv.getX(i)-world.x/FOLIGNO_SAMPLE.width)<1e-6);
-   assert.ok(Math.abs(uv.getY(i)-world.z/FOLIGNO_SAMPLE.height)<1e-6);
+   assert.ok(Math.abs(uv.getX(i)-world.z/FOLIGNO_SAMPLE.width)<1e-6);
+   assert.ok(Math.abs(uv.getY(i)-world.x/FOLIGNO_SAMPLE.height)<1e-6);
   }
   view.dispose();
  }

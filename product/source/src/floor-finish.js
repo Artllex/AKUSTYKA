@@ -11,7 +11,7 @@ export function applyFolignoFloor(mesh){
  mesh.updateMatrixWorld(true);
  for(let i=0;i<positions.count;i++){
   const point=mesh.localToWorld(new THREE.Vector3().fromBufferAttribute(positions,i));
-  uv.push(point.x/FOLIGNO_SAMPLE.width,point.z/FOLIGNO_SAMPLE.height);
+  uv.push(point.z/FOLIGNO_SAMPLE.width,point.x/FOLIGNO_SAMPLE.height);
  }
  mesh.geometry.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));
  mesh.material.color.set(0xffffff);
