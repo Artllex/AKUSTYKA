@@ -668,3 +668,7 @@ Etykiety odległości promieni od tweeterów i czerwonych linii odstępu od ści
 ## Natychmiastowa edycja monitorów — 0.83.0
 
 Pola odległości tweeter–ucho, pozycji X/Y/Z i obrotu stosują każdą poprawną zmianę od razu, zarówno podczas wpisywania, jak i po użyciu strzałek. Przyciski „Ustaw odległość” i „Zastosuj ustawienie” zostały usunięte. Niepełna lub niepoprawna liczba podczas pisania nie jest stosowana. Każdą poprawną zmianę można cofnąć przez Ctrl+Z.
+
+## Rzut z obiektami nad płaszczyzną — 0.84.0
+
+Przycisk „Pokaż obiekty” w panelu rzutów przełącza widok samej wybranej płaszczyzny oraz widok tej płaszczyzny z wyposażeniem po stronie kamery. Działa w rzucie od wnętrza i od zewnątrz; pozostałe ściany, lasery i ostrzeżenia odstępu nie pojawiają się w rzucie. Wybrany tryb obowiązuje przy kolejnych rzutach, a powrót do Widoku 3D przywraca zwykłą widoczność obiektów.

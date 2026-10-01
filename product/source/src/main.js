@@ -37,6 +37,7 @@ import {createDocument,DEFAULT_ROOM,roomFromCentimeters,roomMetrics,usesDefaultL
 import {createRoom,addNicheStepToMeshRoom} from './room-view.js';
 
 import {surfaceProjection} from './projection.js';
+import {objectOnProjectionSide} from './projection-objects.js';
 
 import {createOrientation} from './orientation.js';
 
@@ -189,15 +190,18 @@ function select(surface){selected=surface;refreshCollisions();$('inside').disabl
 
 function resize(){const w=host.clientWidth,h=host.clientHeight;if(!w||!h)return;renderer.setSize(w,h);perspective.aspect=w/h;perspective.updateProjectionMatrix();if(projection){camera.left=-projection.halfHeight*w/h;camera.right=projection.halfHeight*w/h;camera.updateProjectionMatrix();}}
 
-const projectionHidden=new WeakMap();
+const projectionHidden=new WeakMap();let projectionObjectsVisible=false;
 function updateProjectionVisibility(){
  if(!view)return;
- const groups=[...featureViews,...listenerViews,...monitorViews,...rackViews].map(v=>v.group);if(tweeterRays)groups.push(tweeterRays.group);if(wallWarnings)groups.push(wallWarnings.group);
- for(const group of groups){if(projection){if(!projectionHidden.has(group))projectionHidden.set(group,group.visible);group.visible=false;}else if(projectionHidden.has(group)){group.visible=projectionHidden.get(group);projectionHidden.delete(group);}}
- if(projection){const surface=view.surfaces.find(s=>s.name===projection.surfaceName);for(const object of view.group.children)object.visible=object===surface||(object.name==='floor-outline'&&surface?.name==='floor')||(object===view.grid&&surface?.name==='floor'&&$('grid').checked);}
+ const objects=[...featureViews,...listenerViews,...monitorViews,...rackViews].map(v=>v.group),groups=[...objects];if(tweeterRays)groups.push(tweeterRays.group);if(wallWarnings)groups.push(wallWarnings.group);
+ const surface=projection?view.surfaces.find(s=>s.name===projection.surfaceName):null;
+ for(const group of groups){if(projection){if(!projectionHidden.has(group))projectionHidden.set(group,group.visible);group.visible=!!(projectionObjectsVisible&&objects.includes(group)&&projectionHidden.get(group)&&objectOnProjectionSide(group,surface,projection.side));}else if(projectionHidden.has(group)){group.visible=projectionHidden.get(group);projectionHidden.delete(group);}}
+ if(projection){for(const object of view.group.children)object.visible=object===surface||(object.name==='floor-outline'&&surface?.name==='floor')||(object===view.grid&&surface?.name==='floor'&&$('grid').checked);}
  host.dataset.visibleSceneEntities=String(groups.filter(g=>g.visible).length);
  host.dataset.projectionSurface=projection?.surfaceName??'';
 }
+
+$('projection-objects').onclick=()=>{projectionObjectsVisible=!projectionObjectsVisible;const button=$('projection-objects');button.setAttribute('aria-pressed',String(projectionObjectsVisible));button.textContent=projectionObjectsVisible?'Ukryj obiekty':'Pokaż obiekty';updateProjectionVisibility();};
 
 let previousSurfaceView=null;
 function frame(top=false){previousSurfaceView=null;projection=null;camera=perspective;camera.up.set(0,1,0);const r=doc.room,scale=Math.max(r.width,r.length,r.height),target=new THREE.Vector3(r.width/2,r.height*0.35,r.length/2);camera.position.copy(target).add(new THREE.Vector3(top?0:scale*1.25,top?scale*2:scale,top?0.001:scale*1.4));bindControls(target);view.group.children.forEach(o=>o.visible=true);view.grid.visible=$('grid').checked;$('cutaway').disabled=false;updateProjectionVisibility();resize();}
