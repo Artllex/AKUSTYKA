@@ -17,3 +17,12 @@ export function distanceBetweenObjects(first,second){const a=triangleData(first)
  function visit(A,B){if(best<1e-18||lowerBound(A.box,B.box)>best+1e-18)return;if(A.items&&B.items){for(const a of A.items)for(const b of B.items)if(lowerBound(a.box,b.box)<=best)compareTriangles(a.triangle,b.triangle,offer);return;}
  const pairs=A.items?[[A,B.left],[A,B.right]]:B.items?[[A.left,B],[A.right,B]]:[[A.left,B.left],[A.left,B.right],[A.right,B.left],[A.right,B.right]];pairs.sort((a,b)=>lowerBound(a[0].box,a[1].box)-lowerBound(b[0].box,b[1].box));for(const [a,b] of pairs)visit(a,b);
  }visit(tree(a),tree(b));return result;}
+
+export function distanceFromPointToObject(point,object){
+ let best=Infinity,result=null;
+ for(const {triangle} of triangleData(object)){
+  const end=triangle.closestPointToPoint(point,new THREE.Vector3()),distance=point.distanceTo(end);
+  if(distance<best){best=distance;result={start:point.clone(),end,distance};}
+ }
+ return result;
+}

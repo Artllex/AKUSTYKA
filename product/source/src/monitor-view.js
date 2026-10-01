@@ -38,7 +38,7 @@ export function createStudioMonitor(record){
  }
  mesh('power-led',new THREE.SphereGeometry(0.002,8,6),new THREE.MeshBasicMaterial({color:0x75dcca}),[0.043,0.2605,0.195]);
  group.position.set(record.position.x,record.position.y,record.position.z);group.rotation.y=record.yaw;group.updateMatrixWorld(true);
- return {group,getDriverCenters(){return MM27_DRIVERS.map(driver=>({id:driver.id,label:driver.label,color:driver.color,position:group.localToWorld(new THREE.Vector3(...driver.center)),normal:new THREE.Vector3(...driver.normal).applyQuaternion(group.quaternion)}));},dispose(){const geometries=new Set(),materials=new Set(),textures=new Set();group.traverse(o=>{if(o.geometry)geometries.add(o.geometry);if(o.material)materials.add(o.material);if(o.material?.map)textures.add(o.material.map);});for(const t of textures)t.dispose();for(const g of geometries)g.dispose();for(const m of materials)m.dispose();}};
+ return {group,getRearFaceCenter(){return group.localToWorld(new THREE.Vector3(0,h/2,-0.245));},getDriverCenters(){return MM27_DRIVERS.map(driver=>({id:driver.id,label:driver.label,color:driver.color,position:group.localToWorld(new THREE.Vector3(...driver.center)),normal:new THREE.Vector3(...driver.normal).applyQuaternion(group.quaternion)}));},dispose(){const geometries=new Set(),materials=new Set(),textures=new Set();group.traverse(o=>{if(o.geometry)geometries.add(o.geometry);if(o.material)materials.add(o.material);if(o.material?.map)textures.add(o.material.map);});for(const t of textures)t.dispose();for(const g of geometries)g.dispose();for(const m of materials)m.dispose();}};
 }
 
 

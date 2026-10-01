@@ -680,3 +680,7 @@ Niebieski laser mierzy odległość między środkami tweeterów. Laser i karta 
 ## Lasery i odbicia w rzucie z obiektami — 0.86.0
 
 Rzut z obiektami pokazuje lasery monitorów widocznych po oglądanej stronie płaszczyzny. Rzut samej powierzchni je ukrywa. Niebieski laser między monitorami zachowuje widoczność tylko podczas najechania kursorem. Pierwsze odbicia na oglądanej powierzchni mają w rzucie cienki kontur 1 px; widok 3D zachowuje dotychczasowe znaczniki i opcjonalne drogi odbić.
+
+## Dwa pomiary odstępu monitora od ściany — 0.87.0
+
+Dla ściany fizycznie znajdującej się za monitorem program pokazuje dwa odcinki: najkrótszy od rzeczywistej bryły monitora oraz od środka zewnętrznej tylnej płyty wzmacniacza. Oba są liczone do tej samej ściany, z uwzględnieniem wnęki i otworów. Karty pojawiają się po najechaniu na dany odcinek i podają jego nazwę oraz długość. Każdy odcinek jest czerwony poniżej minimum chłodzenia 12,7 cm, a zielony po spełnieniu warunku. Ostrzeżenia dla pozostałych bliskich ścian pozostają.

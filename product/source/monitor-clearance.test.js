@@ -17,3 +17,36 @@ test('wall warning touches rendered speaker and labels measured gap, even for hi
 
 test('window opening does not create a false front-wall warning',()=>{const f=fixture(),monitor=f.monitors[0],niche=f.doc.roomFeatures.window;monitor.group.position.set(niche.center,0.9245,0.32);monitor.group.rotation.y=0;monitor.group.updateMatrixWorld(true);const warnings=measureMonitorWallClearance([monitor],f.room.surfaces);assert.ok(!warnings.some(w=>w.wall==='wall-front'));f.dispose();});
 test('distance card stays beyond the laser edge while camera rotates',()=>{const f=fixture(),rays=createTweeterRays(f.monitors,f.listener,f.doc.room),label=rays.group.getObjectByName('distance-ray-monitor-L'),camera=new THREE.PerspectiveCamera();for(const position of [[2,2,4],[0,5,0.1],[-4,1,1]]){camera.position.set(...position);camera.lookAt(0,1,0);updateDistanceLabels(rays.group,camera);const up=new THREE.Vector3(0,1,0).applyQuaternion(camera.quaternion);assert.ok(label.position.clone().sub(label.userData.anchor).dot(up)>label.scale.y/2+.04);}rays.dispose();f.dispose();});
+
+test('rear face center and nearest cabinet point are measured separately on the same physical wall',()=>{
+ const f=fixture(),monitor=f.monitors[0];
+ monitor.group.position.set(0.4,0.9245,0.36);monitor.group.rotation.y=Math.PI/6;monitor.group.updateMatrixWorld(true);
+ const view=createMonitorWallWarnings([monitor],f.room.surfaces),measurement=view.rearClearances[0];
+ assert.equal(measurement.wall,'wall-front');
+ assert.ok(measurement.center.start.distanceTo(monitor.getRearFaceCenter())<1e-9);
+ assert.ok(Math.abs(measurement.center.end.z)<1e-8);
+ assert.ok(measurement.nearest.distance<MIN_WALL_CLEARANCE);
+ assert.ok(measurement.center.distance>MIN_WALL_CLEARANCE);
+ const near=view.group.getObjectByName('wall-clearance-monitor-L-wall-front');
+ const center=view.group.getObjectByName('rear-center-clearance-monitor-L-wall-front');
+ assert.equal(near.material.color.getHex(),0xff303d);
+ assert.equal(center.material.color.getHex(),0x55e69a);
+ assert.equal(near.userData.distance,measurement.nearest.distance);
+ assert.equal(center.userData.distance,measurement.center.distance);
+ assert.equal(center.userData.distanceLabel.userData.title,'Środek tyłu');
+ assert.equal(near.userData.distanceLabel.userData.title,'Najbliższy punkt');
+ view.dispose();
+ monitor.group.position.z=0.32;monitor.group.updateMatrixWorld(true);
+ const closer=createMonitorWallWarnings([monitor],f.room.surfaces);
+ assert.equal(closer.group.getObjectByName('rear-center-clearance-monitor-L-wall-front').material.color.getHex(),0xff303d);
+ closer.dispose();f.dispose();
+});
+
+test('rear center clearance follows the recessed wall rather than the missing front-wall patch',()=>{
+ const f=fixture(),monitor=f.monitors[0],niche=f.doc.roomFeatures.window;
+ monitor.group.position.set(niche.center,0.9245,0.4);monitor.group.rotation.y=0;monitor.group.updateMatrixWorld(true);
+ const view=createMonitorWallWarnings([monitor],f.room.surfaces),measurement=view.rearClearances[0];
+ assert.equal(measurement.wall,'niche-back');
+ assert.ok(Math.abs(measurement.center.end.z+niche.depth)<1e-8);
+ view.dispose();f.dispose();
+});
