@@ -660,3 +660,7 @@ Alt + kliknięcie jest obsługiwane przez cały obszar widoku przed nakładką p
 ## Alt + przeciągnięcie: ramka zaznaczenia — 0.81.0
 
 Alt + przeciągnięcie lewym przyciskiem myszy rysuje rozciąganą ramkę w widoku pokoju, także gdy gest zaczyna się nad uchwytem geometrii. Ramka zaznacza wierzchołki lub krawędzie leżące w jej obszarze zgodnie z aktywnym typem zaznaczenia. W trybie powierzchni przełącza na wierzchołki. Ctrl + przeciągnięcie nadal przesuwa kamerę, a zwykłe kliknięcie nadal wybiera powierzchnię. Test gotowej aplikacji sprawdza rysowanie ramki, wiele zaznaczonych punktów oraz brak ruchu kamery.
+
+## Karty odległości tylko pod kursorem — 0.82.0
+
+Etykiety odległości promieni od tweeterów i czerwonych linii odstępu od ścian są ukryte, dopóki kursor nie znajdzie się nad odpowiednią linią. W danej chwili pojawia się wyłącznie etykieta najbliższego lasera; po odsunięciu kursora znika. Same linie i obliczone wartości pozostają widoczne i niezmienione.

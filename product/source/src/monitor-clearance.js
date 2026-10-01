@@ -51,7 +51,7 @@ export function createMonitorWallWarnings(monitors,surfaces){
   line.name=`wall-clearance-${warning.monitor}-${warning.wall}`;line.position.copy(start).add(warning.end).multiplyScalar(.5);
   line.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),delta.normalize());
   line.userData={monitor:warning.monitor,wall:warning.wall,distance:warning.distance,start:start.clone(),end:warning.end.clone()};group.add(line);
-  const label=createDistanceLabel(warning.distance,line.position,0xff777d);label.name=`wall-distance-${warning.monitor}-${warning.wall}`;group.add(label);
+  const label=createDistanceLabel(warning.distance,line.position,0xff777d);label.name=`wall-distance-${warning.monitor}-${warning.wall}`;line.userData.distanceLabel=label;group.add(label);
  }
  return {group,warnings,dispose(){group.traverse(o=>{o.geometry?.dispose();if(o.isSprite){o.material.map?.dispose();o.material.dispose();}});material.dispose();}};
 }

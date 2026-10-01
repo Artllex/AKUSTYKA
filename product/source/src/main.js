@@ -63,7 +63,7 @@ import {updateLinkedMonitor,DEFAULT_MONITOR_LINKS} from './monitor-links.js';
 
 import {createTweeterRays} from './tweeter-rays.js';
 import {createMonitorWallWarnings} from './monitor-clearance.js';
-import {updateDistanceLabels} from './distance-label.js';
+import {updateDistanceLabels,hoverDistanceLabel} from './distance-label.js';
 
 import {findMonitorCollisions,tintCollision} from './monitor-collisions.js';
 
@@ -82,6 +82,13 @@ const doc=createDocument();const history=createDocumentHistory(doc);let bench,li
 try{renderer=new THREE.WebGLRenderer({antialias:true});}catch(error){$('error').hidden=false;$('error').textContent='Nie można uruchomić widoku 3D. Sprawdź obsługę WebGL w przeglądarce.';throw error;}
 
 renderer.setPixelRatio(Math.min(devicePixelRatio,2));host.append(renderer.domElement);renderer.setClearColor(0x16212b);
+let laserCursor=null;
+host.addEventListener('pointermove',event=>{
+ if(event.target.closest?.('button,input,label,#edit-popup,#edit-tools,#axis-gizmo,.view-tools,#distance-label,#edge-insert')){laserCursor=null;return;}
+ const rect=renderer.domElement.getBoundingClientRect();
+ laserCursor={x:event.clientX-rect.left,y:event.clientY-rect.top};
+});
+host.addEventListener('pointerleave',()=>{laserCursor=null;});
 
 // Uchwyty geometrii leżą nad płótnem, więc gest touchpada trafia w SVG.
 // Przekaż go do OrbitControls razem z pozycją kursora i modyfikatorami.
@@ -294,7 +301,7 @@ $('toggle-surface').hidden=true;
 
 new ResizeObserver(resize).observe(host);
 
-rebuild();fieldHistory=setupFieldHistory({history,read:()=>doc,editor:viewportEditor,context:()=>({object:selectedObjectId,monitor:$('monitor-select').value})});setupNumericFields();renderer.setAnimationLoop(()=>{controls.update();host.dataset.cameraPosition=camera.position.toArray().join(',');host.dataset.cameraTarget=controls.target.toArray().join(',');updateProjectionVisibility();if(!projection)view.updateVisibility(camera,$('cutaway').checked);if(reflectionView)for(const o of reflectionView.group.children)o.visible=!projection||(o.userData.surface===projection.surfaceName&&o.name!=='reflection-path');updateDistanceLabels(tweeterRays?.group,camera);updateDistanceLabels(wallWarnings?.group,camera);viewportEditor?.render();orientation.update(camera);renderer.render(scene,camera);});
+rebuild();fieldHistory=setupFieldHistory({history,read:()=>doc,editor:viewportEditor,context:()=>({object:selectedObjectId,monitor:$('monitor-select').value})});setupNumericFields();renderer.setAnimationLoop(()=>{controls.update();host.dataset.cameraPosition=camera.position.toArray().join(',');host.dataset.cameraTarget=controls.target.toArray().join(',');updateProjectionVisibility();if(!projection)view.updateVisibility(camera,$('cutaway').checked);if(reflectionView)for(const o of reflectionView.group.children)o.visible=!projection||(o.userData.surface===projection.surfaceName&&o.name!=='reflection-path');const label=hoverDistanceLabel([tweeterRays?.group,wallWarnings?.group],camera,laserCursor,renderer.domElement.clientWidth,renderer.domElement.clientHeight);host.dataset.hoverDistanceLabel=label?.name??'';updateDistanceLabels(tweeterRays?.group,camera);updateDistanceLabels(wallWarnings?.group,camera);viewportEditor?.render();orientation.update(camera);renderer.render(scene,camera);});
 
 
 
