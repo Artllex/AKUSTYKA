@@ -27,7 +27,7 @@ test('15U rack stands on the floor inside the rear right corner and keeps its mo
  const foot=view.group.getObjectByName('tapered-foot-side'),footPositions=foot.geometry.attributes.position;
  const topAt=z=>{let top=-Infinity;for(let i=0;i<footPositions.count;i++)if(Math.abs(footPositions.getZ(i)-z)<1e-6)top=Math.max(top,footPositions.getY(i));return top;};
  assert.ok(topAt(RACK_15U.depth/2)>topAt(-RACK_15U.depth/2),'rear foot ends must be higher than the front');
- assert.ok(Math.abs(topAt(RACK_15U.depth/2)-2*lowerRail.geometry.parameters.height)<1e-6,'rear foot height must equal twice the lower beam height');
+ assert.ok(topAt(RACK_15U.depth/2)-0.011>3.5*lowerRail.geometry.parameters.height,'rear end must remain visibly taller than the foreground beam despite perspective');
  const rail=view.group.getObjectByName('mounting-rail'),positions=rail.geometry.attributes.position;
  assert.ok(rail.position.z<0,'uprights and front rail must face the room, with the feet behind');
  assert.ok(lowerRail.position.z<0,'branded cross-member must be at the front');
