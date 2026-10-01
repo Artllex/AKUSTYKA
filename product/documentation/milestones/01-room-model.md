@@ -676,3 +676,7 @@ Przycisk „Pokaż obiekty” w panelu rzutów przełącza widok samej wybranej 
 ## Odległość między monitorami — 0.85.0
 
 Niebieski laser mierzy odległość między środkami tweeterów. Laser i karta pomiaru pojawiają się jednocześnie tylko podczas najechania kursorem na przebieg odcinka; po odsunięciu kursora znikają. Pomiar aktualizuje się po zmianie położenia monitorów.
+
+## Lasery i odbicia w rzucie z obiektami — 0.86.0
+
+Rzut z obiektami pokazuje lasery monitorów widocznych po oglądanej stronie płaszczyzny. Rzut samej powierzchni je ukrywa. Niebieski laser między monitorami zachowuje widoczność tylko podczas najechania kursorem. Pierwsze odbicia na oglądanej powierzchni mają w rzucie cienki kontur 1 px; widok 3D zachowuje dotychczasowe znaczniki i opcjonalne drogi odbić.

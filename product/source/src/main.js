@@ -70,6 +70,7 @@ import {createMonitorSpan} from './monitor-span.js';
 import {findMonitorCollisions,tintCollision} from './monitor-collisions.js';
 
 import {createReflectionView} from './reflection-view.js';
+import {updateReflectionVisibility} from './reflection-visibility.js';
 
 import {normalizeReflectionSettings} from './reflection-model.js';
 
@@ -194,10 +195,20 @@ function resize(){const w=host.clientWidth,h=host.clientHeight;if(!w||!h)return;
 const projectionHidden=new WeakMap();let projectionObjectsVisible=false;
 function updateProjectionVisibility(){
  if(!view)return;
- const objects=[...featureViews,...listenerViews,...monitorViews,...rackViews].map(v=>v.group),groups=[...objects];if(tweeterRays)groups.push(tweeterRays.group);if(wallWarnings)groups.push(wallWarnings.group);if(monitorSpan)groups.push(monitorSpan.group);
+ const objects=[...featureViews,...listenerViews,...monitorViews,...rackViews].map(v=>v.group),helpers=[tweeterRays?.group,wallWarnings?.group,monitorSpan?.group].filter(Boolean),groups=[...objects,...helpers];
  const surface=projection?view.surfaces.find(s=>s.name===projection.surfaceName):null;
- for(const group of groups){if(projection){if(!projectionHidden.has(group))projectionHidden.set(group,group.visible);group.visible=!!(projectionObjectsVisible&&objects.includes(group)&&projectionHidden.get(group)&&objectOnProjectionSide(group,surface,projection.side));}else if(projectionHidden.has(group)){group.visible=projectionHidden.get(group);projectionHidden.delete(group);}}
+ for(const group of objects){if(projection){if(!projectionHidden.has(group))projectionHidden.set(group,group.visible);group.visible=!!(projectionObjectsVisible&&projectionHidden.get(group)&&objectOnProjectionSide(group,surface,projection.side));}else if(projectionHidden.has(group)){group.visible=projectionHidden.get(group);projectionHidden.delete(group);}}
+ const visibleMonitors=new Set(monitorViews.filter(m=>m.group.visible).map(m=>m.group.name));
+ for(const group of helpers){if(projection){if(!projectionHidden.has(group))projectionHidden.set(group,group.visible);group.visible=!!(projectionObjectsVisible&&projectionHidden.get(group)&&(group===monitorSpan?.group?visibleMonitors.size===2:visibleMonitors.size>0));}else if(projectionHidden.has(group)){group.visible=projectionHidden.get(group);projectionHidden.delete(group);}}
+ for(const group of [tweeterRays?.group,wallWarnings?.group].filter(Boolean))for(const child of group.children){
+  const monitor=child.userData.monitor??(child.name.startsWith('ray-')?child.name.slice(4):child.name.startsWith('head-hit-')?child.name.slice(9):null);
+  if(!monitor)continue;
+  if(projection){if(!projectionHidden.has(child))projectionHidden.set(child,child.visible);child.visible=projectionHidden.get(child)&&visibleMonitors.has(monitor);}else if(projectionHidden.has(child)){child.visible=projectionHidden.get(child);projectionHidden.delete(child);}
+ }
  if(projection){for(const object of view.group.children)object.visible=object===surface||(object.name==='floor-outline'&&surface?.name==='floor')||(object===view.grid&&surface?.name==='floor'&&$('grid').checked);}
+ updateReflectionVisibility(reflectionView,projection,projectionObjectsVisible);
+ host.dataset.visibleLaserGroups=String(helpers.filter(g=>g.visible).length);
+ host.dataset.visibleReflectionOutlines=String(reflectionView?.group.visible?reflectionView.group.children.filter(o=>o.name==='reflection-projection'&&o.visible).length:0);
  host.dataset.visibleSceneEntities=String(groups.filter(g=>g.visible).length);
  host.dataset.projectionSurface=projection?.surfaceName??'';
 }
@@ -306,7 +317,7 @@ $('toggle-surface').hidden=true;
 
 new ResizeObserver(resize).observe(host);
 
-rebuild();fieldHistory=setupFieldHistory({history,read:()=>doc,editor:viewportEditor,context:()=>({object:selectedObjectId,monitor:$('monitor-select').value})});setupNumericFields();renderer.setAnimationLoop(()=>{controls.update();host.dataset.cameraPosition=camera.position.toArray().join(',');host.dataset.cameraTarget=controls.target.toArray().join(',');updateProjectionVisibility();if(!projection)view.updateVisibility(camera,$('cutaway').checked);if(reflectionView)for(const o of reflectionView.group.children)o.visible=!projection||(o.userData.surface===projection.surfaceName&&o.name!=='reflection-path');const label=hoverDistanceLabel([tweeterRays?.group,wallWarnings?.group,monitorSpan?.group],camera,laserCursor,renderer.domElement.clientWidth,renderer.domElement.clientHeight);host.dataset.hoverDistanceLabel=label?.name??'';updateDistanceLabels(tweeterRays?.group,camera);updateDistanceLabels(wallWarnings?.group,camera);updateDistanceLabels(monitorSpan?.group,camera);viewportEditor?.render();orientation.update(camera);renderer.render(scene,camera);});
+rebuild();fieldHistory=setupFieldHistory({history,read:()=>doc,editor:viewportEditor,context:()=>({object:selectedObjectId,monitor:$('monitor-select').value})});setupNumericFields();renderer.setAnimationLoop(()=>{controls.update();host.dataset.cameraPosition=camera.position.toArray().join(',');host.dataset.cameraTarget=controls.target.toArray().join(',');updateProjectionVisibility();if(!projection)view.updateVisibility(camera,$('cutaway').checked);const label=hoverDistanceLabel([tweeterRays?.group,wallWarnings?.group,monitorSpan?.group],camera,laserCursor,renderer.domElement.clientWidth,renderer.domElement.clientHeight);host.dataset.hoverDistanceLabel=label?.name??'';updateDistanceLabels(tweeterRays?.group,camera);updateDistanceLabels(wallWarnings?.group,camera);updateDistanceLabels(monitorSpan?.group,camera);viewportEditor?.render();orientation.update(camera);renderer.render(scene,camera);});
 
 
 
