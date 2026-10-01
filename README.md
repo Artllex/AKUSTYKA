@@ -1,6 +1,6 @@
 # AKUSTYKA
 
-Edytor pokoju 3D dla Windows, przygotowany do dalszego rozwijania narzędzi akustycznych. Aktualna wersja: 0.79.0.
+Edytor pokoju 3D dla Windows, przygotowany do dalszego rozwijania narzędzi akustycznych. Aktualna wersja: 0.80.0.
 
 Pozwala edytować geometrię pokoju, ustawiać manekina i monitory studyjne oraz oglądać geometryczne pierwsze odbicia. Domyślne wymiary wewnętrzne: **247,7 × 371,5 × 260,5 cm**. Obliczenia charakterystyki częstotliwościowej i pełna symulacja akustyczna nie są jeszcze zaimplementowane.
 

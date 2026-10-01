@@ -59,10 +59,18 @@ app.whenReady().then(async()=>{
   window.webContents.sendInputEvent({type:'keyDown',keyCode:'Alt'});
   window.webContents.sendInputEvent({type:'mouseMove',...altPoint});
   window.webContents.sendInputEvent({type:'mouseDown',...altPoint,button:'left',modifiers:['alt']});
-  window.webContents.sendInputEvent({type:'mouseUp',...altPoint,button:'left',modifiers:['alt']});
   window.webContents.sendInputEvent({type:'keyUp',keyCode:'Alt'});
+  window.webContents.sendInputEvent({type:'mouseUp',...altPoint,button:'left'});
   modifierCheck.altSelection=await window.webContents.executeJavaScript(`(()=>{const host=document.getElementById('viewport');return {surface:host.dataset.meshSelection,title:document.getElementById('edit-title').textContent};})()`);
   if(!modifierCheck.altSelection.surface||modifierCheck.altSelection.title!=='Powierzchnia')throw new Error(JSON.stringify(modifierCheck));
+  await window.webContents.executeJavaScript(`document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}))`);
+  const overlayHit=await window.webContents.executeJavaScript(`(()=>{const svg=document.getElementById('edit-overlay'),rect=svg.getBoundingClientRect(),circle=document.createElementNS('http://www.w3.org/2000/svg','circle');circle.id='alt-overlay-check';circle.setAttribute('cx',${altPoint.x}-rect.left);circle.setAttribute('cy',${altPoint.y}-rect.top);circle.setAttribute('r','12');circle.setAttribute('fill','transparent');circle.setAttribute('pointer-events','all');svg.append(circle);return document.elementFromPoint(${altPoint.x},${altPoint.y})===circle;})()`);
+  window.webContents.sendInputEvent({type:'keyDown',keyCode:'Alt'});
+  window.webContents.sendInputEvent({type:'mouseDown',...altPoint,button:'left',modifiers:['alt']});
+  window.webContents.sendInputEvent({type:'mouseUp',...altPoint,button:'left',modifiers:['alt']});
+  window.webContents.sendInputEvent({type:'keyUp',keyCode:'Alt'});
+  modifierCheck.overlaySelection=await window.webContents.executeJavaScript(`(()=>{const host=document.getElementById('viewport'),selected=host.dataset.meshSelection;document.getElementById('alt-overlay-check')?.remove();return selected;})()`);
+  if(!overlayHit||!modifierCheck.overlaySelection)throw new Error(JSON.stringify({overlayHit,modifierCheck}));
   await window.webContents.executeJavaScript(`document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}))`);
   result.modifierCheck=modifierCheck;
 

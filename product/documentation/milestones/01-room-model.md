@@ -652,3 +652,7 @@ Ctrl + przeciągnięcie lewym przyciskiem przesuwa widok, także po rozpoczęciu
 ## Poprawka sterowania kamerą — 0.79.0
 
 Poprzednia zmiana ustawiła Ctrl + lewy przycisk na PAN, lecz OrbitControls zamienia PAN na ROTATE, gdy Ctrl jest wciśnięty. Teraz lewy przycisk pozostaje ROTATE, a sam OrbitControls przekształca Ctrl + przeciągnięcie w przesuwanie. W teście gotowej aplikacji sprawdzane jest faktyczne przesunięcie celu kamery bez zmiany jej kierunku, a także rzeczywiste Alt + kliknięcie powierzchni.
+
+## Alt + zaznaczenie powierzchni — 0.80.0
+
+Alt + kliknięcie jest obsługiwane przez cały obszar widoku przed nakładką punktów i krawędzi. Wybiera powierzchnię pokoju pod kursorem również przez wyposażenie i uchwyty geometrii; nie uruchamia przy tym obracania kamery ani przeciągania uchwytu. Weryfikacja aplikacji obejmuje kliknięcie w płótno 3D oraz w nakładkę, a także zwolnienie Alt przed puszczeniem myszy.

@@ -237,12 +237,22 @@ $('reset').onclick=()=>{doc.room={...DEFAULT_ROOM};doc.roomShape=null;doc.roomMe
 
 const raycaster=new THREE.Raycaster();let down;
 
+// Surface picking belongs to the viewport, not to the SVG handles that happen
+// to be drawn above it. Handle Alt at the shared parent before either child.
+host.addEventListener('pointerdown',e=>{
+ if(!e.altKey||e.ctrlKey||e.button!==0||edgeOnly(e)||e.target.closest('button,input,label,#edit-popup,#edit-tools,#axis-gizmo,.view-tools,#distance-label,#edge-insert'))return;
+ e.preventDefault();e.stopImmediatePropagation();
+ down=null;
+ const surface=pickSurface(e);
+ if(surface){clearMeasurement();selectObject(null);select(surface);viewportEditor.pick(surface);}
+},true);
+
 document.addEventListener('keydown',e=>{if(e.key==='Control')host.classList.add('camera-pan-modifier');});
 document.addEventListener('keyup',e=>{if(e.key==='Control')host.classList.remove('camera-pan-modifier');});
 window.addEventListener('blur',()=>host.classList.remove('camera-pan-modifier'));
 renderer.domElement.addEventListener('pointerdown',e=>{controls.mouseButtons.LEFT=e.shiftKey&&!e.ctrlKey?THREE.MOUSE.PAN:THREE.MOUSE.ROTATE;down={x:e.clientX,y:e.clientY,id:e.pointerId,button:e.button};},true);
 
-renderer.domElement.addEventListener('pointerup',e=>{if(!down||down.id!==e.pointerId||down.button!==0||Math.hypot(e.clientX-down.x,e.clientY-down.y)>5){down=null;return;}down=null;if(edgeOnly(e))return;if(e.altKey){const surface=pickSurface(e);if(surface){clearMeasurement();selectObject(null);select(surface);viewportEditor.pick(surface);}return;}const {target,object}=pickScene(e);if(!target){clearMeasurement();viewportEditor.clear();selectObject(null);select(null);return;}if(e.ctrlKey){const first=selectedObjectId?findEntity(selectedObjectId):selected;if(first&&target&&first!==target){measurement={first:entityKey(first),second:entityKey(target)};refreshMeasurement();}return;}clearMeasurement();if(object){viewportEditor.clear();selectObject(object);if(!projection)select(null);}else if(view.surfaces.includes(target)){selectObject(null);select(target);viewportEditor.pick(target);}});
+renderer.domElement.addEventListener('pointerup',e=>{if(!down||down.id!==e.pointerId||down.button!==0||Math.hypot(e.clientX-down.x,e.clientY-down.y)>5){down=null;return;}down=null;if(edgeOnly(e))return;const {target,object}=pickScene(e);if(!target){clearMeasurement();viewportEditor.clear();selectObject(null);select(null);return;}if(e.ctrlKey){const first=selectedObjectId?findEntity(selectedObjectId):selected;if(first&&target&&first!==target){measurement={first:entityKey(first),second:entityKey(target)};refreshMeasurement();}return;}clearMeasurement();if(object){viewportEditor.clear();selectObject(object);if(!projection)select(null);}else if(view.surfaces.includes(target)){selectObject(null);select(target);viewportEditor.pick(target);}});
 
 function pickScene(e){const rect=renderer.domElement.getBoundingClientRect();raycaster.setFromCamera(new THREE.Vector2((e.clientX-rect.left)/rect.width*2-1,-(e.clientY-rect.top)/rect.height*2+1),camera);const groups=projection?[]:selectableGroups();const hits=raycaster.intersectObjects([...groups,...view.surfaces.filter(s=>s.visible)],true).filter(hit=>{let o=hit.object;while(o){if(!o.visible)return false;o=o.parent;}return !hit.object.name.startsWith('center-')&&!hit.object.name.startsWith('cross-');});const hit=hits[0];let object=hit?.object;while(object&&!groups.includes(object))object=object.parent;const target=object??(view.surfaces.includes(hit?.object)?hit.object:null);return {target,object,hit};}
 function pickSurface(e){const rect=renderer.domElement.getBoundingClientRect();raycaster.setFromCamera(new THREE.Vector2((e.clientX-rect.left)/rect.width*2-1,-(e.clientY-rect.top)/rect.height*2+1),camera);return raycaster.intersectObjects(view.surfaces.filter(surface=>surface.visible),false)[0]?.object??null;}
