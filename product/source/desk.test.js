@@ -51,14 +51,14 @@ test('desk is saved, follows room width while untouched, and can be added to old
  assert.equal(desk.position.x,createDeskRecord(next).position.x+.1);
  placeDefaultListeningLayout(doc);assert.equal(desk.position.x,createDeskRecord(next).position.x+.1);
  const loaded=parseRoomDocument(JSON.stringify(doc));
- assert.equal(loaded.objects.filter(o=>o.type==='studio-desk').length,1);
- loaded.objects=loaded.objects.filter(o=>o.type!=='studio-desk');
+ assert.equal(loaded.objects.filter(o=>o.id==='desk-combodesk-88').length,1);
+ loaded.objects=loaded.objects.filter(o=>o.id!=='desk-combodesk-88');
  const old=parseRoomDocument(JSON.stringify(loaded));
- assert.equal(old.objects.filter(o=>o.type==='studio-desk').length,0);
+ assert.equal(old.objects.filter(o=>o.id==='desk-combodesk-88').length,0);
  const legacy=createDocument();legacy.objects=legacy.objects.filter(o=>o.type!=='studio-desk');
  assert.equal(usesDefaultListeningLayout(legacy),true);
  ensureDeskRecord(old);ensureDeskRecord(old);
- assert.equal(old.objects.filter(o=>o.type==='studio-desk').length,1);
+ assert.equal(old.objects.filter(o=>o.id==='desk-combodesk-88').length,1);
 });
 
 test('default desk moves exactly 27 cm toward listener; old untouched documents migrate',()=>{

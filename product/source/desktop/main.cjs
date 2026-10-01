@@ -95,8 +95,8 @@ app.whenReady().then(async()=>{
 
   const rackCheck=await window.webContents.executeJavaScript(`(()=>{const viewport=document.getElementById('viewport');return {count:Number(viewport.dataset.rackCount),selected:viewport.dataset.selectedObject};})()`);
   if(rackCheck.count!==1)throw new Error(JSON.stringify(rackCheck));result.rackCheck=rackCheck;
-  const deskCheck=await window.webContents.executeJavaScript(`(()=>({count:Number(document.getElementById('viewport').dataset.deskCount)}))()`);
-  if(deskCheck.count!==1)throw new Error(JSON.stringify(deskCheck));result.deskCheck=deskCheck;
+  const deskCheck=await window.webContents.executeJavaScript(`(()=>({count:Number(document.getElementById('viewport').dataset.deskCount),modulCount:Number(document.getElementById('viewport').dataset.modulDeskCount)}))()`);
+  if(deskCheck.count!==2||deskCheck.modulCount!==1)throw new Error(JSON.stringify(deskCheck));result.deskCheck=deskCheck;
 
   const sideDistanceCheck=await window.webContents.executeJavaScript(`(()=>{const $=id=>document.getElementById(id),input=$('monitor-ear-distance'),before=Number(input.value),target=+(before+3).toFixed(1);input.value=String(target);input.dispatchEvent(new Event('input',{bubbles:true}));const left=Number(input.value);$('monitor-select').value='monitor-R';$('monitor-select').dispatchEvent(new Event('change'));const right=Number(input.value);$('monitor-select').value='monitor-L';$('monitor-select').dispatchEvent(new Event('change'));$('edit-undo').click();return {before,target,left,right,undone:Number(input.value)};})()`);
   if(sideDistanceCheck.before!==86.9||sideDistanceCheck.left!==sideDistanceCheck.target||sideDistanceCheck.right!==sideDistanceCheck.target||sideDistanceCheck.undone!==sideDistanceCheck.before)throw new Error(JSON.stringify(sideDistanceCheck));result.sideDistanceCheck=sideDistanceCheck;

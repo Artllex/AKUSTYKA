@@ -60,7 +60,9 @@ import {monitorSideDistance,moveMonitorAlongSide} from './monitor-side-distance.
 import {createRackView} from './rack-view.js';
 import {ensureRackRecord,moveDefaultRackWithRoom} from './rack-model.js';
 import {createDeskView} from './desk-view.js';
+import {createModulDeskView} from './modul-desk-view.js';
 import {ensureDeskRecord,moveDefaultDeskWithRoom} from './desk-model.js';
+import {MODUL_DESK_ID,ensureModulDeskRecord,moveDefaultModulDeskWithRoom} from './modul-desk-model.js';
 
 import {updateLinkedMonitor,DEFAULT_MONITOR_LINKS} from './monitor-links.js';
 
@@ -82,7 +84,7 @@ import './style.css';
 
 const $=id=>document.getElementById(id),host=$('viewport');
 
-const doc=createDocument();const history=createDocumentHistory(doc);let bench,listenerPanel,monitorPanel,reflectionPanel,featuresPanel,objectPanel,surfacePanel,viewportEditor,fieldHistory,rackAddButton,deskAddButton;const orientation=createOrientation($('orientation'));let renderer;
+const doc=createDocument();const history=createDocumentHistory(doc);let bench,listenerPanel,monitorPanel,reflectionPanel,featuresPanel,objectPanel,surfacePanel,viewportEditor,fieldHistory,rackAddButton,deskAddButton,modulDeskAddButton;const orientation=createOrientation($('orientation'));let renderer;
 
 try{renderer=new THREE.WebGLRenderer({antialias:true});}catch(error){$('error').hidden=false;$('error').textContent='Nie można uruchomić widoku 3D. Sprawdź obsługę WebGL w przeglądarce.';throw error;}
 
@@ -182,7 +184,7 @@ $('distance-clear').onclick=clearMeasurement;document.addEventListener('keydown'
 
 const selectionOutline=new THREE.BoxHelper(undefined,0x74dcc2);selectionOutline.userData.helper=true;selectionOutline.visible=false;selectionOutline.material.depthTest=false;selectionOutline.renderOrder=20;scene.add(selectionOutline);
 
-const objectLabel=id=>id==='door'?'Drzwi':id==='window'?'Wnęka okna':id==='radiator'?'Kaloryfer':id==='switch'?'Włącznik światła':id==='ceiling-light'?'Lampa sufitowa Govee H60A6':id==='rack-15u'?'Stojak RIVECO 19″ 15U':id==='desk-combodesk-88'?'Biurko Thomann ComboDesk 88':id.startsWith('monitor-')?'Monitor '+id.slice(8):'Manekin';
+const objectLabel=id=>id==='door'?'Drzwi':id==='window'?'Wnęka okna':id==='radiator'?'Kaloryfer':id==='switch'?'Włącznik światła':id==='ceiling-light'?'Lampa sufitowa Govee H60A6':id==='rack-15u'?'Stojak RIVECO 19″ 15U':id==='desk-combodesk-88'?'Biurko Thomann ComboDesk 88':id===MODUL_DESK_ID?'Biurko modul Studio Desk 2025':id.startsWith('monitor-')?'Monitor '+id.slice(8):'Manekin';
 
 function selectableGroups(){return [...featureViews,...listenerViews,...monitorViews,...rackViews,...deskViews].map(v=>v.group);}
 
@@ -234,7 +236,7 @@ function refreshMonitors(){for(const monitor of monitorViews){scene.remove(monit
 
 function refreshRacks(){for(const rack of rackViews){scene.remove(rack.group);rack.dispose();}rackViews=doc.objects.filter(o=>o.type==='studio-rack').map(record=>{const rack=createRackView(record);applyObjectTransform(rack.group,doc.transforms);scene.add(rack.group);return rack;});host.dataset.rackCount=rackViews.length;if(rackAddButton)rackAddButton.hidden=!!rackViews.length;refreshCollisions();refreshObjectSelection();}
 
-function refreshDesks(){for(const desk of deskViews){scene.remove(desk.group);desk.dispose();}deskViews=doc.objects.filter(o=>o.type==='studio-desk').map(record=>{const desk=createDeskView(record);applyObjectTransform(desk.group,doc.transforms);scene.add(desk.group);return desk;});host.dataset.deskCount=deskViews.length;if(deskAddButton)deskAddButton.hidden=!!deskViews.length;refreshCollisions();refreshObjectSelection();}
+function refreshDesks(){for(const desk of deskViews){scene.remove(desk.group);desk.dispose();}deskViews=doc.objects.filter(o=>o.type==='studio-desk').map(record=>{const desk=record.id===MODUL_DESK_ID?createModulDeskView(record):createDeskView(record);applyObjectTransform(desk.group,doc.transforms);scene.add(desk.group);return desk;});host.dataset.deskCount=deskViews.length;host.dataset.modulDeskCount=deskViews.filter(d=>d.group.name===MODUL_DESK_ID).length;if(deskAddButton)deskAddButton.hidden=doc.objects.some(o=>o.id==='desk-combodesk-88');if(modulDeskAddButton)modulDeskAddButton.hidden=doc.objects.some(o=>o.id===MODUL_DESK_ID);refreshCollisions();refreshObjectSelection();}
 
 function buildRoom(transforms=doc.transforms){
  const roomView=doc.roomMesh?createMeshRoom(doc.room,doc.roomMesh):doc.roomShape?createFootprintRoom(doc.room,doc.roomShape,doc.roomFeatures):createRoom(doc.room,doc.roomFeatures,transforms);
@@ -252,7 +254,7 @@ function buildRoom(transforms=doc.transforms){
 
 function applySnapshot(snapshot){listenerPanel?.abort();const roomChanged=JSON.stringify(doc.roomMesh)!==JSON.stringify(snapshot.roomMesh)||JSON.stringify(doc.roomShape)!==JSON.stringify(snapshot.roomShape)||JSON.stringify(doc.room)!==JSON.stringify(snapshot.room)||JSON.stringify(doc.roomFeatures)!==JSON.stringify(snapshot.roomFeatures)||JSON.stringify(doc.transforms)!==JSON.stringify(snapshot.transforms);Object.assign(doc,snapshot);for(const key of ['width','length','height'])$(key).value=doc.room[key]*100;if(roomChanged)rebuild(true);else {refreshRacks();refreshDesks();refreshListeners();refreshMonitors();}featuresPanel?.sync();objectPanel?.sync();refreshMeasurement();viewportEditor?.sync(true);fieldHistory?.restore();bench?.refresh(history);}
 
-$('dimensions').addEventListener('submit',e=>{e.preventDefault();try{const nextRoom=roomFromCentimeters($('width').value,$('length').value,$('height').value),defaultListeningLayout=usesDefaultListeningLayout(doc);normalizeRoomFeatures(doc.roomFeatures,nextRoom);if(doc.roomShape)doc.roomShape=doc.roomShape.map(p=>({x:p.x*nextRoom.width/doc.room.width,z:p.z*nextRoom.length/doc.room.length}));if(doc.roomMesh)doc.roomMesh.vertices=doc.roomMesh.vertices.map(p=>({x:p.x*nextRoom.width/doc.room.width,y:p.y*nextRoom.height/doc.room.height,z:p.z*nextRoom.length/doc.room.length}));moveDefaultRackWithRoom(doc,nextRoom);moveDefaultDeskWithRoom(doc,nextRoom);doc.room=nextRoom;if(defaultListeningLayout)placeDefaultListeningLayout(doc);history.push(doc);rebuild();$('error').hidden=true;}catch(error){$('error').textContent=error.message;$('error').hidden=false;}});
+$('dimensions').addEventListener('submit',e=>{e.preventDefault();try{const nextRoom=roomFromCentimeters($('width').value,$('length').value,$('height').value),defaultListeningLayout=usesDefaultListeningLayout(doc);normalizeRoomFeatures(doc.roomFeatures,nextRoom);if(doc.roomShape)doc.roomShape=doc.roomShape.map(p=>({x:p.x*nextRoom.width/doc.room.width,z:p.z*nextRoom.length/doc.room.length}));if(doc.roomMesh)doc.roomMesh.vertices=doc.roomMesh.vertices.map(p=>({x:p.x*nextRoom.width/doc.room.width,y:p.y*nextRoom.height/doc.room.height,z:p.z*nextRoom.length/doc.room.length}));moveDefaultRackWithRoom(doc,nextRoom);moveDefaultDeskWithRoom(doc,nextRoom);moveDefaultModulDeskWithRoom(doc,nextRoom);doc.room=nextRoom;if(defaultListeningLayout)placeDefaultListeningLayout(doc);history.push(doc);rebuild();$('error').hidden=true;}catch(error){$('error').textContent=error.message;$('error').hidden=false;}});
 
 $('grid').addEventListener('change',()=>view.grid.visible=$('grid').checked&&(!projection||selected?.name==='floor'));
 
@@ -301,6 +303,7 @@ function commitObjectTransform(id,transform,recordHistory=true){doc.transforms=u
 objectPanel=setupObjectPanel({read:()=>selectedObjectId?{label:objectLabel(selectedObjectId),transform:doc.transforms[selectedObjectId]}:null,change(transform){if(selectedObjectId)commitObjectTransform(selectedObjectId,transform);},clear:()=>selectObject(null),showError});
 rackAddButton=document.createElement('button');rackAddButton.type='button';rackAddButton.textContent='Dodaj stojak RIVECO 19″ 15U';rackAddButton.hidden=doc.objects.some(o=>o.id==='rack-15u');rackAddButton.onclick=()=>{ensureRackRecord(doc);history.push(doc);refreshRacks();refreshReflections();bench.refresh(history);};$('object-panel').append(rackAddButton);
 deskAddButton=document.createElement('button');deskAddButton.type='button';deskAddButton.textContent='Dodaj biurko Thomann ComboDesk 88';deskAddButton.hidden=doc.objects.some(o=>o.id==='desk-combodesk-88');deskAddButton.onclick=()=>{ensureDeskRecord(doc);history.push(doc);refreshDesks();refreshReflections();bench.refresh(history);};$('object-panel').append(deskAddButton);
+modulDeskAddButton=document.createElement('button');modulDeskAddButton.type='button';modulDeskAddButton.textContent='Dodaj biurko modul Studio Desk 2025';modulDeskAddButton.hidden=doc.objects.some(o=>o.id===MODUL_DESK_ID);modulDeskAddButton.onclick=()=>{ensureModulDeskRecord(doc);history.push(doc);refreshDesks();refreshReflections();bench.refresh(history);};$('object-panel').append(modulDeskAddButton);
 
 surfacePanel=setupSurfacePanel({read:()=>doc.roomShape??initialFootprint(doc),change(points,commit){
 
