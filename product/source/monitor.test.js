@@ -20,6 +20,18 @@ test('MM27 cabinet has real scale and five colored surface centers per monitor',
  for(const driver of MM27_DRIVERS){const p=view.getDriverCenters().find(p=>p.id===driver.id);assert.deepEqual(p.position.toArray(),driver.center);const marker=view.group.getObjectByName('center-'+driver.id);assert.equal(marker.material.color.getHex(),driver.color);assert.ok(marker.visible);assert.ok(marker.getWorldPosition(new THREE.Vector3()).distanceTo(p.position)<=0.004501);}
  assert.deepEqual(MM27_DRIVERS.slice(3).map(d=>d.normal),[[-1,0,0],[1,0,0]]);view.dispose();
 });
+test('Gen2 finish has silver front and rear plates, side cones and amplifier details',()=>{
+ const view=createStudioMonitor(createMonitorPair(DEFAULT_ROOM)[0]);
+ const part=name=>view.group.getObjectByName(name);
+ assert.ok(part('baffle').material.color.getHex()>0x999999);
+ assert.ok(part('rear-plate').material.color.getHex()>0x999999);
+ assert.ok(part('tweeter-panel'));
+ assert.equal(view.group.children.filter(child=>child.name==='heatsink-fin').length,16);
+ assert.equal(view.group.children.filter(child=>child.name==='rear-xlr').length,2);
+ for(const id of ['sub-left','sub-right'])assert.ok(part('driver-'+id).getObjectByName('side-white-cone'));
+ for(const id of ['midbass-top','midbass-bottom'])assert.ok(part('driver-'+id).getObjectByName('midbass-inner-cone'));
+ view.dispose();
+});
 test('centers follow speaker position and yaw, visibility does not alter geometry',()=>{
  const record=createMonitorPair(DEFAULT_ROOM)[1];record.position={x:1.7,y:0.8,z:0.6};record.yaw=Math.PI/2;record.centersVisible=false;
  const view=createStudioMonitor(record);const tweeter=view.getDriverCenters().find(d=>d.id==='tweeter');assert.ok(tweeter.position.distanceTo(new THREE.Vector3(1.897,1.0605,0.6))<1e-9);assert.ok(tweeter.normal.distanceTo(new THREE.Vector3(1,0,0))<1e-9);for(const driver of MM27_DRIVERS)assert.equal(view.group.getObjectByName('center-'+driver.id).visible,false);view.dispose();
