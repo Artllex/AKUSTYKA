@@ -17,7 +17,7 @@ function leverGeometry(outward){
  // Each station follows the side elevation: near/far depth, then half-width
  // from the top drawing. The thick portion belongs only to the short elbow.
  const p=RECTA_HANDLE.pivotOffset;
- const stations=[[p,.006,.013,.010],[p-.006,.008,.048,.011],[p-.012,.012,.060,.011],[p-.020,.022,.062,.0095],[p-.030,.033,.063,.0075],[p-.040,.041,.063,.0058],[p-.060,.043,.063,.0055],[p-.100,.044,.063,.0055],[p-RECTA_HANDLE.reach,.045,.063,.0055]];
+ const stations=[[p,.006,.045,.010],[p-.006,.008,.052,.011],[p-.012,.012,.060,.011],[p-.020,.022,.062,.0095],[p-.030,.033,.063,.0075],[p-.040,.041,.063,.0058],[p-.060,.043,.063,.0055],[p-.100,.044,.063,.0055],[p-RECTA_HANDLE.reach,.045,.063,.0055]];
  const sides=20,steps=64,positions=[],indices=[];
  for(let i=0;i<=steps;i++){
   const x=p-RECTA_HANDLE.reach*i/steps;

@@ -98,7 +98,7 @@ test('RECTA hardware has measured matte rosettes, keyhole and shaped levers on b
   close(Math.max(...tipY)-Math.min(...tipY),RECTA_HANDLE.tipHeight);
   close(Math.max(...tipZ)-Math.min(...tipZ),RECTA_HANDLE.tipDepth);
   const rootZ=[];for(let i=0;i<positions.count;i++)if(Math.abs(positions.getX(i)-RECTA_HANDLE.pivotOffset)<1e-6)rootZ.push(positions.getZ(i));
-  assert.ok(Math.max(...rootZ)-Math.min(...rootZ)<.012,'the lever must leave the rosette as a narrow shank');
+  assert.ok(Math.max(...rootZ)-Math.min(...rootZ)>.035,'the attachment must be solid rather than pinched at the rosette');
   const shaftZ=[];for(let i=0;i<positions.count;i++)if(Math.abs(positions.getX(i)-(RECTA_HANDLE.pivotOffset-.09))<.001)shaftZ.push(Math.abs(positions.getZ(i)));
   assert.ok(Math.min(...shaftZ)>.04,'the straight grip must remain thin and away from the rosette');
   assert.equal(lock.geometry.parameters.shapes.holes.length,1);
