@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import {MM27} from './monitor-model.js';
 import {distanceBetweenObjects} from './object-distance.js';
+import {createDistanceLabel} from './distance-label.js';
 
 // Barefoot MicroMain27 Gen2 owner's manual, Positioning (page 6/7).
 export const MIN_LISTENING_DISTANCE=1;
@@ -30,7 +31,7 @@ export function measureMonitorWallClearance(monitors,surfaces){
     surface.updateWorldMatrix(true,false);
     const wall=new THREE.Mesh(surface.geometry,material);wall.matrixAutoUpdate=false;wall.matrix.copy(surface.matrixWorld);
     if(boxGapSquared(bounds,new THREE.Box3().setFromObject(wall))<MIN_WALL_CLEARANCE**2){
-     const result=distanceBetweenObjects(envelope,wall);
+     const result=distanceBetweenObjects(monitor.group,wall);
      if(result&&result.distance<MIN_WALL_CLEARANCE-1e-7)warnings.push({...result,monitor:monitor.group.name,wall:surface.name});
     }
    }
@@ -44,12 +45,13 @@ export function createMonitorWallWarnings(monitors,surfaces){
  const group=new THREE.Group();group.name='monitor-wall-clearance';group.userData.helper=true;
  const warnings=measureMonitorWallClearance(monitors,surfaces),material=new THREE.MeshBasicMaterial({color:0xff303d,depthTest:false});
  for(const warning of warnings){
-  const start=warning.distance<1e-6?monitors.find(m=>m.group.name===warning.monitor).getDriverCenters().find(d=>d.id==='tweeter').position:warning.start;
+  const start=warning.start;
   const delta=warning.end.clone().sub(start),length=delta.length();if(length<1e-8)continue;
   const line=new THREE.Mesh(new THREE.CylinderGeometry(0.006,0.006,length,8),material);
   line.name=`wall-clearance-${warning.monitor}-${warning.wall}`;line.position.copy(start).add(warning.end).multiplyScalar(.5);
   line.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),delta.normalize());
   line.userData={monitor:warning.monitor,wall:warning.wall,distance:warning.distance,start:start.clone(),end:warning.end.clone()};group.add(line);
+  const label=createDistanceLabel(warning.distance,line.position.clone().add(new THREE.Vector3(0,.055,0)),0xff777d);label.name=`wall-distance-${warning.monitor}-${warning.wall}`;group.add(label);
  }
- return {group,warnings,dispose(){group.traverse(o=>o.geometry?.dispose());material.dispose();}};
+ return {group,warnings,dispose(){group.traverse(o=>{o.geometry?.dispose();if(o.isSprite){o.material.map?.dispose();o.material.dispose();}});material.dispose();}};
 }

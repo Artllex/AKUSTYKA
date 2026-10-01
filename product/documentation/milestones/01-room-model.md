@@ -640,3 +640,7 @@ Zwykły klik na widocznej powierzchni ponownie ją zaznacza i udostępnia rzut p
 ## Odległość monitorów od słuchacza i ścian — 0.76.0
 
 Instrukcja Barefoot MicroMain27 Gen2 zaleca minimum 100 cm od środka tweetera do miejsca odsłuchu. Kolor lasera każdego monitora jest czerwony poniżej tego progu i zielony od 100 cm. Pomiar używa bliższego ucha aktualnej pozycji manekina. Dla chłodzenia producent wymaga 12,7 cm wolnej przestrzeni między monitorem a dużą przeszkodą; dla każdej zbyt bliskiej ściany program rysuje czerwony odcinek od pełnej bryły monitora do rzeczywistej powierzchni ściany. Pomiar obejmuje ściany wnęki i zachowuje otwory w ścianach. Źródło: https://barefootsound.com/wp-content/uploads/2014/06/Barefoot_MicroMain27_Gen2_Users_Manual.pdf, sekcja 8 „Positioning”.
+
+## Linie odstępów i kolizja z grzejnikiem — 0.77.0
+
+Czerwona linia odstępu od ściany zaczyna się na faktycznie renderowanej bryle monitora i kończy na ścianie, także gdy ściana jest ukryta przez widok wnętrza. Etykiety przy liniach ściennych i laserach pokazują długość widocznego odcinka w centymetrach. Przecięcie monitora z grzejnikiem barwi cały grzejnik na czerwono; po odsunięciu wraca pierwotny kolor. Kontrola aplikacji obejmuje tę kolizję i przywrócenie stanu bez kolizji.
