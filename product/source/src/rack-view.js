@@ -8,7 +8,9 @@ export function createRackView(record){
  const opening=new THREE.MeshStandardMaterial({color:0x080a0c,roughness:0.96});
  const rubber=new THREE.MeshStandardMaterial({color:0x111316,roughness:0.95});
  const {width,depth,height,leanDegrees,mountingHeight}=RACK_15U;
- const lean=Math.tan(leanDegrees*Math.PI/180),railBaseY=0.060,railBaseZ=-depth/2+0.013;
+ const lean=Math.tan(leanDegrees*Math.PI/180),railBaseY=0.060;
+ // The uprights stand at the rear of the feet; their tops lean farther rearward.
+ const railBaseZ=depth/2-0.024-lean*(height-railBaseY);
  const railZ=y=>railBaseZ+lean*(y-railBaseY);
  const geometries=[];
  function mesh(name,geometry,material,x=0,y=0,z=0){const part=new THREE.Mesh(geometry,material);part.name=name;part.position.set(x,y,z);group.add(part);geometries.push(geometry);return part;}
@@ -38,7 +40,7 @@ export function createRackView(record){
   // Folded side plates run the full depth; four low rubber pads touch floor.
   bar('foot-base',0.030,0.003,depth,sign*(width/2-0.015),0.0095,0,edge);
   const outline=new THREE.Shape();
-  for(const [index,[z,y]] of [[-depth/2,0.011],[-depth/2,0.078],[-0.105,0.057],[depth/2,0.016],[depth/2,0.011]].entries()){
+  for(const [index,[z,y]] of [[-depth/2,0.011],[-depth/2,0.016],[0.055,0.057],[depth/2,0.078],[depth/2,0.011]].entries()){
    if(index===0)outline.moveTo(-z,y);else outline.lineTo(-z,y);
   }
   outline.closePath();
@@ -49,11 +51,11 @@ export function createRackView(record){
   }
  }
  // Front low cross-member and slim upper cross-member leave the rack open.
- bar('lower-front-rail',width,0.052,0.003,0,0.036,-depth/2+0.002,steel);
- bar('lower-rail-return',width,0.003,0.016,0,0.061,-depth/2+0.008,edge);
+ bar('lower-front-rail',width,0.052,0.003,0,0.036,railBaseZ+0.002,steel);
+ bar('lower-rail-return',width,0.003,0.016,0,0.061,railBaseZ+0.008,edge);
  bar('upper-cross-member',width,0.012,0.003,0,height-0.006,railZ(height),steel);
  for(const x of [-width/2+0.019,width/2-0.019])for(const y of [0.023,0.048]){
-  const screw=mesh('front-screw',new THREE.SphereGeometry(0.0027,8,6),edge,x,y,-depth/2+0.003);
+  const screw=mesh('front-screw',new THREE.SphereGeometry(0.0027,8,6),edge,x,y,railBaseZ+0.003);
   screw.userData.collision=false;
  }
  if(typeof document!=='undefined'){
@@ -63,7 +65,7 @@ export function createRackView(record){
   ctx.textAlign='center';ctx.font='bold 55px sans-serif';ctx.fillText('R',104,83);
   ctx.textAlign='left';ctx.font='bold 57px sans-serif';ctx.fillText('RIVECO',158,84);
   const texture=new THREE.CanvasTexture(canvas),label=new THREE.Mesh(new THREE.PlaneGeometry(0.065,0.016),new THREE.MeshBasicMaterial({map:texture,transparent:true,side:THREE.DoubleSide}));
-  label.name='brand';label.position.set(0,0.036,-depth/2+0.0001);label.rotation.y=Math.PI;label.userData.collision=false;group.add(label);geometries.push(label.geometry);
+  label.name='brand';label.position.set(0,0.036,railBaseZ+0.0001);label.rotation.y=Math.PI;label.userData.collision=false;group.add(label);geometries.push(label.geometry);
  }
  group.position.set(record.position.x,record.position.y,record.position.z);group.rotation.y=record.yaw;group.updateMatrixWorld(true);
  return {group,dispose(){const textures=new Set(),materials=new Set();group.traverse(part=>{if(part.material){materials.add(part.material);if(part.material.map)textures.add(part.material.map);}});for(const geometry of geometries)geometry.dispose();for(const texture of textures)texture.dispose();for(const material of materials)material.dispose();}};

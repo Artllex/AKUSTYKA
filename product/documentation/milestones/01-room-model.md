@@ -579,4 +579,8 @@ Zgodnie z dostarczonym zdjęciem wymiarowym stojak ma 73 cm wysokości, 50 cm sz
 
 ## Kierunek zwężenia stopek i logo — 0.61.0
 
-Obie boczne stopki są najwyższe przy przednich szynach i zwężają się ku tyłowi stojaka. Na przedniej dolnej belce znajduje się białe oznaczenie RIVECO z symbolem, zwrócone ku wnętrzu pokoju.
+Obie boczne stopki mają być najwyższe przy szynach i zwężać się ku wolnym końcom. Na przedniej dolnej belce znajduje się białe oznaczenie RIVECO z symbolem, zwrócone ku wnętrzu pokoju.
+
+## Korekta orientacji stopek — 0.62.0
+
+Pionowe szyny znajdują się z tyłu stojaka, a stopki biegną od nich ku przodowi. Ich wolne końce są niższe od części przy szynach. Poprzedni model miał zamienione przód i tył stojaka, dlatego mimo zmiany współrzędnych skos nadal wyglądał odwrotnie w widoku pokoju.
