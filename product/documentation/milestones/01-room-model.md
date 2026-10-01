@@ -664,3 +664,7 @@ Alt + przeciągnięcie lewym przyciskiem myszy rysuje rozciąganą ramkę w wido
 ## Karty odległości tylko pod kursorem — 0.82.0
 
 Etykiety odległości promieni od tweeterów i czerwonych linii odstępu od ścian są ukryte, dopóki kursor nie znajdzie się nad odpowiednią linią. W danej chwili pojawia się wyłącznie etykieta najbliższego lasera; po odsunięciu kursora znika. Same linie i obliczone wartości pozostają widoczne i niezmienione.
+
+## Natychmiastowa edycja monitorów — 0.83.0
+
+Pola odległości tweeter–ucho, pozycji X/Y/Z i obrotu stosują każdą poprawną zmianę od razu, zarówno podczas wpisywania, jak i po użyciu strzałek. Przyciski „Ustaw odległość” i „Zastosuj ustawienie” zostały usunięte. Niepełna lub niepoprawna liczba podczas pisania nie jest stosowana. Każdą poprawną zmianę można cofnąć przez Ctrl+Z.
