@@ -25,16 +25,21 @@ export function createDeskView(record){
    hole.userData.collision=false;
   }}
  }
- // The two full-height side panels have the curved front edge seen in the references.
+ // The side is inset beneath the tabletop. Its front edge bows deeply inward
+ // at knee height, then returns forward to form the broad foot at floor level.
  for(const sign of [-1,1]){
   const shape=new THREE.Shape();
-  shape.moveTo(-D.depth/2,0);shape.lineTo(D.depth/2,0);
-  shape.lineTo(D.depth/2,0.30);
-  shape.bezierCurveTo(D.depth/2-0.08,0.44,D.depth/2-0.12,0.59,D.depth/2-0.10,D.worktop.top-D.worktop.thickness);
-  shape.lineTo(-D.depth/2,D.worktop.top-D.worktop.thickness);shape.closePath();
-  const g=new THREE.ExtrudeGeometry(shape,{depth:0.018,bevelEnabled:false,curveSegments:12});
+  shape.moveTo(-0.290,0);
+  shape.lineTo(0.250,0);
+  shape.lineTo(0.250,0.018);
+  shape.bezierCurveTo(0.125,0.135,0.095,0.260,0.125,0.335);
+  shape.bezierCurveTo(0.145,0.455,0.315,0.500,0.315,0.610);
+  shape.lineTo(0.315,D.worktop.top-D.worktop.thickness);
+  shape.lineTo(-0.290,D.worktop.top-D.worktop.thickness);
+  shape.closePath();
+  const g=new THREE.ExtrudeGeometry(shape,{depth:0.018,bevelEnabled:false,curveSegments:24});
   g.rotateY(-Math.PI/2);
-  mesh('shaped-side-panel',g,board,sign*(D.width/2-0.018),0,0);
+  mesh('shaped-side-panel',g,board,sign*(D.width/2-0.027)+0.009,0,0);
   box('keyboard-runner',0.010,0.016,0.33,sign*0.779,0.635,0.13,metal);
  }
  // Sliding tray is modelled closed, with its metal runners visible from the sides.
@@ -49,9 +54,9 @@ export function createDeskView(record){
  mesh('rear-panel-three-cable-holes',backGeometry,board,0,0,-D.depth/2+0.025);
  box('cable-trough',1.51,0.012,0.095,0,0.48,-0.286);
  box('rear-lower-crossbar',1.50,0.12,0.018,0,0.44,-0.332);
- // Small hardware marks preserve the visible construction without dominating the model.
- for(const x of [-0.775,0.775])for(const y of [0.52,0.69]){
-  const screw=mesh('side-screw',new THREE.CylinderGeometry(0.0035,0.0035,0.001,12),metal,x,y,0.12);
+ // Fasteners on the outer face follow the pattern visible in the side photo.
+ for(const sign of [-1,1])for(const [z,y] of [[-0.060,0.690],[-0.060,0.505],[-0.205,0.430],[-0.085,0.430],[-0.235,0.335]]){
+  const screw=mesh('side-screw',new THREE.CylinderGeometry(0.0035,0.0035,0.001,12),metal,sign*(D.width/2-0.0175),y,z);
   screw.rotation.z=Math.PI/2;screw.userData.collision=false;
  }
  group.position.set(record.position.x,record.position.y,record.position.z);group.rotation.y=record.yaw;group.updateMatrixWorld(true);

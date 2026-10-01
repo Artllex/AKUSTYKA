@@ -15,6 +15,18 @@ test('ComboDesk 88 has published envelope, distinct tiers, three rack bays and c
  assert.ok(Math.abs(bounds.min.y)<1e-6);
  assert.ok(Math.abs(bounds.max.y-D.height)<1e-6);
  assert.equal(group.getObjectsByProperty('name','shaped-side-panel').length,2);
+ const sides=group.getObjectsByProperty('name','shaped-side-panel');
+ const frontAt=(side,low,high)=>{
+  const positions=side.geometry.attributes.position;let front=-Infinity;
+  for(let i=0;i<positions.count;i++)if(positions.getY(i)>=low&&positions.getY(i)<=high)front=Math.max(front,positions.getZ(i));
+  return front;
+ };
+ for(const side of sides){
+  assert.ok(frontAt(side,.30,.36)<frontAt(side,.58,.62)-.14,'knee cutout must be deeply recessed');
+  assert.ok(frontAt(side,.00,.03)>frontAt(side,.30,.36)+.09,'foot must return forward at floor level');
+ }
+ assert.ok(Math.abs(sides[0].position.x+sides[1].position.x-0.018)<1e-8,'side panels must be mirrored');
+ assert.equal(group.getObjectsByProperty('name','side-screw').length,10);
  assert.equal(group.getObjectsByProperty('name','rack-divider').length,4);
  const tray=group.getObjectByName('keyboard-tray');
  assert.deepEqual([tray.geometry.parameters.width,tray.geometry.parameters.depth],[1.56,.3]);
