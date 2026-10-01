@@ -35,9 +35,12 @@ test('window and door are true wall openings and retain projection dimensions',(
  }
  room.dispose();
 });
-test('niche has an 8 cm rear step, a soffit at 222 cm, and no window glass',()=>{
+test('niche holds an upper tilt pane and a wider fixed lower pane with measured clear openings',()=>{
  const features=defaultRoomFeatures(DEFAULT_ROOM),views=createRoomFeatureViews(DEFAULT_ROOM,features),recess=views.find(v=>v.group.name==='window').group;
- assert.ok(recess.getObjectByName('recess-back'));assert.equal(recess.getObjectByName('window-sill'),undefined);assert.equal(recess.getObjectByName('window-upper-glass'),undefined);assert.equal(features.window.bottom,0);assert.equal(features.window.depth,0.151);assert.equal(features.window.stepDepth,0.065);assert.equal(features.window.stepHeight,0.08);assert.ok(Math.abs(features.window.height-2.22)<1e-9);assert.ok(recess.getObjectByName('niche-roof'));const step=recess.getObjectByName('niche-step');assert.ok(step);const box=new THREE.Box3().setFromObject(step);assert.ok(Math.abs(box.min.z+0.151)<1e-8);assert.ok(Math.abs(box.max.z+0.086)<1e-8);assert.ok(Math.abs(box.max.y-0.08)<1e-8);
+ assert.ok(recess.getObjectByName('recess-back'));assert.equal(recess.getObjectByName('window-sill'),undefined);assert.equal(features.window.bottom,0);assert.equal(features.window.depth,0.151);assert.equal(features.window.stepDepth,0.065);assert.equal(features.window.stepHeight,0.08);assert.ok(Math.abs(features.window.height-2.22)<1e-9);assert.ok(recess.getObjectByName('niche-roof'));const step=recess.getObjectByName('niche-step');assert.ok(step);const box=new THREE.Box3().setFromObject(step);assert.ok(Math.abs(box.min.z+0.151)<1e-8);assert.ok(Math.abs(box.max.z+0.086)<1e-8);assert.ok(Math.abs(box.max.y-0.08)<1e-8);
+ const upper=recess.getObjectByName('window-upper-tilt-glass'),lower=recess.getObjectByName('window-lower-fixed-glass');assert.ok(upper&&lower);assert.ok(recess.getObjectByName('window-upper-handle'));assert.equal(recess.getObjectByName('window-lower-handle'),undefined);
+ recess.updateMatrixWorld(true);const upperSize=new THREE.Box3().setFromObject(upper).getSize(new THREE.Vector3()),lowerSize=new THREE.Box3().setFromObject(lower).getSize(new THREE.Vector3());
+ assert.ok(Math.abs(upperSize.x-.831)<1e-7&&Math.abs(upperSize.y-.893)<1e-7);assert.ok(Math.abs(lowerSize.x-.923)<1e-7&&Math.abs(lowerSize.y-.835)<1e-7);
  for(const v of views)v.dispose();
 });
 test('front wall closes the niche above 222 cm while the lower opening stays clear',()=>{

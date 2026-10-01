@@ -104,6 +104,29 @@ export function createRoomFeatureViews(room,features){
  W.box('recess-back',[w.width,w.height-(hasStep?w.stepHeight:0),0.01],[w.center,w.bottom+(hasStep?w.stepHeight:0)+(w.height-(hasStep?w.stepHeight:0))/2,-w.depth-0.005],reveal);
  if(hasStep)W.box('niche-step',[w.width,w.stepHeight,w.stepDepth],[w.center,w.bottom+w.stepHeight/2,-w.depth+w.stepDepth/2],stepMaterial);
  W.box('niche-roof',[w.width,0.01,w.depth],[w.center,w.bottom+w.height+0.005,-w.depth/2],reveal).userData.collision=false;
+ // Two glazing lights share the existing opening. The upper tilt sash has
+ // thicker stiles than the fixed lower pane, hence their different clear widths.
+ const frame=W.mat(0xe8e9e5,{roughness:.45}),sash=W.mat(0xf4f5f2,{roughness:.38}),glass=W.mat(0xcbdde1,{metalness:.12,roughness:.18,transparent:true,opacity:.91,side:THREE.DoubleSide}),seal=W.mat(0x555e61,{roughness:.85}),hardware=W.mat(0xc4c8c5,{metalness:.55,roughness:.3});
+ const glassZ=-w.depth+.014,frameZ=glassZ+.009,faceZ=frameZ+.009;
+ const windowBottom=w.bottom+.16,lowerTop=windowBottom+.835,upperBottom=lowerTop+.175,upperTop=upperBottom+.893;
+ const addGlazing=(name,width,bottom,height)=>{
+  W.box(name+'-glass',[width,height,.004],[w.center,bottom+height/2,glassZ],glass);
+  for(const side of [-1,1]){
+   W.box(name+'-seal-side',[.004,height+.008,.004],[w.center+side*(width/2+.002),bottom+height/2,frameZ-.003],seal);
+  }
+  for(const y of [bottom-.002,bottom+height+.002])W.box(name+'-seal-horizontal',[width+.008,.004,.004],[w.center,y,frameZ-.003],seal);
+ };
+ addGlazing('window-lower-fixed',.923,windowBottom,.835);
+ addGlazing('window-upper-tilt',.831,upperBottom,.893);
+ for(const side of [-1,1]){
+  W.box('window-outer-jamb',[.024,w.height,.022],[w.center+side*(w.width/2-.012),w.bottom+w.height/2,frameZ],frame);
+  W.box('window-lower-stile',[Math.max(.01,(w.width-.923)/2-.024),lowerTop-windowBottom+.036,.012],[w.center+side*(.923/2+(w.width-.923)/4+.006),(windowBottom+lowerTop)/2,faceZ],frame);
+  W.box('window-upper-tilt-stile',[Math.max(.01,(w.width-.831)/2-.024),upperTop-upperBottom+.028,.017],[w.center+side*(.831/2+(w.width-.831)/4+.006),(upperBottom+upperTop)/2,faceZ+.003],sash);
+ }
+ for(const [name,y,height] of [['window-bottom-frame',w.bottom+.09,.04],['window-crossbar',(lowerTop+upperBottom)/2,.125],['window-top-frame',w.bottom+w.height-.04,.08]])W.box(name,[w.width-.024,height,.021],[w.center,y,frameZ],frame);
+ for(const y of [upperBottom-.012,upperTop+.012])W.box('window-upper-sash-rail',[.855,.022,.017],[w.center,y,faceZ+.003],sash);
+ W.box('window-upper-handle-plate',[.011,.046,.007],[w.center-.831/2-.036,upperBottom+.45,faceZ+.015],hardware);
+ W.box('window-upper-handle',[.007,.088,.012],[w.center-.831/2-.036,upperBottom+.42,faceZ+.024],hardware);
 
  const r=features.radiator,R=create('radiator'),enamel=R.mat(0xe0e2dc),pipe=R.mat(0xbec5c1,{metalness:0.5});
  R.box('radiator-body',[r.width,r.height,r.depth-0.005],[r.center,r.bottom+r.height/2,r.standoff+(r.depth-0.005)/2],enamel);
