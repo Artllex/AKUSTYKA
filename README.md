@@ -37,6 +37,8 @@ Jedna jednostka modelu to jeden metr; pola interfejsu pokazują centymetry. X oz
 
 ## Lokalna organizacja projektu
 
+Zasady pracy zapisano w [AGENTS.md](AGENTS.md): każda zakończona zmiana otrzymuje lokalny commit, `product/builds/` zachowuje maksymalnie dwie najnowsze paczki Windows, a pliki projektu trafiają wyłącznie do miejsc przewidzianych przez strukturę Project Managera. Wysyłanie commitów wymaga osobnego polecenia.
+
 ## Cel:
 
 - Projekt zarządzany przez Project Control.
