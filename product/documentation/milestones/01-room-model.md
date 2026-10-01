@@ -632,3 +632,7 @@ Alt + klik zaznacza powierzchnię pokoju (ścianę, podłogę lub sufit), także
 ## Wszystkie odbicia i wspólne pola liczbowe — 0.74.0
 
 Nowy pokój domyślnie pokazuje pierwsze odbicia wszystkich przetworników obu monitorów. Wybór „Tweetery” nadal pozwala ograniczyć widok. Pola liczbowe w panelach i nakładkach używają wspólnej kontrolki z przyciskami zmniejszania i zwiększania po bokach oraz jednostką bezpośrednio przy wartości; dotyczy to także przesunięcia X. Zachowano istniejące wartości w zapisanych dokumentach.
+
+## Klikanie powierzchni — 0.75.0
+
+Zwykły klik na widocznej powierzchni ponownie ją zaznacza i udostępnia rzut prostopadły. Alt + klik nadal wybiera powierzchnię nawet przez wyposażenie stojące przed nią. Wierzchołki i krawędzie zachowują pierwszeństwo w swoich uchwytach.
