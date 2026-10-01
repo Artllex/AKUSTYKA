@@ -59,6 +59,8 @@ import {setupMonitorPanel} from './monitor-panel.js';
 import {monitorSideDistance,moveMonitorAlongSide} from './monitor-side-distance.js';
 import {createRackView} from './rack-view.js';
 import {ensureRackRecord,moveDefaultRackWithRoom} from './rack-model.js';
+import {createDeskView} from './desk-view.js';
+import {ensureDeskRecord,moveDefaultDeskWithRoom} from './desk-model.js';
 
 import {updateLinkedMonitor,DEFAULT_MONITOR_LINKS} from './monitor-links.js';
 
@@ -80,7 +82,7 @@ import './style.css';
 
 const $=id=>document.getElementById(id),host=$('viewport');
 
-const doc=createDocument();const history=createDocumentHistory(doc);let bench,listenerPanel,monitorPanel,reflectionPanel,featuresPanel,objectPanel,surfacePanel,viewportEditor,fieldHistory,rackAddButton;const orientation=createOrientation($('orientation'));let renderer;
+const doc=createDocument();const history=createDocumentHistory(doc);let bench,listenerPanel,monitorPanel,reflectionPanel,featuresPanel,objectPanel,surfacePanel,viewportEditor,fieldHistory,rackAddButton,deskAddButton;const orientation=createOrientation($('orientation'));let renderer;
 
 try{renderer=new THREE.WebGLRenderer({antialias:true});}catch(error){$('error').hidden=false;$('error').textContent='Nie można uruchomić widoku 3D. Sprawdź obsługę WebGL w przeglądarce.';throw error;}
 
@@ -110,7 +112,7 @@ const scene=new THREE.Scene();scene.add(new THREE.HemisphereLight(0xe7f4ff,0x3b4
 
 const perspective=new THREE.PerspectiveCamera(42,1,0.01,200);
 
-let camera=perspective,controls,view,featureViews=[],listenerViews=[],monitorViews=[],rackViews=[],tweeterRays=null,wallWarnings=null,monitorSpan=null,reflectionView=null,selected=null,projection=null,selectedObjectId=null;
+let camera=perspective,controls,view,featureViews=[],listenerViews=[],monitorViews=[],rackViews=[],deskViews=[],tweeterRays=null,wallWarnings=null,monitorSpan=null,reflectionView=null,selected=null,projection=null,selectedObjectId=null;
 
 function bindControls(target){controls?.dispose();controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.minDistance=0.15;controls.maxDistance=60;controls.maxPolarAngle=Math.PI;controls.enableRotate=!projection;controls.target.copy(target);controls.update();}
 
@@ -180,9 +182,9 @@ $('distance-clear').onclick=clearMeasurement;document.addEventListener('keydown'
 
 const selectionOutline=new THREE.BoxHelper(undefined,0x74dcc2);selectionOutline.userData.helper=true;selectionOutline.visible=false;selectionOutline.material.depthTest=false;selectionOutline.renderOrder=20;scene.add(selectionOutline);
 
-const objectLabel=id=>id==='door'?'Drzwi':id==='window'?'Wnęka okna':id==='radiator'?'Kaloryfer':id==='switch'?'Włącznik światła':id==='ceiling-light'?'Lampa sufitowa Govee H60A6':id==='rack-15u'?'Stojak RIVECO 19″ 15U':id.startsWith('monitor-')?'Monitor '+id.slice(8):'Manekin';
+const objectLabel=id=>id==='door'?'Drzwi':id==='window'?'Wnęka okna':id==='radiator'?'Kaloryfer':id==='switch'?'Włącznik światła':id==='ceiling-light'?'Lampa sufitowa Govee H60A6':id==='rack-15u'?'Stojak RIVECO 19″ 15U':id==='desk-combodesk-88'?'Biurko Thomann ComboDesk 88':id.startsWith('monitor-')?'Monitor '+id.slice(8):'Manekin';
 
-function selectableGroups(){return [...featureViews,...listenerViews,...monitorViews,...rackViews].map(v=>v.group);}
+function selectableGroups(){return [...featureViews,...listenerViews,...monitorViews,...rackViews,...deskViews].map(v=>v.group);}
 
 function refreshObjectSelection(){const object=selectableGroups().find(g=>(g.userData.recordId??g.userData.id??g.name)===selectedObjectId);selectionOutline.visible=!!object;if(object)selectionOutline.setFromObject(object);host.dataset.selectedObject=object?selectedObjectId:'';objectPanel?.sync();refreshMeasurement();}
 
@@ -195,7 +197,7 @@ function resize(){const w=host.clientWidth,h=host.clientHeight;if(!w||!h)return;
 const projectionHidden=new WeakMap();let projectionObjectsVisible=false;
 function updateProjectionVisibility(){
  if(!view)return;
- const objects=[...featureViews,...listenerViews,...monitorViews,...rackViews].map(v=>v.group),helpers=[tweeterRays?.group,wallWarnings?.group,monitorSpan?.group].filter(Boolean),groups=[...objects,...helpers];
+ const objects=[...featureViews,...listenerViews,...monitorViews,...rackViews,...deskViews].map(v=>v.group),helpers=[tweeterRays?.group,wallWarnings?.group,monitorSpan?.group].filter(Boolean),groups=[...objects,...helpers];
  const surface=projection?view.surfaces.find(s=>s.name===projection.surfaceName):null;
  for(const group of objects){if(projection){if(!projectionHidden.has(group))projectionHidden.set(group,group.visible);group.visible=!!(projectionObjectsVisible&&projectionHidden.get(group)&&objectOnProjectionSide(group,surface,projection.side));}else if(projectionHidden.has(group)){group.visible=projectionHidden.get(group);projectionHidden.delete(group);}}
  const visibleMonitors=new Set(monitorViews.filter(m=>m.group.visible).map(m=>m.group.name));
@@ -232,6 +234,8 @@ function refreshMonitors(){for(const monitor of monitorViews){scene.remove(monit
 
 function refreshRacks(){for(const rack of rackViews){scene.remove(rack.group);rack.dispose();}rackViews=doc.objects.filter(o=>o.type==='studio-rack').map(record=>{const rack=createRackView(record);applyObjectTransform(rack.group,doc.transforms);scene.add(rack.group);return rack;});host.dataset.rackCount=rackViews.length;if(rackAddButton)rackAddButton.hidden=!!rackViews.length;refreshCollisions();refreshObjectSelection();}
 
+function refreshDesks(){for(const desk of deskViews){scene.remove(desk.group);desk.dispose();}deskViews=doc.objects.filter(o=>o.type==='studio-desk').map(record=>{const desk=createDeskView(record);applyObjectTransform(desk.group,doc.transforms);scene.add(desk.group);return desk;});host.dataset.deskCount=deskViews.length;if(deskAddButton)deskAddButton.hidden=!!deskViews.length;refreshCollisions();refreshObjectSelection();}
+
 function buildRoom(transforms=doc.transforms){
  const roomView=doc.roomMesh?createMeshRoom(doc.room,doc.roomMesh):doc.roomShape?createFootprintRoom(doc.room,doc.roomShape,doc.roomFeatures):createRoom(doc.room,doc.roomFeatures,transforms);
  if(doc.roomMesh)addNicheStepToMeshRoom(roomView,doc.roomFeatures.window.stepHeight,doc.roomFeatures.window.stepDepth);
@@ -243,12 +247,12 @@ function buildRoom(transforms=doc.transforms){
  return roomView;
 }
 
- function rebuild(preserveView=false){const surfaceName=selected?.name??projection?.surfaceName;bench?.refresh(history);if(view){scene.remove(view.group);view.dispose();}view=buildRoom();host.dataset.baseboardCount=view.group.getObjectByName('baseboards')?.children.length??0;host.dataset.meshVertexCount=(doc.roomMesh??initialRoomMesh(doc)).vertices.length;host.dataset.shapeGridVertices=view.grid.geometry?.attributes.position.count??0;host.dataset.shapeVertexCount=doc.roomShape?.length??initialFootprint(doc).length;scene.add(view.group);for(const item of featureViews){scene.remove(item.group);item.dispose();}featureViews=createRoomFeatureViews(doc.room,doc.roomFeatures);for(const item of featureViews){applyObjectTransform(item.group,doc.transforms);if(item.group.name==='window'&&view.surfaces.some(surface=>surface.name==='niche-back'||surface.name==='niche-roof')){for(const part of item.group.children){part.visible=false;part.userData.collision=false;}}scene.add(item.group);}host.dataset.featureCount=featureViews.length;featuresPanel?.sync();for(const input of document.querySelectorAll('[id^=feature-window-]'))input.disabled=!!doc.roomShape;surfacePanel?.sync(selected);refreshRacks();refreshListeners();refreshMonitors();select(null);const r=doc.room,m=doc.roomShape?{area:footprintArea(doc.roomShape),volume:footprintArea(doc.roomShape)*r.height}:roomMetrics(r);$('size').textContent=`${format(r.width*100)} × ${format(r.length*100)} × ${format(r.height*100)} cm`;$('metrics').textContent=`Powierzchnia: ${format(m.area,3)} m² · Objętość: ${format(m.volume,3)} m³`;
+ function rebuild(preserveView=false){const surfaceName=selected?.name??projection?.surfaceName;bench?.refresh(history);if(view){scene.remove(view.group);view.dispose();}view=buildRoom();host.dataset.baseboardCount=view.group.getObjectByName('baseboards')?.children.length??0;host.dataset.meshVertexCount=(doc.roomMesh??initialRoomMesh(doc)).vertices.length;host.dataset.shapeGridVertices=view.grid.geometry?.attributes.position.count??0;host.dataset.shapeVertexCount=doc.roomShape?.length??initialFootprint(doc).length;scene.add(view.group);for(const item of featureViews){scene.remove(item.group);item.dispose();}featureViews=createRoomFeatureViews(doc.room,doc.roomFeatures);for(const item of featureViews){applyObjectTransform(item.group,doc.transforms);if(item.group.name==='window'&&view.surfaces.some(surface=>surface.name==='niche-back'||surface.name==='niche-roof')){for(const part of item.group.children){part.visible=false;part.userData.collision=false;}}scene.add(item.group);}host.dataset.featureCount=featureViews.length;featuresPanel?.sync();for(const input of document.querySelectorAll('[id^=feature-window-]'))input.disabled=!!doc.roomShape;surfacePanel?.sync(selected);refreshRacks();refreshDesks();refreshListeners();refreshMonitors();select(null);const r=doc.room,m=doc.roomShape?{area:footprintArea(doc.roomShape),volume:footprintArea(doc.roomShape)*r.height}:roomMetrics(r);$('size').textContent=`${format(r.width*100)} × ${format(r.length*100)} × ${format(r.height*100)} cm`;$('metrics').textContent=`Powierzchnia: ${format(m.area,3)} m² · Objętość: ${format(m.volume,3)} m³`;
  if(!preserveView)frame();else{select(view.surfaces.find(s=>s.name===surfaceName)??null);if(projection){for(const o of view.group.children)o.visible=o===selected||(o.name==='floor-outline'&&selected?.name==='floor')||(o===view.grid&&selected?.name==='floor'&&$('grid').checked);$('cutaway').disabled=true;}resize();}}
 
-function applySnapshot(snapshot){listenerPanel?.abort();const roomChanged=JSON.stringify(doc.roomMesh)!==JSON.stringify(snapshot.roomMesh)||JSON.stringify(doc.roomShape)!==JSON.stringify(snapshot.roomShape)||JSON.stringify(doc.room)!==JSON.stringify(snapshot.room)||JSON.stringify(doc.roomFeatures)!==JSON.stringify(snapshot.roomFeatures)||JSON.stringify(doc.transforms)!==JSON.stringify(snapshot.transforms);Object.assign(doc,snapshot);for(const key of ['width','length','height'])$(key).value=doc.room[key]*100;if(roomChanged)rebuild(true);else {refreshRacks();refreshListeners();refreshMonitors();}featuresPanel?.sync();objectPanel?.sync();refreshMeasurement();viewportEditor?.sync(true);fieldHistory?.restore();bench?.refresh(history);}
+function applySnapshot(snapshot){listenerPanel?.abort();const roomChanged=JSON.stringify(doc.roomMesh)!==JSON.stringify(snapshot.roomMesh)||JSON.stringify(doc.roomShape)!==JSON.stringify(snapshot.roomShape)||JSON.stringify(doc.room)!==JSON.stringify(snapshot.room)||JSON.stringify(doc.roomFeatures)!==JSON.stringify(snapshot.roomFeatures)||JSON.stringify(doc.transforms)!==JSON.stringify(snapshot.transforms);Object.assign(doc,snapshot);for(const key of ['width','length','height'])$(key).value=doc.room[key]*100;if(roomChanged)rebuild(true);else {refreshRacks();refreshDesks();refreshListeners();refreshMonitors();}featuresPanel?.sync();objectPanel?.sync();refreshMeasurement();viewportEditor?.sync(true);fieldHistory?.restore();bench?.refresh(history);}
 
-$('dimensions').addEventListener('submit',e=>{e.preventDefault();try{const nextRoom=roomFromCentimeters($('width').value,$('length').value,$('height').value),defaultListeningLayout=usesDefaultListeningLayout(doc);normalizeRoomFeatures(doc.roomFeatures,nextRoom);if(doc.roomShape)doc.roomShape=doc.roomShape.map(p=>({x:p.x*nextRoom.width/doc.room.width,z:p.z*nextRoom.length/doc.room.length}));if(doc.roomMesh)doc.roomMesh.vertices=doc.roomMesh.vertices.map(p=>({x:p.x*nextRoom.width/doc.room.width,y:p.y*nextRoom.height/doc.room.height,z:p.z*nextRoom.length/doc.room.length}));moveDefaultRackWithRoom(doc,nextRoom);doc.room=nextRoom;if(defaultListeningLayout)placeDefaultListeningLayout(doc);history.push(doc);rebuild();$('error').hidden=true;}catch(error){$('error').textContent=error.message;$('error').hidden=false;}});
+$('dimensions').addEventListener('submit',e=>{e.preventDefault();try{const nextRoom=roomFromCentimeters($('width').value,$('length').value,$('height').value),defaultListeningLayout=usesDefaultListeningLayout(doc);normalizeRoomFeatures(doc.roomFeatures,nextRoom);if(doc.roomShape)doc.roomShape=doc.roomShape.map(p=>({x:p.x*nextRoom.width/doc.room.width,z:p.z*nextRoom.length/doc.room.length}));if(doc.roomMesh)doc.roomMesh.vertices=doc.roomMesh.vertices.map(p=>({x:p.x*nextRoom.width/doc.room.width,y:p.y*nextRoom.height/doc.room.height,z:p.z*nextRoom.length/doc.room.length}));moveDefaultRackWithRoom(doc,nextRoom);moveDefaultDeskWithRoom(doc,nextRoom);doc.room=nextRoom;if(defaultListeningLayout)placeDefaultListeningLayout(doc);history.push(doc);rebuild();$('error').hidden=true;}catch(error){$('error').textContent=error.message;$('error').hidden=false;}});
 
 $('grid').addEventListener('change',()=>view.grid.visible=$('grid').checked&&(!projection||selected?.name==='floor'));
 
@@ -296,6 +300,7 @@ function commitObjectTransform(id,transform,recordHistory=true){doc.transforms=u
 
 objectPanel=setupObjectPanel({read:()=>selectedObjectId?{label:objectLabel(selectedObjectId),transform:doc.transforms[selectedObjectId]}:null,change(transform){if(selectedObjectId)commitObjectTransform(selectedObjectId,transform);},clear:()=>selectObject(null),showError});
 rackAddButton=document.createElement('button');rackAddButton.type='button';rackAddButton.textContent='Dodaj stojak RIVECO 19″ 15U';rackAddButton.hidden=doc.objects.some(o=>o.id==='rack-15u');rackAddButton.onclick=()=>{ensureRackRecord(doc);history.push(doc);refreshRacks();bench.refresh(history);};$('object-panel').append(rackAddButton);
+deskAddButton=document.createElement('button');deskAddButton.type='button';deskAddButton.textContent='Dodaj biurko Thomann ComboDesk 88';deskAddButton.hidden=doc.objects.some(o=>o.id==='desk-combodesk-88');deskAddButton.onclick=()=>{ensureDeskRecord(doc);history.push(doc);refreshDesks();bench.refresh(history);};$('object-panel').append(deskAddButton);
 
 surfacePanel=setupSurfacePanel({read:()=>doc.roomShape??initialFootprint(doc),change(points,commit){
 
@@ -318,14 +323,3 @@ $('toggle-surface').hidden=true;
 new ResizeObserver(resize).observe(host);
 
 rebuild();fieldHistory=setupFieldHistory({history,read:()=>doc,editor:viewportEditor,context:()=>({object:selectedObjectId,monitor:$('monitor-select').value})});setupNumericFields();renderer.setAnimationLoop(()=>{controls.update();host.dataset.cameraPosition=camera.position.toArray().join(',');host.dataset.cameraTarget=controls.target.toArray().join(',');updateProjectionVisibility();if(!projection)view.updateVisibility(camera,$('cutaway').checked);const label=hoverDistanceLabel([tweeterRays?.group,wallWarnings?.group,monitorSpan?.group],camera,laserCursor,renderer.domElement.clientWidth,renderer.domElement.clientHeight);host.dataset.hoverDistanceLabel=label?.name??'';updateDistanceLabels(tweeterRays?.group,camera);updateDistanceLabels(wallWarnings?.group,camera);updateDistanceLabels(monitorSpan?.group,camera);viewportEditor?.render();orientation.update(camera);renderer.render(scene,camera);});
-
-
-
-
-
-
-
-
-
-
-
