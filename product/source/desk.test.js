@@ -6,12 +6,12 @@ import {COMBODESK_88 as D,createDeskRecord,ensureDeskRecord,moveDefaultDeskWithR
 import {createDeskView} from './src/desk-view.js';
 import {parseRoomDocument} from './src/bench.js';
 
-test('ComboDesk 88 has published envelope, distinct tiers, three rack bays and cable passages',()=>{
+test('ComboDesk 88 keeps its main worktop, shaped sides and cable passages',()=>{
  const record=createDocument().objects.find(o=>o.type==='studio-desk');
  assert.equal(record.model,'thomann-combodesk-88-r-base-black');
  const view=createDeskView(record),group=view.group,bounds=new THREE.Box3().setFromObject(group);
  assert.ok(Math.abs(bounds.max.x-bounds.min.x-D.width)<1e-6);
- assert.ok(Math.abs(bounds.max.z-bounds.min.z-D.depth)<1e-6);
+ assert.ok(Math.abs(bounds.max.z-bounds.min.z-D.worktop.depth)<1e-6);
  assert.ok(Math.abs(bounds.min.y)<1e-6);
  assert.ok(Math.abs(bounds.max.y-D.height)<1e-6);
  assert.equal(group.getObjectsByProperty('name','shaped-side-panel').length,2);
@@ -27,7 +27,9 @@ test('ComboDesk 88 has published envelope, distinct tiers, three rack bays and c
  }
  assert.ok(Math.abs(sides[0].position.x+sides[1].position.x-0.018)<1e-8,'side panels must be mirrored');
  assert.equal(group.getObjectsByProperty('name','side-screw').length,10);
- assert.equal(group.getObjectsByProperty('name','rack-divider').length,4);
+ assert.equal(group.getObjectsByProperty('name','upper-shelf').length,0);
+ assert.equal(group.getObjectsByProperty('name','rack-divider').length,0);
+ assert.equal(group.getObjectsByProperty('name','rack-mount-hole').length,0);
  const tray=group.getObjectByName('keyboard-tray');
  assert.deepEqual([tray.geometry.parameters.width,tray.geometry.parameters.depth],[1.56,.3]);
  const back=group.getObjectByName('rear-panel-three-cable-holes');
@@ -37,9 +39,6 @@ test('ComboDesk 88 has published envelope, distinct tiers, three rack bays and c
   const element=group.getObjectByName(name),rear=new THREE.Box3().setFromObject(element).min.z;
   assert.ok(Math.abs(rear-sideBack)<1e-6,`${name} must end flush with the side panels`);
  }
- const shelf=group.getObjectByName('upper-shelf');
- assert.equal(shelf.geometry.parameters.depth,.268);
- assert.ok(shelf.position.y>group.getObjectByName('worktop').position.y);
  assert.ok(bounds.min.x>0&&bounds.max.x<DEFAULT_ROOM.width&&bounds.min.z>0);
  view.dispose();
 });

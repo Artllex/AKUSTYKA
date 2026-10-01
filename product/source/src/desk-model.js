@@ -1,9 +1,7 @@
 export const COMBODESK_88 = Object.freeze({
- width:1.625,depth:0.716,height:0.876,
+ width:1.625,depth:0.716,height:0.773,
  worktop:Object.freeze({width:1.625,depth:0.675,thickness:0.018,top:0.773}),
- upperShelf:Object.freeze({width:1.625,depth:0.268,thickness:0.018,top:0.876}),
- keyboardTray:Object.freeze({width:1.560,depth:0.300,thickness:0.018}),
- rackBays:3,rackUnits:2
+ keyboardTray:Object.freeze({width:1.560,depth:0.300,thickness:0.018})
 });
 
 export function createDeskRecord(room){

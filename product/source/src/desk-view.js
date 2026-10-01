@@ -7,7 +7,6 @@ export function createDeskView(record){
  const board=new THREE.MeshStandardMaterial({color:0x242426,roughness:0.8});
  const edge=new THREE.MeshStandardMaterial({color:0x111214,roughness:0.7});
  const metal=new THREE.MeshStandardMaterial({color:0x55595e,metalness:0.8,roughness:0.45});
- const dark=new THREE.MeshStandardMaterial({color:0x08090a,roughness:0.92});
  const geometries=[];
  function mesh(name,geometry,material,x=0,y=0,z=0){const m=new THREE.Mesh(geometry,material);m.name=name;m.position.set(x,y,z);group.add(m);geometries.push(geometry);return m;}
  function box(name,w,h,d,x,y,z,material=board){return mesh(name,new THREE.BoxGeometry(w,h,d),material,x,y,z);}
@@ -15,17 +14,6 @@ export function createDeskView(record){
  const topY=D.worktop.top-D.worktop.thickness/2;
  const workZ=(D.depth-D.worktop.depth)/2;
  box('worktop',D.worktop.width,D.worktop.thickness,D.worktop.depth,0,topY,workZ);
- box('upper-shelf',D.upperShelf.width,D.upperShelf.thickness,D.upperShelf.depth,0,D.upperShelf.top-D.upperShelf.thickness/2,-(D.depth-D.upperShelf.depth)/2);
- // Four 2U bays under the raised shelf: outer walls and two partitions.
- const rackHeight=D.upperShelf.top-D.upperShelf.thickness-D.worktop.top;
- for(let i=0;i<4;i++){
-  const x=-D.width/2+0.030+i*(D.width-0.060)/3;
-  box('rack-divider',0.018,rackHeight,D.upperShelf.depth-0.030,x,D.worktop.top+rackHeight/2,-(D.depth-D.upperShelf.depth)/2);
-  if(i<3){for(let row=0;row<6;row++){
-   const hole=box('rack-mount-hole',0.004,0.004,0.001,x+0.012,D.worktop.top+0.011+row*0.011,-0.246,dark);
-   hole.userData.collision=false;
-  }}
- }
  // The side is inset beneath the tabletop. Its front edge bows deeply inward
  // at knee height, then returns forward to form the broad foot at floor level.
  for(const sign of [-1,1]){
@@ -61,6 +49,6 @@ export function createDeskView(record){
   screw.rotation.z=Math.PI/2;screw.userData.collision=false;
  }
  group.position.set(record.position.x,record.position.y,record.position.z);group.rotation.y=record.yaw;group.updateMatrixWorld(true);
- return {group,dispose(){for(const geometry of geometries)geometry.dispose();for(const material of [board,edge,metal,dark])material.dispose();}};
+ return {group,dispose(){for(const geometry of geometries)geometry.dispose();for(const material of [board,edge,metal])material.dispose();}};
 }
 
