@@ -63,6 +63,7 @@ import {updateLinkedMonitor,DEFAULT_MONITOR_LINKS} from './monitor-links.js';
 
 import {createTweeterRays} from './tweeter-rays.js';
 import {createMonitorWallWarnings} from './monitor-clearance.js';
+import {updateDistanceLabels} from './distance-label.js';
 
 import {findMonitorCollisions,tintCollision} from './monitor-collisions.js';
 
@@ -236,7 +237,10 @@ $('reset').onclick=()=>{doc.room={...DEFAULT_ROOM};doc.roomShape=null;doc.roomMe
 
 const raycaster=new THREE.Raycaster();let down;
 
-renderer.domElement.addEventListener('pointerdown',e=>{controls.mouseButtons.LEFT=e.shiftKey&&!e.ctrlKey?THREE.MOUSE.PAN:THREE.MOUSE.ROTATE;down={x:e.clientX,y:e.clientY,id:e.pointerId,button:e.button};},true);
+document.addEventListener('keydown',e=>{if(e.key==='Control')host.classList.add('camera-pan-modifier');});
+document.addEventListener('keyup',e=>{if(e.key==='Control')host.classList.remove('camera-pan-modifier');});
+window.addEventListener('blur',()=>host.classList.remove('camera-pan-modifier'));
+renderer.domElement.addEventListener('pointerdown',e=>{controls.mouseButtons.LEFT=e.ctrlKey?THREE.MOUSE.PAN:THREE.MOUSE.ROTATE;host.dataset.cameraDragMode=e.ctrlKey?'pan':'rotate';down={x:e.clientX,y:e.clientY,id:e.pointerId,button:e.button};},true);
 
 renderer.domElement.addEventListener('pointerup',e=>{if(!down||down.id!==e.pointerId||down.button!==0||Math.hypot(e.clientX-down.x,e.clientY-down.y)>5){down=null;return;}down=null;if(edgeOnly(e))return;if(e.altKey){const surface=pickSurface(e);if(surface){clearMeasurement();selectObject(null);select(surface);viewportEditor.pick(surface);}return;}const {target,object}=pickScene(e);if(!target){clearMeasurement();viewportEditor.clear();selectObject(null);select(null);return;}if(e.ctrlKey){const first=selectedObjectId?findEntity(selectedObjectId):selected;if(first&&target&&first!==target){measurement={first:entityKey(first),second:entityKey(target)};refreshMeasurement();}return;}clearMeasurement();if(object){viewportEditor.clear();selectObject(object);if(!projection)select(null);}else if(view.surfaces.includes(target)){selectObject(null);select(target);viewportEditor.pick(target);}});
 
@@ -290,7 +294,7 @@ $('toggle-surface').hidden=true;
 
 new ResizeObserver(resize).observe(host);
 
-rebuild();fieldHistory=setupFieldHistory({history,read:()=>doc,editor:viewportEditor,context:()=>({object:selectedObjectId,monitor:$('monitor-select').value})});setupNumericFields();renderer.setAnimationLoop(()=>{controls.update();updateProjectionVisibility();if(!projection)view.updateVisibility(camera,$('cutaway').checked);if(reflectionView)for(const o of reflectionView.group.children)o.visible=!projection||(o.userData.surface===projection.surfaceName&&o.name!=='reflection-path');viewportEditor?.render();orientation.update(camera);renderer.render(scene,camera);});
+rebuild();fieldHistory=setupFieldHistory({history,read:()=>doc,editor:viewportEditor,context:()=>({object:selectedObjectId,monitor:$('monitor-select').value})});setupNumericFields();renderer.setAnimationLoop(()=>{controls.update();updateProjectionVisibility();if(!projection)view.updateVisibility(camera,$('cutaway').checked);if(reflectionView)for(const o of reflectionView.group.children)o.visible=!projection||(o.userData.surface===projection.surfaceName&&o.name!=='reflection-path');updateDistanceLabels(tweeterRays?.group,camera);updateDistanceLabels(wallWarnings?.group,camera);viewportEditor?.render();orientation.update(camera);renderer.render(scene,camera);});
 
 
 

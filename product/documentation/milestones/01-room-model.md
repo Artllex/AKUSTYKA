@@ -644,3 +644,7 @@ Instrukcja Barefoot MicroMain27 Gen2 zaleca minimum 100 cm od środka tweetera d
 ## Linie odstępów i kolizja z grzejnikiem — 0.77.0
 
 Czerwona linia odstępu od ściany zaczyna się na faktycznie renderowanej bryle monitora i kończy na ścianie, także gdy ściana jest ukryta przez widok wnętrza. Etykiety przy liniach ściennych i laserach pokazują długość widocznego odcinka w centymetrach. Przecięcie monitora z grzejnikiem barwi cały grzejnik na czerwono; po odsunięciu wraca pierwotny kolor. Kontrola aplikacji obejmuje tę kolizję i przywrócenie stanu bez kolizji.
+
+## Sterowanie myszą i etykiety — 0.78.0
+
+Ctrl + przeciągnięcie lewym przyciskiem przesuwa widok, także po rozpoczęciu ruchu nad uchwytem geometrii. Alt + kliknięcie wybiera powierzchnię, a Alt + kliknięcia uchwytów mogą rozszerzać zaznaczenie. Shift + przeciągnięcie nie przełącza już kamery na przesuwanie. Etykiety odległości pozostają odsunięte ponad laser i czerwone linie w płaszczyźnie ekranu podczas obracania kamery.

@@ -14,7 +14,7 @@ export function createTweeterRays(monitors,listener,room,visible=true,roomSurfac
   const color=tooClose?'close':'clear';materials[color]??=new THREE.MeshBasicMaterial({color:colors[color],transparent:true,opacity:0.95});
   const ray=new THREE.Mesh(new THREE.CylinderGeometry(0.003,0.003,length,6),materials[color]);ray.name='ray-'+monitor.group.name;ray.position.copy(origin).add(target).multiplyScalar(0.5);ray.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),direction);group.add(ray);
   ray.userData={origin:origin.clone(),direction:direction.clone(),target:target.clone(),headHit:target===hit,listeningDistance,tooClose};
-  const label=createDistanceLabel(length,ray.position.clone().add(new THREE.Vector3(0,.05,0)),colors[color]);label.name='distance-ray-'+monitor.group.name;group.add(label);
+  const label=createDistanceLabel(length,ray.position,colors[color]);label.name='distance-ray-'+monitor.group.name;group.add(label);
   if(target===hit){hitCount++;const dot=new THREE.Mesh(new THREE.SphereGeometry(0.006,12,8),materials[color]);dot.name='head-hit-'+monitor.group.name;dot.position.copy(hit).addScaledVector(direction,-0.002);group.add(dot);}
  }
  return {group,hitCount,tooCloseCount,rayCount:group.children.filter(o=>o.name.startsWith('ray-')).length,dispose(){group.traverse(o=>{o.geometry?.dispose();if(o.isSprite){o.material.map?.dispose();o.material.dispose();}});Object.values(materials).forEach(m=>m.dispose());}};
