@@ -1,0 +1,51 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import * as THREE from 'three';
+import {createDocument} from './src/model.js';
+import {createRoom} from './src/room-view.js';
+import {createDeskView} from './src/desk-view.js';
+import {createSeatedListener} from './src/listener-view.js';
+import {createStudioMonitor} from './src/monitor-view.js';
+import {computeFirstReflections} from './src/reflection-model.js';
+import {createReflectionView} from './src/reflection-view.js';
+import {updateReflectionVisibility} from './src/reflection-visibility.js';
+import {objectReflectingFaces,firstObjectReflection} from './src/object-reflections.js';
+
+test('solid object faces obey specular geometry, world transforms and occlusion',()=>{
+ const group=new THREE.Group();group.name='table';
+ const top=new THREE.Mesh(new THREE.BoxGeometry(2,.1,2));top.position.set(2,1,2);group.add(top);
+ const source=new THREE.Vector3(1.4,2,1.5),receiver=new THREE.Vector3(2.3,2,2.2);
+ const find=()=>objectReflectingFaces([group]).faces.filter(face=>face.normal.y>.9).map(face=>firstObjectReflection(source,receiver,face,[top])).find(Boolean);
+ const reflection=find();assert.ok(reflection);assert.ok(Math.abs(reflection.point.y-1.05)<1e-8);
+ const incoming=reflection.point.clone().sub(source).normalize(),outgoing=receiver.clone().sub(reflection.point).normalize();
+ assert.ok(incoming.reflect(reflection.normal).distanceTo(outgoing)<1e-8);
+ group.position.y+=.1;const moved=find();assert.ok(moved);assert.ok(Math.abs(moved.point.y-1.15)<1e-8);
+ const blocker=new THREE.Mesh(new THREE.BoxGeometry(3,.04,3));blocker.position.set(2,1.55,2);group.add(blocker);
+ const faces=objectReflectingFaces([group]);
+ assert.ok(faces.faces.filter(face=>face.mesh===top&&face.normal.y>.9).every(face=>!firstObjectReflection(source,receiver,face,faces.occluders)));
+ top.geometry.dispose();blocker.geometry.dispose();
+});
+
+test('desk contributes real first reflections and blocks hidden floor paths',()=>{
+ const doc=createDocument(),room=createRoom(doc.room,doc.roomFeatures);
+ const desk=createDeskView(doc.objects.find(o=>o.type==='studio-desk'));
+ const listener=createSeatedListener(doc.objects.find(o=>o.type==='seated-listener'));
+ const monitors=doc.objects.filter(o=>o.type==='studio-monitor').map(createStudioMonitor);
+ const without=computeFirstReflections(monitors,listener,doc.room,doc.reflections,room.surfaces);
+ const withDesk=computeFirstReflections(monitors,listener,doc.room,doc.reflections,room.surfaces,[desk.group]);
+ assert.ok(withDesk.some(path=>path.surface.startsWith('object:desk-combodesk-88:worktop:')));
+ assert.ok(withDesk.filter(path=>path.surface==='floor').length<without.filter(path=>path.surface==='floor').length);
+ desk.group.position.z+=1.5;desk.group.updateMatrixWorld(true);
+ const moved=computeFirstReflections(monitors,listener,doc.room,doc.reflections,room.surfaces,[desk.group]);
+ assert.equal(moved.filter(path=>path.surface.startsWith('object:desk-combodesk-88:worktop:')).length,0);
+ desk.group.position.z-=1.5;desk.group.updateMatrixWorld(true);
+ const reflected=createReflectionView(monitors,listener,doc.room,doc.reflections,room.surfaces,[desk.group]);
+ const deskOutlines=reflected.group.children.filter(child=>child.name==='reflection-projection'&&child.userData.objectId==='desk-combodesk-88');
+ assert.ok(deskOutlines.length>0);
+ updateReflectionVisibility(reflected,{surfaceName:'floor'},true,new Set(['desk-combodesk-88']));
+ assert.ok(deskOutlines.every(child=>child.visible));
+ updateReflectionVisibility(reflected,{surfaceName:'floor'},true,new Set());
+ assert.ok(deskOutlines.every(child=>!child.visible));
+ reflected.dispose();
+ room.dispose();desk.dispose();listener.dispose();monitors.forEach(monitor=>monitor.dispose());
+});
