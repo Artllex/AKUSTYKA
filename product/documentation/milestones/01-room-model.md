@@ -599,7 +599,7 @@ Przybliżanie i przesuwanie kamerą zwalniają stopniowo w miarę zbliżania do 
 
 ## Orientacja stojaka w tylnym rogu — 0.65.0
 
-Dolna belka z logo i pionowe szyny są zwrócone do wnętrza pokoju. Stopki biegną od ramy ku tylnej ścianie i zwężają się w tym kierunku, zamiast wysuwać się do środka pokoju.
+Dolna belka z logo i pionowe szyny są zwrócone do wnętrza pokoju. Stopki biegną od ramy ku tylnej ścianie, zamiast wysuwać się do środka pokoju.
 
 ## Wyrównanie pionowej ramy z dolną belką — 0.66.0
 
@@ -608,3 +608,7 @@ Podstawy pionowych szyn znajdują się tuż przy przedniej krawędzi stopek, w j
 ## Głębsze zbliżenie kamery — 0.67.0
 
 W widoku 3D kamera może zbliżyć się do celu na 3 cm zamiast 15 cm. Przy coraz większym zbliżeniu tempo zoomu i przesuwania zwalnia minimalnie mocniej niż w wersji 0.66.0.
+
+## Wysokość tylnych końców stopek — 0.67.0
+
+Tylne końce obu bocznych stopek mają wysokość 10,4 cm, czyli dokładnie dwa razy tyle co dolna belka o wysokości 5,2 cm. Pionowe szyny pozostają wyrównane z przednią belką.

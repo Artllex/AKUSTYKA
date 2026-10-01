@@ -40,7 +40,7 @@ export function createRackView(record){
   // Folded side plates run the full depth; four low rubber pads touch floor.
   bar('foot-base',0.030,0.003,depth,sign*(width/2-0.015),0.0095,0,edge);
   const outline=new THREE.Shape();
-  for(const [index,[z,y]] of [[-depth/2,0.011],[-depth/2,0.078],[-0.055,0.057],[depth/2,0.016],[depth/2,0.011]].entries()){
+  for(const [index,[z,y]] of [[-depth/2,0.011],[-depth/2,0.078],[-0.055,0.084],[depth/2,0.104],[depth/2,0.011]].entries()){
    if(index===0)outline.moveTo(-z,y);else outline.lineTo(-z,y);
   }
   outline.closePath();
