@@ -42,6 +42,8 @@ test('niche holds an upper tilt pane and a wider fixed lower pane with measured 
  const baseBox=new THREE.Box3().setFromObject(step),sillBox=new THREE.Box3().setFromObject(sill);
  assert.ok(Math.abs(baseBox.min.z+.151)<1e-7&&Math.abs(baseBox.max.z+.086)<1e-7&&Math.abs(baseBox.max.y-.065)<1e-7);
  assert.ok(Math.abs(sillBox.min.y-.065)<1e-7&&Math.abs(sillBox.max.y-.08)<1e-7&&Math.abs(sillBox.max.z+.071)<1e-7);
+ const undersideHit=new THREE.Raycaster(new THREE.Vector3(features.window.center,.03,-.0785),new THREE.Vector3(0,1,0)).intersectObject(sill);
+ assert.ok(undersideHit.length>0&&Math.abs(undersideHit[0].point.y-.065)<1e-7,'the sill has a solid underside');
  const room=createRoom(DEFAULT_ROOM,features);room.group.updateMatrixWorld(true);
  const front=room.surfaces.find(s=>s.name==='niche-step-front'),sillFront=room.surfaces.find(s=>s.name==='niche-sill-front'),top=room.surfaces.find(s=>s.name==='niche-step-top');
  assert.ok(front&&sillFront&&top);assert.ok(Math.abs(front.position.z+.086)<1e-8&&Math.abs(sillFront.position.z+.071)<1e-8);
@@ -50,6 +52,11 @@ test('niche holds an upper tilt pane and a wider fixed lower pane with measured 
  const upper=recess.getObjectByName('window-upper-tilt-glass'),lower=recess.getObjectByName('window-lower-fixed-glass');assert.ok(upper&&lower);assert.ok(recess.getObjectByName('window-upper-handle'));assert.equal(recess.getObjectByName('window-lower-handle'),undefined);
  recess.updateMatrixWorld(true);const upperSize=new THREE.Box3().setFromObject(upper).getSize(new THREE.Vector3()),lowerSize=new THREE.Box3().setFromObject(lower).getSize(new THREE.Vector3());
  assert.ok(Math.abs(upperSize.x-.831)<1e-7&&Math.abs(upperSize.y-.893)<1e-7);assert.ok(Math.abs(lowerSize.x-.923)<1e-7&&Math.abs(lowerSize.y-.835)<1e-7);
+ const hitFrame=(x,y)=>new THREE.Raycaster(new THREE.Vector3(x,y,.5),new THREE.Vector3(0,0,-1)).intersectObjects(recess.children.filter(part=>part.name.includes('frame')||part.name.includes('stile')||part.name.includes('crossbar'))).length>0;
+ assert.ok(hitFrame(features.window.center,2.11),'the top frame fills the space above the upper sash');
+ assert.ok(hitFrame(features.window.center-.45,1.6),'the upper side stile reaches the glass');
+ assert.ok(hitFrame(features.window.center+.48,.6),'the lower side stile reaches the glass');
+ assert.ok(hitFrame(features.window.center,1.09),'the crossbar fills the gap between panes');
  for(const v of views)v.dispose();
 });
 test('front wall closes the niche above 222 cm while the lower opening stays clear',()=>{

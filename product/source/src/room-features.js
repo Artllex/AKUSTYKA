@@ -94,7 +94,7 @@ export function createRoomFeatureViews(room,features){
   D.box('door-hinge',[.016,.052,.02],[x,y,room.length-.023],steel);
   D.box('door-hinge-outside',[.016,.052,.02],[x,y,room.length+.01],steel);
  }
- const w=features.window,W=create('window'),reveal=W.mat(WALL_PAINT_COLOR),stepMaterial=W.mat(WALL_PAINT_COLOR);
+ const w=features.window,W=create('window'),reveal=W.mat(WALL_PAINT_COLOR),stepMaterial=W.mat(WALL_PAINT_COLOR),sillMaterial=W.mat(WALL_PAINT_COLOR,{polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1});
  const middle=w.bottom+w.height/2,hasStep=w.stepDepth>0&&w.stepHeight>0;
  for(const side of [-1,1]){
   const x=w.center+side*(w.width/2-0.005);
@@ -105,7 +105,7 @@ export function createRoomFeatureViews(room,features){
  if(hasStep){
   const sillThickness=Math.min(.015,w.stepHeight),baseHeight=w.stepHeight-sillThickness;
   if(baseHeight>0)W.box('niche-step',[w.width,baseHeight,w.stepDepth],[w.center,w.bottom+baseHeight/2,-w.depth+w.stepDepth/2],stepMaterial);
-  W.box('niche-sill',[w.width,sillThickness,w.stepDepth+.015],[w.center,w.bottom+w.stepHeight-sillThickness/2,-w.depth+(w.stepDepth+.015)/2],stepMaterial);
+  W.box('niche-sill',[w.width,sillThickness,w.stepDepth+.015],[w.center,w.bottom+w.stepHeight-sillThickness/2,-w.depth+(w.stepDepth+.015)/2],sillMaterial);
  }
  W.box('niche-roof',[w.width,0.01,w.depth],[w.center,w.bottom+w.height+0.005,-w.depth/2],reveal).userData.collision=false;
  // Two glazing lights share the existing opening. The upper tilt sash has
@@ -124,10 +124,11 @@ export function createRoomFeatureViews(room,features){
  addGlazing('window-upper-tilt',.831,upperBottom,.893);
  for(const side of [-1,1]){
   W.box('window-outer-jamb',[.024,w.height,.022],[w.center+side*(w.width/2-.012),w.bottom+w.height/2,frameZ],frame);
-  W.box('window-lower-stile',[Math.max(.01,(w.width-.923)/2-.024),lowerTop-windowBottom+.036,.012],[w.center+side*(.923/2+(w.width-.923)/4+.006),(windowBottom+lowerTop)/2,faceZ],frame);
-  W.box('window-upper-tilt-stile',[Math.max(.01,(w.width-.831)/2-.024),upperTop-upperBottom+.028,.017],[w.center+side*(.831/2+(w.width-.831)/4+.006),(upperBottom+upperTop)/2,faceZ+.003],sash);
+  const lowerStile=(w.width-.923)/2,upperStile=(w.width-.831)/2;
+  W.box('window-lower-stile',[lowerStile,.835,.02],[w.center+side*(.923/2+lowerStile/2),windowBottom+.835/2,faceZ],frame);
+  W.box('window-upper-tilt-stile',[upperStile,.893,.02],[w.center+side*(.831/2+upperStile/2),upperBottom+.893/2,faceZ+.003],sash);
  }
- for(const [name,y,height] of [['window-bottom-frame',w.bottom+.09,.04],['window-crossbar',(lowerTop+upperBottom)/2,.125],['window-top-frame',w.bottom+w.height-.04,.08]])W.box(name,[w.width-.024,height,.021],[w.center,y,frameZ],frame);
+ for(const [name,bottom,height] of [['window-bottom-frame',w.bottom,windowBottom-w.bottom],['window-crossbar',lowerTop,upperBottom-lowerTop],['window-top-frame',upperTop,w.bottom+w.height-upperTop]])W.box(name,[w.width,height,.025],[w.center,bottom+height/2,frameZ],frame);
  for(const y of [upperBottom-.012,upperTop+.012])W.box('window-upper-sash-rail',[.855,.022,.017],[w.center,y,faceZ+.003],sash);
  W.box('window-upper-handle-plate',[.011,.046,.007],[w.center-.831/2-.036,upperBottom+.45,faceZ+.015],hardware);
  W.box('window-upper-handle',[.007,.088,.012],[w.center-.831/2-.036,upperBottom+.42,faceZ+.024],hardware);
