@@ -80,3 +80,8 @@ button:disabled{opacity:.4;cursor:default}
 #monitor-side-distance{margin-top:18px;padding-bottom:18px;border-bottom:1px solid #2b3944}
 #monitor-side-distance label{margin-bottom:10px}
 #monitor-side-distance input{font-size:16px;padding:10px}
+
+#object-panel>label[for="desk-choice"]{display:block;margin:22px 0 18px}
+#desk-choice{display:block;width:100%;min-width:0;margin-top:8px;padding:10px;background:#1d2832;border:1px solid #394956;border-radius:6px;color:#eef5f7;font:inherit;font-size:14px;color-scheme:dark}
+#desk-choice option{background:#1d2832;color:#eef5f7}
+#desk-choice:focus-visible{outline:2px solid #74dcc2;outline-offset:2px}
