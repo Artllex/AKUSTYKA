@@ -604,3 +604,7 @@ Dolna belka z logo i pionowe szyny są zwrócone do wnętrza pokoju. Stopki bieg
 ## Wyrównanie pionowej ramy z dolną belką — 0.66.0
 
 Podstawy pionowych szyn znajdują się tuż przy przedniej krawędzi stopek, w jednej płaszczyźnie głębokości z dolną belką. Usunięto wcześniejsze odsunięcie szyn o 2,4 cm w głąb podstawy. Wymiary zewnętrzne stojaka pozostają 50 × 30 × 73 cm.
+
+## Głębsze zbliżenie kamery — 0.67.0
+
+W widoku 3D kamera może zbliżyć się do celu na 3 cm zamiast 15 cm. Przy coraz większym zbliżeniu tempo zoomu i przesuwania zwalnia minimalnie mocniej niż w wersji 0.66.0.

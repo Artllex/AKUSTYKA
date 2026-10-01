@@ -1,4 +1,4 @@
-const NEAR_SLOWDOWN=0.3;
+const NEAR_SLOWDOWN=0.32;
 
 export function navigationSpan(camera,target){
  if(camera.isOrthographicCamera)return (camera.top-camera.bottom)/camera.zoom;

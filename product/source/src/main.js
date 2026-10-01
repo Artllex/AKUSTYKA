@@ -106,7 +106,7 @@ class SteadyOrbitControls extends OrbitControls{
  update(...args){if(this.referenceSpan)this.panSpeed=panSpeedForSpan(navigationSpan(this.object,this.target),this.referenceSpan);return super.update(...args);}
 }
 
-function bindControls(target){controls?.dispose();controls=new SteadyOrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.minDistance=0.15;controls.maxDistance=60;controls.maxPolarAngle=Math.PI;controls.enableRotate=!projection;controls.target.copy(target);controls.setNavigationReference();}
+function bindControls(target){controls?.dispose();controls=new SteadyOrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.minDistance=0.03;controls.maxDistance=60;controls.maxPolarAngle=Math.PI;controls.enableRotate=!projection;controls.target.copy(target);controls.setNavigationReference();}
 
 const format=(n,d=1)=>n.toLocaleString('pl-PL',{minimumFractionDigits:d,maximumFractionDigits:d});
 
