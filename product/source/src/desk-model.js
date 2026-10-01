@@ -8,7 +8,7 @@ export const COMBODESK_88 = Object.freeze({
 
 export function createDeskRecord(room){
  return {id:'desk-combodesk-88',type:'studio-desk',model:'thomann-combodesk-88-r-base-black',
-  position:{x:room.width/2,y:0,z:COMBODESK_88.depth/2+0.16},yaw:0};
+  position:{x:room.width/2,y:0,z:COMBODESK_88.depth/2+0.16+0.27},yaw:0};
 }
 export function ensureDeskRecord(document){
  if(!document.objects.some(record=>record.id==='desk-combodesk-88'))document.objects.push(createDeskRecord(document.room));

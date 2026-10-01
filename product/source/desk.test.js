@@ -61,3 +61,16 @@ test('desk is saved, follows room width while untouched, and can be added to old
  ensureDeskRecord(old);ensureDeskRecord(old);
  assert.equal(old.objects.filter(o=>o.type==='studio-desk').length,1);
 });
+
+test('default desk moves exactly 27 cm toward listener; old untouched documents migrate',()=>{
+ const doc=createDocument(),desk=doc.objects.find(o=>o.type==='studio-desk');
+ const previousZ=D.depth/2+0.16;
+ assert.ok(Math.abs(desk.position.z-previousZ-0.27)<1e-9);
+ assert.ok(desk.position.z>doc.objects.find(o=>o.type==='studio-monitor').position.z);
+ const saved=JSON.parse(JSON.stringify(doc));saved.objects.find(o=>o.id===desk.id).position.z=previousZ;
+ assert.equal(parseRoomDocument(JSON.stringify(saved)).objects.find(o=>o.id===desk.id).position.z,desk.position.z);
+ saved.objects.find(o=>o.id===desk.id).position.z=previousZ+.08;
+ assert.equal(parseRoomDocument(JSON.stringify(saved)).objects.find(o=>o.id===desk.id).position.z,previousZ+.08);
+ saved.objects.find(o=>o.id===desk.id).position.z=previousZ;saved.transforms[desk.id]={x:.01,y:0,z:0,rx:0,ry:0,rz:0};
+ assert.equal(parseRoomDocument(JSON.stringify(saved)).objects.find(o=>o.id===desk.id).position.z,previousZ);
+});
