@@ -24,10 +24,12 @@ test('15U rack stands on the floor inside the rear right corner and keeps its mo
  assert.equal(view.group.getObjectsByProperty('name','front-screw-recess').length,4);
  const lowerRail=view.group.getObjectByName('lower-front-rail');
  assert.ok(screws.every(screw=>screw.position.z<lowerRail.position.z-lowerRail.geometry.parameters.depth/2),'screw heads must be visible on the front face');
- const foot=view.group.getObjectByName('foot-side-plate'),footPositions=foot.geometry.attributes.position;
- const topAt=z=>{let top=-Infinity;for(let i=0;i<footPositions.count;i++)if(Math.abs(footPositions.getZ(i)-z)<1e-6)top=Math.max(top,footPositions.getY(i));return top;};
- assert.ok(Math.abs(topAt(RACK_15U.depth/2)-topAt(-RACK_15U.depth/2))<1e-6,'both ends of each foot must have one level top edge');
- assert.ok(Math.abs(topAt(RACK_15U.depth/2)-0.011-2*lowerRail.geometry.parameters.height)<1e-6,'side-plate height must equal twice the lower beam height');
+ for(const plate of view.group.getObjectsByProperty('name','foot-side-plate')){
+  const vertices=plate.geometry.attributes.position;
+  const topAtEnd=z=>{let top=-Infinity;for(let i=0;i<vertices.count;i++)if(Math.abs(vertices.getZ(i)-z)<1e-6)top=Math.max(top,vertices.getY(i));return top;};
+  assert.ok(Math.abs(topAtEnd(-RACK_15U.depth/2)-0.011-1.5*lowerRail.geometry.parameters.height)<1e-6,'upright end must be 50% taller than the lower beam');
+  assert.ok(Math.abs(topAtEnd(RACK_15U.depth/2)-0.011-lowerRail.geometry.parameters.height)<1e-6,'far end must be the same height as the lower beam');
+ }
  const rail=view.group.getObjectByName('mounting-rail'),positions=rail.geometry.attributes.position;
  assert.ok(rail.position.z<0,'uprights and front rail must face the room, with the feet behind');
  assert.ok(lowerRail.position.z<0,'branded cross-member must be at the front');
