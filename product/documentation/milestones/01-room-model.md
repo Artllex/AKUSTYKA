@@ -588,3 +588,7 @@ Pionowe szyny znajdują się z tyłu stojaka, a stopki biegną od nich ku przodo
 ## Oznaczenie i śruby dolnej belki — 0.63.0
 
 Na środku dolnej belki jest duży biały symbol RIVECO z małym napisem pod spodem, zgodnie ze zdjęciem użytkownika. Po obu końcach belki są po dwie widoczne od przodu śruby z metalowymi obwódkami i ciemnymi środkami.
+
+## Stała prędkość nawigacji — 0.64.0
+
+Przybliżanie gestem touchpada i przesuwanie kamery za pomocą Shift + przeciągnięcie myszy używają stałej skali ruchu względem pozycji początkowej widoku. Blisko obiektu kolejne gesty nie stają się coraz wolniejsze. Zasada obowiązuje także w rzucie prostopadłym.
