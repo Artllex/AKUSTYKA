@@ -52,11 +52,11 @@ test('niche holds an upper tilt pane and a wider fixed lower pane with measured 
  const upper=recess.getObjectByName('window-upper-tilt-glass'),lower=recess.getObjectByName('window-lower-fixed-glass');assert.ok(upper&&lower);assert.ok(recess.getObjectByName('window-upper-handle'));assert.equal(recess.getObjectByName('window-lower-handle'),undefined);
  recess.updateMatrixWorld(true);const upperSize=new THREE.Box3().setFromObject(upper).getSize(new THREE.Vector3()),lowerSize=new THREE.Box3().setFromObject(lower).getSize(new THREE.Vector3());
  assert.ok(Math.abs(upperSize.x-.831)<1e-7&&Math.abs(upperSize.y-.893)<1e-7);assert.ok(Math.abs(lowerSize.x-.923)<1e-7&&Math.abs(lowerSize.y-.835)<1e-7);
- const hitFrame=(x,y)=>new THREE.Raycaster(new THREE.Vector3(x,y,.5),new THREE.Vector3(0,0,-1)).intersectObjects(recess.children.filter(part=>part.name.includes('frame')||part.name.includes('stile')||part.name.includes('crossbar'))).length>0;
- assert.ok(hitFrame(features.window.center,2.11),'the top frame fills the space above the upper sash');
- assert.ok(hitFrame(features.window.center-.45,1.6),'the upper side stile reaches the glass');
- assert.ok(hitFrame(features.window.center+.48,.6),'the lower side stile reaches the glass');
- assert.ok(hitFrame(features.window.center,1.09),'the crossbar fills the gap between panes');
+ const frameMesh=recess.getObjectByName('window-continuous-frame');assert.ok(frameMesh&&recess.getObjectByName('window-upper-tilt-sash'));
+ assert.equal(recess.getObjectByName('window-outer-jamb'),undefined);
+ const hitFrame=(x,y)=>new THREE.Raycaster(new THREE.Vector3(x,y,.5),new THREE.Vector3(0,0,-1)).intersectObject(frameMesh).length>0;
+ for(const [x,y] of [[features.window.center,2.11],[features.window.center-.45,1.6],[features.window.center+.48,.6],[features.window.center,1.09],[features.window.center,.08]])assert.ok(hitFrame(x,y),'continuous frame covers the outside and mullion');
+ for(const [x,y] of [[features.window.center,1.6],[features.window.center,.6]])assert.equal(hitFrame(x,y),false,'the measured glazing remains open in the frame');
  for(const v of views)v.dispose();
 });
 test('front wall closes the niche above 222 cm while the lower opening stays clear',()=>{

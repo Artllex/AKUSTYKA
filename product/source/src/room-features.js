@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import {WALL_PAINT_COLOR} from './wall-paint.js';
 import {addRectaDoorHardware} from './recta-handle.js';
+import {addTwoLevelWindow} from './window-assembly.js';
 const DEFAULT_SWITCH_HEIGHT=.112;
 function defaultSwitchBottom(room){const doorTop=room.height-.505-.058,handleY=doorTop-.923;return handleY+.1-DEFAULT_SWITCH_HEIGHT/2;}
 export function defaultRoomFeatures(room){return {
@@ -108,30 +109,7 @@ export function createRoomFeatureViews(room,features){
   W.box('niche-sill',[w.width,sillThickness,w.stepDepth+.015],[w.center,w.bottom+w.stepHeight-sillThickness/2,-w.depth+(w.stepDepth+.015)/2],sillMaterial);
  }
  W.box('niche-roof',[w.width,0.01,w.depth],[w.center,w.bottom+w.height+0.005,-w.depth/2],reveal).userData.collision=false;
- // Two glazing lights share the existing opening. The upper tilt sash has
- // thicker stiles than the fixed lower pane, hence their different clear widths.
- const frame=W.mat(0xe8e9e5,{roughness:.45}),sash=W.mat(0xf4f5f2,{roughness:.38}),glass=W.mat(0xcbdde1,{metalness:.12,roughness:.18,transparent:true,opacity:.91,side:THREE.DoubleSide}),seal=W.mat(0x555e61,{roughness:.85}),hardware=W.mat(0xc4c8c5,{metalness:.55,roughness:.3});
- const glassZ=-w.depth+.014,frameZ=glassZ+.009,faceZ=frameZ+.009;
- const windowBottom=w.bottom+.16,lowerTop=windowBottom+.835,upperBottom=lowerTop+.175,upperTop=upperBottom+.893;
- const addGlazing=(name,width,bottom,height)=>{
-  W.box(name+'-glass',[width,height,.004],[w.center,bottom+height/2,glassZ],glass);
-  for(const side of [-1,1]){
-   W.box(name+'-seal-side',[.004,height+.008,.004],[w.center+side*(width/2+.002),bottom+height/2,frameZ-.003],seal);
-  }
-  for(const y of [bottom-.002,bottom+height+.002])W.box(name+'-seal-horizontal',[width+.008,.004,.004],[w.center,y,frameZ-.003],seal);
- };
- addGlazing('window-lower-fixed',.923,windowBottom,.835);
- addGlazing('window-upper-tilt',.831,upperBottom,.893);
- for(const side of [-1,1]){
-  W.box('window-outer-jamb',[.024,w.height,.022],[w.center+side*(w.width/2-.012),w.bottom+w.height/2,frameZ],frame);
-  const lowerStile=(w.width-.923)/2,upperStile=(w.width-.831)/2;
-  W.box('window-lower-stile',[lowerStile,.835,.02],[w.center+side*(.923/2+lowerStile/2),windowBottom+.835/2,faceZ],frame);
-  W.box('window-upper-tilt-stile',[upperStile,.893,.02],[w.center+side*(.831/2+upperStile/2),upperBottom+.893/2,faceZ+.003],sash);
- }
- for(const [name,bottom,height] of [['window-bottom-frame',w.bottom,windowBottom-w.bottom],['window-crossbar',lowerTop,upperBottom-lowerTop],['window-top-frame',upperTop,w.bottom+w.height-upperTop]])W.box(name,[w.width,height,.025],[w.center,bottom+height/2,frameZ],frame);
- for(const y of [upperBottom-.012,upperTop+.012])W.box('window-upper-sash-rail',[.855,.022,.017],[w.center,y,faceZ+.003],sash);
- W.box('window-upper-handle-plate',[.011,.046,.007],[w.center-.831/2-.036,upperBottom+.45,faceZ+.015],hardware);
- W.box('window-upper-handle',[.007,.088,.012],[w.center-.831/2-.036,upperBottom+.42,faceZ+.024],hardware);
+ addTwoLevelWindow(W,w);
 
  const r=features.radiator,R=create('radiator'),enamel=R.mat(0xe0e2dc),pipe=R.mat(0xbec5c1,{metalness:0.5});
  R.box('radiator-body',[r.width,r.height,r.depth-0.005],[r.center,r.bottom+r.height/2,r.standoff+(r.depth-0.005)/2],enamel);
