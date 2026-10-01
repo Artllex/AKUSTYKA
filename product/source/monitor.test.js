@@ -1,8 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from 'three';
-import {MM27,MM27_DRIVERS,createMonitorPair} from './src/monitor-model.js';
+import {MM27,MM27_DRIVERS,createMonitorPair,DEFAULT_MONITOR_EAR_DISTANCE} from './src/monitor-model.js';
 import {createStudioMonitor} from './src/monitor-view.js';
+import {monitorSideDistance} from './src/monitor-side-distance.js';
 import {createDocument,DEFAULT_ROOM,usesDefaultListeningLayout,placeDefaultListeningLayout} from './src/model.js';
 import {createSeatedListener} from './src/listener-view.js';
 import {createRoom} from './src/room-view.js';
@@ -25,6 +26,8 @@ test('centers follow speaker position and yaw, visibility does not alter geometr
 });
 test('default ears sit at 34% of room length on the sides of an equilateral tweeter triangle',()=>{
  const doc=createDocument(),listener=createSeatedListener(doc.objects[0]),monitors=doc.objects.filter(o=>o.type==='studio-monitor').map(createStudioMonitor),room=createRoom(doc.room,doc.roomFeatures);
+ assert.equal(DEFAULT_MONITOR_EAR_DISTANCE,0.869);
+ assert.ok(['monitor-L','monitor-R'].every(id=>Math.abs(monitorSideDistance(doc,id)-0.869)<1e-9));
  const ears=['left','right'].map(side=>listener.group.getObjectByName('ear-'+side).getWorldPosition(new THREE.Vector3()));
  const tweeters=monitors.map(m=>m.getDriverCenters().find(d=>d.id==='tweeter').position),side=tweeters[0].distanceTo(tweeters[1]);
  const apex=new THREE.Vector3(doc.room.width/2,tweeters[0].y,tweeters[0].z+Math.sqrt(3)*side/2);

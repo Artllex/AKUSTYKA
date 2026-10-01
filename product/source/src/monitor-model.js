@@ -9,6 +9,7 @@ export const MM27 = Object.freeze({
  source:'https://barefootsound.com/manuals/MicroMain27_Owners_Manual.pdf'
 });
 // Local origin: bottom center of cabinet. Front faces +Z, Y points upward.
+export const DEFAULT_MONITOR_EAR_DISTANCE=0.869;
 export const DRIVER_COLORS=Object.freeze({'midbass-top':0x47c8ff,tweeter:0xffdc32,'midbass-bottom':0xbba0ff,'sub-left':0x6be68b,'sub-right':0xf57ddd});
 export const MM27_DRIVERS = Object.freeze([
  {id:'midbass-top',label:'Górny midbass · 5,25″',diameter:0.13335,center:[0,0.3812,0.197],normal:[0,0,1]},
@@ -25,7 +26,7 @@ export function createMonitorPair(room,listener=createListenerRecord(room)){
  const earZ=listener.position.z+defaultEarOffsetZ(listener),earHalfWidth=.083*listener.stature/1.68;
  // The tweeters are the front vertices. Each rearward side passes through an ear;
  // its intersection is the third vertex, just behind the head.
- const halfSpacing=Math.min(.54,room.width*.22),yawAngle=Math.PI/6,tweeterFront=MM27_DRIVERS.find(d=>d.id==='tweeter').center[2];
+ const halfSpacing=Math.min(earHalfWidth+DEFAULT_MONITOR_EAR_DISTANCE/2,room.width*.22),yawAngle=Math.PI/6,tweeterFront=MM27_DRIVERS.find(d=>d.id==='tweeter').center[2];
  const tweeterZ=earZ-Math.sqrt(3)*(halfSpacing-earHalfWidth);
  return ['L','R'].map((channel,i)=>{
   const side=i===0?-1:1,yaw=-side*yawAngle;

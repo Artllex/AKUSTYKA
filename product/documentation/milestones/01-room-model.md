@@ -684,3 +684,7 @@ Rzut z obiektami pokazuje lasery monitorów widocznych po oglądanej stronie pł
 ## Dwa pomiary odstępu monitora od ściany — 0.87.0
 
 Dla ściany fizycznie znajdującej się za monitorem program pokazuje dwa odcinki: najkrótszy od rzeczywistej bryły monitora oraz od środka zewnętrznej tylnej płyty wzmacniacza. Oba są liczone do tej samej ściany, z uwzględnieniem wnęki i otworów. Karty pojawiają się po najechaniu na dany odcinek i podają jego nazwę oraz długość. Każdy odcinek jest czerwony poniżej minimum chłodzenia 12,7 cm, a zielony po spełnieniu warunku. Ostrzeżenia dla pozostałych bliskich ścian pozostają.
+
+## Domyślna odległość tweeter–ucho — 0.88.0
+
+Nowy pokój ustawia obydwa monitory w odległości 86,9 cm wzdłuż boku trójkąta tweeter–ucho. Uszy pozostają na 34% długości pokoju, kąt monitorów wynosi 30°, a boki trójkąta przechodzą przez uszy. Zmiana nie nadpisuje ręcznie ustawionych monitorów w zapisanych pokojach.
