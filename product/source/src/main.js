@@ -61,6 +61,7 @@ import {createRackView} from './rack-view.js';
 import {ensureRackRecord,moveDefaultRackWithRoom} from './rack-model.js';
 import {createDeskView} from './desk-view.js';
 import {createModulDeskView} from './modul-desk-view.js';
+import {createAlienwareDisplay} from './alienware-display.js';
 import {moveDefaultDeskWithRoom} from './desk-model.js';
 import {MODUL_DESK_ID,moveDefaultModulDeskWithRoom} from './modul-desk-model.js';
 import {THOMANN_DESK_ID,chooseDesk,selectedDeskId} from './desk-choice.js';
@@ -237,7 +238,7 @@ function refreshMonitors(){for(const monitor of monitorViews){scene.remove(monit
 
 function refreshRacks(){for(const rack of rackViews){scene.remove(rack.group);rack.dispose();}rackViews=doc.objects.filter(o=>o.type==='studio-rack').map(record=>{const rack=createRackView(record);applyObjectTransform(rack.group,doc.transforms);scene.add(rack.group);return rack;});host.dataset.rackCount=rackViews.length;if(rackAddButton)rackAddButton.hidden=!!rackViews.length;refreshCollisions();refreshObjectSelection();}
 
-function refreshDesks(){for(const desk of deskViews){scene.remove(desk.group);desk.dispose();}deskViews=doc.objects.filter(o=>o.type==='studio-desk').map(record=>{const desk=record.id===MODUL_DESK_ID?createModulDeskView(record):createDeskView(record);applyObjectTransform(desk.group,doc.transforms);scene.add(desk.group);return desk;});host.dataset.deskCount=deskViews.length;host.dataset.modulDeskCount=deskViews.filter(d=>d.group.name===MODUL_DESK_ID).length;$('desk-choice').value=selectedDeskId(doc)??THOMANN_DESK_ID;refreshCollisions();refreshObjectSelection();}
+function refreshDesks(){for(const desk of deskViews){scene.remove(desk.group);desk.dispose();}deskViews=doc.objects.filter(o=>o.type==='studio-desk').map(record=>{const desk=record.id===MODUL_DESK_ID?createModulDeskView(record):createDeskView(record);const display=createAlienwareDisplay(record);desk.group.add(display.group);const disposeDesk=desk.dispose;desk.dispose=()=>{display.dispose();disposeDesk();};applyObjectTransform(desk.group,doc.transforms);scene.add(desk.group);return desk;});host.dataset.deskCount=deskViews.length;host.dataset.computerDisplayCount=deskViews.length;host.dataset.modulDeskCount=deskViews.filter(d=>d.group.name===MODUL_DESK_ID).length;$('desk-choice').value=selectedDeskId(doc)??THOMANN_DESK_ID;refreshCollisions();refreshObjectSelection();}
 
 function buildRoom(transforms=doc.transforms){
  const roomView=doc.roomMesh?createMeshRoom(doc.room,doc.roomMesh):doc.roomShape?createFootprintRoom(doc.room,doc.roomShape,doc.roomFeatures):createRoom(doc.room,doc.roomFeatures,transforms);
