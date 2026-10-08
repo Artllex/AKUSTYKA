@@ -38,6 +38,9 @@ function builder(name){
  const cylinder=(name,radius,height,material,x,y,z,parent=group)=>{
   const geometry=new THREE.CylinderGeometry(radius,radius,height,24),item=new THREE.Mesh(geometry,material);item.name=name;item.position.set(x,y,z);parent.add(item);geometries.push(geometry);return item;
  };
+ const mesh=(name,geometry,material,x=0,y=0,z=0,parent=group)=>{
+  const item=new THREE.Mesh(geometry,material);item.name=name;item.position.set(x,y,z);parent.add(item);geometries.push(geometry);return item;
+ };
  const label=(name,text,w,h,background,foreground,x,y,z,parent=group,rotationX=0)=>{
   if(typeof document==='undefined')return;
   const canvas=document.createElement('canvas');canvas.width=512;canvas.height=128;
@@ -45,14 +48,22 @@ function builder(name){
   ctx.fillStyle=foreground;ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='bold 58px Arial';ctx.fillText(text,256,64);
   const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;textures.push(texture);
   const geometry=new THREE.PlaneGeometry(w,h),material=new THREE.MeshBasicMaterial({map:texture,side:THREE.DoubleSide});
-  const item=new THREE.Mesh(geometry,material);item.name=name;item.position.set(x,y,z);item.rotation.x=rotationX;parent.add(item);geometries.push(geometry);materials.push(material);
+  const item=new THREE.Mesh(geometry,material);item.name=name;item.position.set(x,y,z);item.rotation.x=rotationX;parent.add(item);geometries.push(geometry);materials.push(material);return item;
  };
  const image=(name,canvas,w,h,x,y,z,parent=group)=>{
   const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;textures.push(texture);
   const geometry=new THREE.PlaneGeometry(w,h),material=new THREE.MeshBasicMaterial({map:texture,side:THREE.DoubleSide});
   const item=new THREE.Mesh(geometry,material);item.name=name;item.position.set(x,y,z);parent.add(item);geometries.push(geometry);materials.push(material);
  };
- return {group,mat,box,round,repeatedRound,cylinder,label,image,dispose(){geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());textures.forEach(t=>t.dispose());}};
+ return {group,mat,box,round,repeatedRound,cylinder,mesh,label,image,dispose(){geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());textures.forEach(t=>t.dispose());}};
+}
+
+function moniconWedge(width){
+ const depth=MONICON_XL.depth/2,outline=[[-depth,.006],[depth,.006],[depth,.031],[-.012,.055],[-depth,.078]];
+ const shape=new THREE.Shape();
+ outline.forEach(([z,y],i)=>i?shape.lineTo(-z,y):shape.moveTo(-z,y));shape.closePath();
+ const geometry=new THREE.ExtrudeGeometry(shape,{depth:width,steps:1,bevelEnabled:false});
+ geometry.rotateY(Math.PI/2);geometry.translate(-width/2,0,0);return geometry;
 }
 
 export function createMotu24Ai(rack){
@@ -208,30 +219,85 @@ export function createGxt144Rexx(desk){
 }
 
 export function createMoniconXL(desk){
- const b=builder('palmer-monicon-xl'),{group,mat,box,round,cylinder,label}=b;
- const body=mat(0x242628,.35,.63),panel=mat(0x343638,.28,.6),wood=mat(0x684321,.05,.78),dark=mat(0x101214,.22,.65),silver=mat(0xb5b9b5,.54,.38),yellow=mat(0xffbc38),red=mat(0xdf6255),green=mat(0x6ccc80);
+ const b=builder('palmer-monicon-xl'),{group,mat,box,round,repeatedRound,cylinder,mesh,label}=b;
  const p=deskPeripheralPlacement(desk);group.position.set(p.monicon.x,p.top,p.monicon.z);
- round('console-body',MONICON_XL.width,.039,MONICON_XL.depth,.006,body,0,.020,0);
- for(const side of [-1,1])round('wood-side-cheek',.008,.052,MONICON_XL.depth,.003,wood,side*(MONICON_XL.width/2-.004),.027,0);
- const controls=new THREE.Group();controls.name='sloped-control-panel';controls.position.y=.057;controls.rotation.x=.18;group.add(controls);
- round('angled-control-surface',.237,.006,.197,.003,panel,0,0,0,controls);
- label('palmer-brand','PALMER',.052,.011,'#343638','#eff1e8',-.088,.0035,-.080,controls,-Math.PI/2);
- label('monicon-name','MONICON XL',.081,.011,'#343638','#eff1e8',.067,.0035,-.080,controls,-Math.PI/2);
- // Two banks of source and output selectors, metering, then the main controls.
- for(const side of [-1,1])for(let i=0;i<3;i++){
-  const x=side*(.029+i*.026),z=-.052;
-  round('source-output-key',.017,.005,.013,.002,i===0?yellow:dark,x,.006,z,controls);
+ const chassis=mat(0x282b2e,.32,.67),sideCap=mat(0x333638,.12,.91),upperMat=mat(0x17191c,.13,.74),lowerMat=mat(0x292c2f,.27,.62);
+ const dark=mat(0x111316,.18,.55),silver=mat(0xaaaead,.57,.38),white=mat(0xe2e4df,.08,.45),orange=mat(0xe46c1d,.05,.5),black=mat(0x050607,.1,.66);
+ mesh('formed-metal-chassis',moniconWedge(MONICON_XL.width-.016),chassis);
+ for(const side of [-1,1]){
+  mesh('textured-side-cap',moniconWedge(.008),sideCap,side*(MONICON_XL.width/2-.004));
+  const seam=new THREE.CatmullRomCurve3([
+   new THREE.Vector3(side*.119,.078,-MONICON_XL.depth/2),
+   new THREE.Vector3(side*.119,.055,-.012),
+   new THREE.Vector3(side*.119,.031,MONICON_XL.depth/2)
+  ]);
+  mesh('orange-side-seam',new THREE.TubeGeometry(seam,16,.0011,5,false),orange);
+  for(const [y,z] of [[.057,-.070],[.026,.070]]){
+   const screw=cylinder('side-screw',.0015,.0008,dark,side*.1273,y,z);screw.rotation.z=Math.PI/2;
+  }
  }
- box('correlation-meter',.061,.003,.015,dark,0,.004,-.025,controls);
- for(let i=0;i<11;i++)box('meter-led',.0023,.001,.004,i<4?green:i<8?yellow:red,-.024+i*.0048,.006,-.025,controls);
- for(const x of [-.083,.083])for(let i=0;i<3;i++)round('control-key',.021,.004,.014,.002,i===2?red:dark,x,.006,-.008+i*.022,controls);
- for(const x of [-.083,.083])cylinder('headphone-level',.010,.009,dark,x,.012,.063,controls);
- cylinder('main-volume-knob',.031,.016,dark,0,.015,.053,controls);
- cylinder('volume-cap',.022,.001,silver,0,.024,.053,controls);
- for(const x of [-.034,.034])round('mono-dim-key',.016,.004,.014,.002,dark,x,.005,.016,controls);
- // Front headphone sockets are inset in the vertical lip.
- for(const x of [-.083,.083]){
-  const socket=cylinder('headphone-socket',.006,.0015,dark,x,.019,MONICON_XL.depth/2+.001);socket.rotation.x=Math.PI/2;
+ for(const x of [-.101,.101])for(const z of [-.080,.080])round('rubber-foot',.018,.004,.014,.002,black,x,.004,z);
+
+ // Two real slopes meet at the middle ridge: a higher meter/source panel and
+ // a shallower front surface for the volume and headphone controls.
+ const upper=new THREE.Group();upper.name='upper-control-panel';upper.position.set(0,.066,-.058);upper.rotation.x=.236;group.add(upper);
+ const lower=new THREE.Group();lower.name='lower-control-panel';lower.position.set(0,.043,.045);lower.rotation.x=.208;group.add(lower);
+ round('upper-face',.230,.002,.092,.0015,upperMat,0,.001,0,upper);
+ round('lower-face',.230,.002,.114,.0015,lowerMat,0,.001,0,lower);
+ label('monicon-name','monicon XL',.060,.009,'#17191c','#a3a6a5',-.074,.003,-.033,upper,-Math.PI/2);
+ label('palmer-brand','Palmer',.055,.010,'#17191c','#a3a6a5',.075,.003,-.033,upper,-Math.PI/2);
+
+ const knob=(name,parent,x,z,r,h)=>{
+  cylinder(name+'-ring',r*1.17,.0014,silver,x,.003,z,parent);
+  cylinder(name,r,h,dark,x,.003+h/2,z,parent);
+  box(name+'-orange-index',r*.30,.0006,.0012,orange,x+r*.41,.003+h+.0003,z-r*.28,parent);
+ };
+ knob('aux-input-level',upper,-.097,.008,.0065,.009);
+ knob('cue-output-level',upper,.082,.026,.0065,.009);
+ for(const [title,x,width] of [['INPUT SELECT',-.054,.034],['OUTPUT SELECT',.055,.037],['CUE SOURCE',.104,.031]]){
+  label(`${title}-legend`,title,width,.005,'#17191c','#aeb1b0',x,.003,-.023,upper,-Math.PI/2);
+  for(let i=0;i<3;i++){
+   const z=-.003+i*.013;
+   round('white-selector-key',.011,.004,.009,.0015,white,x,.005,z,upper);
+   label('selector-caption',title==='OUTPUT SELECT'?`OUT ${i+1}`:`IN ${i+1}`,.009,.005,'#e2e4df','#222528',x,.0075,z,upper,-Math.PI/2);
+  }
+ }
+ const meters=[];
+ for(const x of [-.020,0,.020])for(let row=0;row<8;row++)meters.push({x,y:.003,z:-.005+row*.005});
+ repeatedRound('three-channel-meter-leds',.005,.0007,.0022,.0003,white,meters,upper);
+ for(const [title,x,width] of [['LEFT',-.020,.014],['CORRELATION',0,.023],['RIGHT',.020,.015]])label(`${title}-meter-label`,title,width,.004,'#17191c','#9b9e9d',x,.003,-.016,upper,-Math.PI/2);
+
+ for(const [name,x] of [['headphone-one-level',-.098],['headphone-two-level',-.069],['attenuation-level',.070],['talk-level',.101]])knob(name,lower,x,-.019,.0065,.009);
+ knob('main-volume-knob',lower,0,.009,.018,.013);
+ label('main-volume-caption','MAIN',.031,.006,'#292c2f','#b8b9b5',0,.003,.037,lower,-Math.PI/2);
+ for(const x of [-.098,-.069])round('black-pfl-key',.014,.004,.009,.0015,dark,x,.005,.036,lower);
+ for(const [name,x] of [['MUTE',-.039],['MONO',.038],['DIM',.071],['TALK',.104]]){
+  round('white-function-key',.018,.004,.013,.0018,white,x,.005,.039,lower);
+  label(`${name}-caption`,name,.015,.007,'#e2e4df','#292c2f',x,.0075,.039,lower,-Math.PI/2);
+ }
+
+ // Two headphone outputs share one recessed plate in the front wall.
+ round('front-headphone-recess',.061,.022,.001,.004,black,-.073,.019,MONICON_XL.depth/2+.0005);
+ for(const x of [-.091,-.055]){
+  mesh('front-headphone-rim',new THREE.TorusGeometry(.007,.0012,6,16),silver,x,.019,MONICON_XL.depth/2+.002);
+  mesh('front-headphone-hole',new THREE.CircleGeometry(.0046,16),black,x,.019,MONICON_XL.depth/2+.0021);
+ }
+
+ // The rear panel has paired balanced connections plus auxiliary and power I/O.
+ const back=-MONICON_XL.depth/2;
+ round('rear-connector-panel',.228,.050,.001,.003,upperMat,0,.039,back-.0006);
+ const rearSocket=(name,x,y,ring=silver)=>{
+  const rim=mesh(name+'-rim',new THREE.TorusGeometry(.0051,.0011,6,14),ring,x,y,back-.002);rim.rotation.y=Math.PI;
+  const hole=mesh(name+'-hole',new THREE.CircleGeometry(.0035,14),black,x,y,back-.0022);hole.rotation.y=Math.PI;
+ };
+ for(const x of [-.089,-.065,-.025,0,.025,.090,.113])for(const y of [.028,.050])rearSocket('balanced-rear-jack',x,y);
+ rearSocket('aux-rca-left',.053,.049,white);rearSocket('aux-rca-right',.053,.028,orange);
+ rearSocket('spdif-in',.072,.049);rearSocket('aux-in',.072,.028);
+ round('rear-power-switch',.009,.018,.002,.001,dark,-.111,.044,back-.002);
+ rearSocket('power-in',-.111,.024);
+ for(const [title,x] of [['OUTPUTS',-.063],['MONITOR',0],['INPUTS',.101]]){
+  const marking=label(`${title}-rear-label`,title,.050,.007,'#17191c','#adb1af',x,.066,back-.0015);
+  if(marking)marking.rotation.y=Math.PI;
  }
  group.userData.dimensions=MONICON_XL;
  return b;

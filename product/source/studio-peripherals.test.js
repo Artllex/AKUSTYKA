@@ -104,3 +104,31 @@ test('repeated laptop keys use one compact draw call',()=>{
  assert.ok(renderCost(laptop.group).draws<45);
  laptop.dispose();
 });
+
+test('Monicon XL follows the photographed wedge profile and control layout',()=>{
+ const view=createMoniconXL(createDeskRecord(room));
+ const group=view.group;
+ const caps=group.getObjectsByProperty('name','textured-side-cap');
+ assert.equal(caps.length,2);
+ assert.equal(group.getObjectsByProperty('name','orange-side-seam').length,2);
+ assert.equal(group.getObjectsByProperty('name','front-headphone-rim').length,2);
+ assert.equal(group.getObjectsByProperty('name','balanced-rear-jack-rim').length,14);
+ assert.ok(!group.getObjectByName('wood-side-cheek'));
+ const upper=group.getObjectByName('upper-control-panel');
+ const lower=group.getObjectByName('lower-control-panel');
+ assert.ok(upper.position.z<lower.position.z&&upper.position.y>lower.position.y);
+ assert.ok(upper.rotation.x>0&&lower.rotation.x>0);
+ const body=group.getObjectByName('formed-metal-chassis');
+ body.geometry.computeBoundingBox();
+ const vertices=body.geometry.getAttribute('position');
+ let rearTop=0,frontTop=0;
+ for(let i=0;i<vertices.count;i++){
+  const z=vertices.getZ(i),y=vertices.getY(i);
+  if(z<-.1)rearTop=Math.max(rearTop,y);
+  if(z>.1)frontTop=Math.max(frontTop,y);
+ }
+ assert.ok(rearTop-frontTop>.04,'rear must be taller than the front lip');
+ const knob=group.getObjectByName('main-volume-knob');
+ assert.ok(knob.geometry.parameters.radiusTop<.02,'main knob should not dominate the panel');
+ view.dispose();
+});
