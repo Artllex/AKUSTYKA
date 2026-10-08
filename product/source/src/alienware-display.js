@@ -9,8 +9,9 @@ export const AW3423DWF=Object.freeze({width:.81525,height:.41557,depth:.30571,cu
 export function displayPlacement(desk){
  const modul=desk.id===MODUL_DESK_ID;
  const top=modul?MODUL_STUDIO_DESK.height:COMBODESK_88.worktop.top;
- // Both desk tops cover this entire footprint; the base clears B's cable grommet.
- return {x:0,y:top,z:modul?.055:.055};
+ const rear=modul?-MODUL_STUDIO_DESK.top.frontZ:(COMBODESK_88.depth-COMBODESK_88.worktop.depth)/2-COMBODESK_88.worktop.depth/2;
+ // The rear heel sits 5 mm inboard from the back edge of either worktop.
+ return {x:0,y:top,z:rear+.1295+.005};
 }
 
 function curved(geometry,radius=AW3423DWF.curveRadius){
@@ -49,20 +50,22 @@ export function createAlienwareDisplay(desk){
  const texture=scenicTexture(),screen=new THREE.MeshBasicMaterial({map:texture,side:THREE.DoubleSide});
  const materials=[body,bezel,stand,turquoise,screen],geometries=[];
  function mesh(name,geometry,material,x=0,y=0,z=0){const item=new THREE.Mesh(geometry,material);item.name=name;item.position.set(x,y,z);group.add(item);geometries.push(geometry);return item;}
- const d=AW3423DWF,panelY=d.height-d.panelHeight/2,panelZ=-.075;
+ // The screen sits behind the support stem; its projection stays outside both tweeter rays.
+ const d=AW3423DWF,panelY=d.height-d.panelHeight/2,panelZ=-.155;
  mesh('curved-rear-shell-1800r',curved(new THREE.BoxGeometry(d.width,d.panelHeight,.026,64,1,1)),body,0,panelY,panelZ);
  mesh('black-front-bezel',curved(new THREE.PlaneGeometry(d.width-.004,d.panelHeight-.004,64,1)),bezel,0,panelY,panelZ+.0135);
  mesh('curved-oled-screen',curved(new THREE.PlaneGeometry(d.width-.018,d.panelHeight-.032,64,1)),screen,0,panelY+.007,panelZ+.0143);
  mesh('lower-chin',curved(new THREE.BoxGeometry(d.width-.006,.018,.003,64,1,1)),stand,0,d.height-d.panelHeight+.009,panelZ+.015);
  // Central height-adjustable stem, V-shaped front feet and short rear heel.
- mesh('stand-stem',new RoundedBoxGeometry(.057,.205,.047,4,.008),stand,0,.116,-.097);
- mesh('stand-neck',new RoundedBoxGeometry(.073,.06,.066,4,.008),body,0,.265,-.094);
+ mesh('stand-stem',new RoundedBoxGeometry(.057,.205,.047,4,.008),stand,0,.116,-.13);
+ mesh('stand-neck',new RoundedBoxGeometry(.073,.06,.066,4,.008),body,0,.265,-.135);
  for(const side of [-1,1]){
-  const arm=new THREE.Shape();arm.moveTo(0,-.08);arm.lineTo(side*.031,-.065);arm.lineTo(side*.242,.137);arm.lineTo(side*.253,.137);arm.lineTo(side*.253,.115);arm.lineTo(side*.035,-.105);arm.closePath();
+  // Shape-Y becomes world -Z after rotation, so negative values put the V feet toward the listener.
+  const arm=new THREE.Shape();arm.moveTo(0,.08);arm.lineTo(side*.031,.065);arm.lineTo(side*.242,-.165);arm.lineTo(side*.253,-.165);arm.lineTo(side*.253,-.143);arm.lineTo(side*.035,.105);arm.closePath();
   const foot=new THREE.ExtrudeGeometry(arm,{depth:.012,bevelEnabled:true,bevelSegments:2,steps:1,bevelSize:.002,bevelThickness:.001});foot.rotateX(-Math.PI/2);
   mesh('v-foot',foot,stand,0,.002,0);
  }
- mesh('rear-foot',new RoundedBoxGeometry(.048,.012,.079,3,.004),stand,0,.008,-.128);
+ mesh('rear-foot',new RoundedBoxGeometry(.048,.012,.079,3,.004),stand,0,.008,-.09);
  // Rounded vertical vent and luminous marks on the rear, visible when orbiting.
  const vent=mesh('rear-vent',new THREE.TorusGeometry(.044,.006,8,36),bezel,0,.257,panelZ-.014);vent.scale.y=2.05;
  const alien=mesh('rear-alien-mark',new THREE.SphereGeometry(.014,16,8),turquoise,-.205,.245,panelZ-.0146);alien.scale.set(1,.78,.1);
