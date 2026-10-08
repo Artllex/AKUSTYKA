@@ -23,6 +23,18 @@ function builder(name){
  const round=(name,w,h,d,r,material,x=0,y=0,z=0,parent=group)=>{
   const geometry=new RoundedBoxGeometry(w,h,d,3,r),item=new THREE.Mesh(geometry,material);item.name=name;item.position.set(x,y,z);parent.add(item);geometries.push(geometry);return item;
  };
+ const repeatedRound=(name,w,h,d,r,material,positions,parent=group)=>{
+  // One low-detail bevel and one draw call for a whole bank of tiny keys.
+  const geometry=new RoundedBoxGeometry(w,h,d,1,r),item=new THREE.InstancedMesh(geometry,material,positions.length);
+  const matrix=new THREE.Matrix4();
+  positions.forEach((position,index)=>{
+   item.setMatrixAt(index,matrix.makeTranslation(position.x,position.y,position.z));
+   if(position.color!==undefined)item.setColorAt(index,new THREE.Color(position.color));
+  });
+  item.instanceMatrix.needsUpdate=true;
+  if(item.instanceColor)item.instanceColor.needsUpdate=true;
+  item.name=name;parent.add(item);geometries.push(geometry);return item;
+ };
  const cylinder=(name,radius,height,material,x,y,z,parent=group)=>{
   const geometry=new THREE.CylinderGeometry(radius,radius,height,24),item=new THREE.Mesh(geometry,material);item.name=name;item.position.set(x,y,z);parent.add(item);geometries.push(geometry);return item;
  };
@@ -40,7 +52,7 @@ function builder(name){
   const geometry=new THREE.PlaneGeometry(w,h),material=new THREE.MeshBasicMaterial({map:texture,side:THREE.DoubleSide});
   const item=new THREE.Mesh(geometry,material);item.name=name;item.position.set(x,y,z);parent.add(item);geometries.push(geometry);materials.push(material);
  };
- return {group,mat,box,round,cylinder,label,image,dispose(){geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());textures.forEach(t=>t.dispose());}};
+ return {group,mat,box,round,repeatedRound,cylinder,label,image,dispose(){geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());textures.forEach(t=>t.dispose());}};
 }
 
 export function createMotu24Ai(rack){
@@ -152,7 +164,7 @@ export function createBehringerKobolExpander(){
 }
 
 export function createStreamDeckXL(desk){
- const b=builder('elgato-stream-deck-xl'),{group,mat,round,box,label}=b;
+ const b=builder('elgato-stream-deck-xl'),{group,mat,round,repeatedRound,box,label}=b;
  const p=deskPeripheralPlacement(desk);group.position.set(p.streamDeck.x,p.top,p.streamDeck.z);
  const black=mat(0x101418,.18,.55),bezel=mat(0x242b30,.28,.45),screen=mat(0x131d24,.05,.35),foot=mat(0x303538,.35,.65);
  round('stream-deck-foot',.170,.007,.102,.004,foot,0,.004,0);
@@ -161,11 +173,14 @@ export function createStreamDeckXL(desk){
  round('stream-deck-body',STREAM_DECK_XL.width,.012,STREAM_DECK_XL.depth,.005,black,0,0,0,face);
  round('stream-deck-glass',.174,.001,.104,.003,bezel,0,.007,0,face);
  const colors=[0x30718b,0xb34e61,0x4d86a0,0xc18a50,0x647cb6,0x4b9a7b,0xb1699a,0x5b95af];
+ const keyPositions=[],iconPositions=[];
  for(let row=0;row<4;row++)for(let col=0;col<8;col++){
   const x=-.074+col*.0211,z=-.037+row*.0246;
-  round('stream-deck-lcd-key',.017,.002,.020,.0018,screen,x,.008,z,face);
-  round('stream-deck-key-icon',.009,.0004,.009,.001,mat(colors[(row*3+col)%colors.length],.05,.42),x,.0092,z,face);
+  keyPositions.push({x,y:.008,z});
+  iconPositions.push({x,y:.0092,z,color:colors[(row*3+col)%colors.length]});
  }
+ repeatedRound('stream-deck-lcd-keys',.017,.002,.020,.0018,screen,keyPositions,face);
+ repeatedRound('stream-deck-key-icons',.009,.0004,.009,.001,mat(0xffffff,.05,.42),iconPositions,face);
  label('stream-deck-brand','elgato',.050,.009,'#101418','#d9e5e8',0,.009,.052,face,-Math.PI/2);
  // Rear support remains behind the visible key face.
  box('stream-deck-stand',.130,.035,.006,foot,0,.018,-.038);
@@ -223,15 +238,17 @@ export function createMoniconXL(desk){
 }
 
 export function createProArtP16(desk){
- const b=builder('asus-proart-p16-h7606wr'),{group,mat,box,round,cylinder,label,image}=b;
+ const b=builder('asus-proart-p16-h7606wr'),{group,mat,box,round,repeatedRound,cylinder,label,image}=b;
  const caseMat=mat(0x16191d,.34,.54),keys=mat(0x22272b,.08,.69),screenBlack=mat(0x080c10,.05,.36),silver=mat(0x697278,.5,.5);
  const p=deskPeripheralPlacement(desk);group.position.set(p.laptop.x,p.top,p.laptop.z);
  round('laptop-base',PROART_P16.width,PROART_P16.baseHeight,PROART_P16.depth,.004,caseMat,0,PROART_P16.baseHeight/2,0);
  box('keyboard-bed',.295,.0005,.105,keys,0,PROART_P16.baseHeight+.0003,-.038);
+ const keyPositions=[];
  for(let row=0;row<6;row++)for(let col=0;col<16;col++){
   const x=-.139+col*.0185,z=-.084+row*.0175;
-  round('keyboard-key',.016,.0009,.014,.0004,caseMat,x,PROART_P16.baseHeight+.001,z);
+  keyPositions.push({x,y:PROART_P16.baseHeight+.001,z});
  }
+ repeatedRound('keyboard-keys',.016,.0009,.014,.0004,caseMat,keyPositions);
  for(const side of [-1,1])for(let i=0;i<15;i++)box('speaker-grille',.0013,.0005,.004,keys,side*.162,PROART_P16.baseHeight+.0004,-.081+i*.007);
  round('trackpad',.107,.0005,.071,.003,keys,0,PROART_P16.baseHeight+.0003,.074);
  cylinder('asus-dialpad-mark',.009,.0005,silver,.044,PROART_P16.baseHeight+.0008,.052);

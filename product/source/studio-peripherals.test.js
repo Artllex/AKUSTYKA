@@ -8,6 +8,16 @@ import {createAlienwareDisplay} from './src/alienware-display.js';
 import {createMotu24Ai,createMoniconXL,createProArtP16,createStreamDeckXL,createGxt144Rexx,createBehringerModelD,createBehringerKobolExpander,MOTU_24AI,MONICON_XL,PROART_P16,STREAM_DECK_XL,GXT_144_REXX,MODEL_D,KOBOL_EXPANDER} from './src/studio-peripherals.js';
 
 const room={width:2.477,length:3.715,height:2.605};
+function renderCost(group){
+ let triangles=0,draws=0;
+ group.traverse(object=>{
+  if(!object.isMesh)return;
+  draws++;
+  const geometry=object.geometry,faces=geometry.index?geometry.index.count/3:geometry.getAttribute('position').count/3;
+  triangles+=faces*(object.isInstancedMesh?object.count:1);
+ });
+ return {triangles,draws};
+}
 
 test('MOTU 24Ai occupies one unit between the RIVECO mounting rails',()=>{
  const view=createMotu24Ai(createRackRecord(room));
@@ -56,7 +66,7 @@ for(const [name,record,halfWidth,rear,front,top] of [
  assert.ok(Math.abs(right.max.x-right.min.x-MONICON_XL.width)<.005);
  assert.ok(Math.abs(left.max.x-left.min.x-PROART_P16.width)<.005);
  assert.ok(palmer.group.getObjectByName('main-volume-knob'));
- assert.equal(laptop.group.getObjectsByProperty('name','keyboard-key').length,96);
+ assert.equal(laptop.group.getObjectByName('keyboard-keys').count,96);
  const oled=laptop.group.getObjectByName('display-wallpaper').geometry.parameters;
  assert.ok(Math.abs(oled.width/oled.height-1.6)<.001,'ProArt panel follows the 16:10 display ratio');
  palmer.dispose();laptop.dispose();display.dispose();
@@ -75,9 +85,22 @@ for(const [name,record,halfWidth,rear,front,top] of [
   for(const other of boxes.slice(2))assert.ok(!box.intersectsBox(other),'new desk object overlaps existing equipment');
  }
  assert.ok(!boxes[0].intersectsBox(boxes[1]));
- assert.equal(views[0].group.getObjectsByProperty('name','stream-deck-lcd-key').length,STREAM_DECK_XL.keys);
+ assert.equal(views[0].group.getObjectByName('stream-deck-lcd-keys').count,STREAM_DECK_XL.keys);
+ assert.equal(views[0].group.getObjectByName('stream-deck-key-icons').count,STREAM_DECK_XL.keys);
  assert.ok(views[0].group.getObjectByName('stream-deck-stand'));
  assert.ok(views[1].group.getObjectByName('vertical-mouse-shell'));
  assert.ok(boxes[1].getSize(new THREE.Vector3()).y<=GXT_144_REXX.height+.01);
+ assert.ok(renderCost(views[0].group).triangles<9000);
+ assert.ok(renderCost(views[0].group).draws<10);
  for(const view of views)view.dispose();
+});
+
+test('repeated laptop keys use one compact draw call',()=>{
+ const laptop=createProArtP16(createDeskRecord(room));
+ const keys=laptop.group.getObjectByName('keyboard-keys');
+ assert.ok(keys.isInstancedMesh);
+ assert.equal(keys.count,96);
+ assert.ok(renderCost(laptop.group).triangles<13000);
+ assert.ok(renderCost(laptop.group).draws<45);
+ laptop.dispose();
 });
