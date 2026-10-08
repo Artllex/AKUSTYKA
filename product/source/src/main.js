@@ -44,6 +44,7 @@ import {createOrientation} from './orientation.js';
 import {parseRoomDocument,setupBench} from './bench.js';
 
 import {createListenerRecord,createSeatedListener} from './listener-view.js';
+import {createListenerPov,BINOCULAR_FIELD} from './listener-pov.js';
 
 import {createDocumentHistory} from './history.js';
 
@@ -113,10 +114,11 @@ $('edit-overlay').addEventListener('wheel',event=>{
 },{passive:false});
 
 const scene=new THREE.Scene();scene.add(new THREE.HemisphereLight(0xe7f4ff,0x3b4b5e,2.5));const light=new THREE.DirectionalLight(0xffffff,2);light.position.set(3,8,5);scene.add(light);
+const listenerPov=createListenerPov(renderer,scene);
 
 const perspective=new THREE.PerspectiveCamera(42,1,0.01,200);
 
-let camera=perspective,controls,view,featureViews=[],listenerViews=[],monitorViews=[],rackViews=[],deskViews=[],tweeterRays=null,wallWarnings=null,monitorSpan=null,reflectionView=null,selected=null,projection=null,selectedObjectId=null;
+let camera=perspective,controls,view,featureViews=[],listenerViews=[],monitorViews=[],rackViews=[],deskViews=[],tweeterRays=null,wallWarnings=null,monitorSpan=null,reflectionView=null,selected=null,projection=null,selectedObjectId=null,povActive=false;
 
 function bindControls(target){controls?.dispose();controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.minDistance=0.15;controls.maxDistance=60;controls.maxPolarAngle=Math.PI;controls.enableRotate=!projection;controls.target.copy(target);controls.update();}
 
@@ -222,7 +224,17 @@ function updateProjectionVisibility(){
 $('projection-objects').onclick=()=>{projectionObjectsVisible=!projectionObjectsVisible;const button=$('projection-objects');button.setAttribute('aria-pressed',String(projectionObjectsVisible));button.textContent=projectionObjectsVisible?'Ukryj obiekty':'Pokaż obiekty';updateProjectionVisibility();};
 
 let previousSurfaceView=null;
-function frame(top=false){previousSurfaceView=null;projection=null;camera=perspective;camera.up.set(0,1,0);const r=doc.room,scale=Math.max(r.width,r.length,r.height),target=new THREE.Vector3(r.width/2,r.height*0.35,r.length/2);camera.position.copy(target).add(new THREE.Vector3(top?0:scale*1.25,top?scale*2:scale,top?0.001:scale*1.4));bindControls(target);view.group.children.forEach(o=>o.visible=true);view.grid.visible=$('grid').checked;$('cutaway').disabled=false;updateProjectionVisibility();resize();}
+function frame(top=false){povActive=false;host.classList.remove('listener-pov');$('listener-pov').setAttribute('aria-pressed','false');previousSurfaceView=null;projection=null;camera=perspective;camera.up.set(0,1,0);const r=doc.room,scale=Math.max(r.width,r.length,r.height),target=new THREE.Vector3(r.width/2,r.height*0.35,r.length/2);camera.position.copy(target).add(new THREE.Vector3(top?0:scale*1.25,top?scale*2:scale,top?0.001:scale*1.4));bindControls(target);view.group.children.forEach(o=>o.visible=true);view.grid.visible=$('grid').checked;$('cutaway').disabled=false;updateProjectionVisibility();resize();}
+
+function enterListenerPov(){
+ if(!listenerViews[0])return;
+ previousSurfaceView=null;projection=null;povActive=true;camera=perspective;controls.enabled=false;
+ host.classList.add('listener-pov');host.dataset.povHorizontalFov=String(BINOCULAR_FIELD.horizontal);host.dataset.povVerticalFov=String(BINOCULAR_FIELD.vertical);
+ $('listener-pov').setAttribute('aria-pressed','true');$('cutaway').disabled=true;
+ clearMeasurement();selectObject(null);select(null);viewportEditor?.clear();
+ view.group.children.forEach(o=>o.visible=true);view.grid.visible=false;
+ updateProjectionVisibility();listenerPov.invalidate();resize();
+}
 
 function project(side){if(!selected)return;projection=surfaceProjection(selected,host.clientWidth/host.clientHeight,side);projection.side=side;projection.surfaceName=selected.name;camera=projection.camera;bindControls(projection.target);for(const o of view.group.children)o.visible=o===selected||(o.name==='floor-outline'&&selected.name==='floor')||(o===view.grid&&selected.name==='floor'&&$('grid').checked);$('cutaway').disabled=true;updateProjectionVisibility();resize();}
 
@@ -260,7 +272,7 @@ $('dimensions').addEventListener('submit',e=>{e.preventDefault();try{const nextR
 
 $('grid').addEventListener('change',()=>view.grid.visible=$('grid').checked&&(!projection||selected?.name==='floor'));
 
-$('perspective').onclick=()=>frame();$('top').onclick=()=>frame(true);$('inside').onclick=()=>project('inside');$('outside').onclick=()=>project('outside');$('return-3d').onclick=()=>frame();
+$('perspective').onclick=()=>frame();$('top').onclick=()=>frame(true);$('inside').onclick=()=>project('inside');$('outside').onclick=()=>project('outside');$('return-3d').onclick=()=>frame();$('listener-pov').onclick=enterListenerPov;
 
 function restore(room){doc.room={...room};for(const key of ['width','length','height'])$(key).value=room[key]*100;rebuild();fieldHistory?.reset();}
 
@@ -288,7 +300,7 @@ function loadDocument(text,name){const data=parseRoomDocument(text);Object.assig
 
 async function openDocument(){try{if(window.desktop){const result=await window.desktop.open();if(result)loadDocument(result.text,result.name);}else{const input=document.createElement('input');input.type='file';input.accept='.json';input.onchange=async()=>{try{if(input.files[0].size>1024*1024)throw new Error('Plik jest zbyt duży.');loadDocument(await input.files[0].text(),input.files[0].name);}catch(error){showError(error);}};input.click();}}catch(error){showError(error);}}
 
-bench=setupBench({new(){Object.assign(doc,createDocument());history.reset(doc);restore(doc.room);$('file-status').textContent='Nowy pokój';$('error').hidden=true;},open:openDocument,save:saveDocument,exit:()=>window.desktop?.exit(),undo:()=>{fieldHistory?.flush();applySnapshot(history.undo());},redo:()=>{fieldHistory?.flush();applySnapshot(history.redo());},three:()=>frame(),top:()=>frame(true)});
+bench=setupBench({new(){Object.assign(doc,createDocument());history.reset(doc);restore(doc.room);$('file-status').textContent='Nowy pokój';$('error').hidden=true;},open:openDocument,save:saveDocument,exit:()=>window.desktop?.exit(),undo:()=>{fieldHistory?.flush();applySnapshot(history.undo());},redo:()=>{fieldHistory?.flush();applySnapshot(history.redo());},three:()=>frame(),top:()=>frame(true),pov:enterListenerPov});
 
 listenerPanel=setupListenerPanel({read:()=>doc.objects.find(o=>o.type==='seated-listener'),preview(patch){try{const record=doc.objects.find(o=>o.type==='seated-listener');Object.assign(record,patchListener(record,patch));refreshListeners();$('error').hidden=true;}catch(error){showError(error);listenerPanel.sync(listenerViews[0]?.getEarHeight());}},commit(){history.push(doc);bench.refresh(history);},cancel(start){Object.assign(doc.objects.find(o=>o.type==='seated-listener'),start);refreshListeners();}});
 
@@ -326,4 +338,17 @@ $('toggle-surface').hidden=true;
 
 new ResizeObserver(resize).observe(host);
 
-rebuild();fieldHistory=setupFieldHistory({history,read:()=>doc,editor:viewportEditor,context:()=>({object:selectedObjectId,monitor:$('monitor-select').value})});setupNumericFields();renderer.setAnimationLoop(()=>{controls.update();host.dataset.cameraPosition=camera.position.toArray().join(',');host.dataset.cameraTarget=controls.target.toArray().join(',');updateProjectionVisibility();if(!projection)view.updateVisibility(camera,$('cutaway').checked);const label=hoverDistanceLabel([tweeterRays?.group,wallWarnings?.group,monitorSpan?.group],camera,laserCursor,renderer.domElement.clientWidth,renderer.domElement.clientHeight);host.dataset.hoverDistanceLabel=label?.name??'';updateDistanceLabels(tweeterRays?.group,camera);updateDistanceLabels(wallWarnings?.group,camera);updateDistanceLabels(monitorSpan?.group,camera);viewportEditor?.render();orientation.update(camera);renderer.render(scene,camera);});
+rebuild();fieldHistory=setupFieldHistory({history,read:()=>doc,editor:viewportEditor,context:()=>({object:selectedObjectId,monitor:$('monitor-select').value})});setupNumericFields();renderer.setAnimationLoop(()=>{
+ if(povActive){
+  const pose=listenerViews[0]?.getEyePose();if(!pose)return;
+  camera.position.copy(pose.position);camera.quaternion.copy(pose.quaternion);camera.updateMatrixWorld(true);
+  host.dataset.cameraPosition=pose.position.toArray().join(',');
+  host.dataset.cameraTarget=pose.position.clone().add(new THREE.Vector3(0,0,-1).applyQuaternion(pose.quaternion)).toArray().join(',');
+  host.dataset.viewMode='listener-pov';host.dataset.hoverDistanceLabel='';
+  view.updateVisibility(camera,false);
+  const hidden=[...listenerViews.map(v=>v.group),tweeterRays?.group,wallWarnings?.group,monitorSpan?.group,reflectionView?.group,measurementGroup,selectionOutline,view.grid,view.group.getObjectByName('room-outline'),view.group.getObjectByName('floor-outline'),view.group.getObjectByName('axes')].filter(Boolean);
+  listenerPov.render(pose,hidden);orientation.update(camera);
+  return;
+ }
+ controls.update();host.dataset.viewMode=projection?'projection':'3d';host.dataset.cameraPosition=camera.position.toArray().join(',');host.dataset.cameraTarget=controls.target.toArray().join(',');updateProjectionVisibility();if(!projection)view.updateVisibility(camera,$('cutaway').checked);const label=hoverDistanceLabel([tweeterRays?.group,wallWarnings?.group,monitorSpan?.group],camera,laserCursor,renderer.domElement.clientWidth,renderer.domElement.clientHeight);host.dataset.hoverDistanceLabel=label?.name??'';updateDistanceLabels(tweeterRays?.group,camera);updateDistanceLabels(wallWarnings?.group,camera);updateDistanceLabels(monitorSpan?.group,camera);viewportEditor?.render();orientation.update(camera);renderer.render(scene,camera);
+});

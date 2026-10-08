@@ -86,3 +86,13 @@ test('OLED panel curves toward the viewer by the specified 1800R radius',()=>{
  assert.ok(Math.abs(display.group.userData.dimensions.width-.81525)<1e-8);
  display.dispose();
 });
+
+test('height-adjustment stem and neck stay behind the OLED screen',()=>{
+ const display=createAlienwareDisplay(createDeskRecord({width:2.477,length:3.715}));
+ const screen=new THREE.Box3().setFromObject(display.group.getObjectByName('curved-oled-screen'));
+ for(const name of ['stand-stem','stand-neck']){
+  const part=new THREE.Box3().setFromObject(display.group.getObjectByName(name));
+  assert.ok(part.max.z<screen.min.z,`${name} must not pierce the visible screen`);
+ }
+ display.dispose();
+});

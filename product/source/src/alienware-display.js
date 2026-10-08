@@ -50,15 +50,16 @@ export function createAlienwareDisplay(desk){
  const texture=scenicTexture(),screen=new THREE.MeshBasicMaterial({map:texture,side:THREE.DoubleSide});
  const materials=[body,bezel,stand,turquoise,screen],geometries=[];
  function mesh(name,geometry,material,x=0,y=0,z=0){const item=new THREE.Mesh(geometry,material);item.name=name;item.position.set(x,y,z);group.add(item);geometries.push(geometry);return item;}
- // The screen sits behind the support stem; its projection stays outside both tweeter rays.
+ // The stand is behind the OLED panel; its projection stays outside both tweeter rays.
  const d=AW3423DWF,panelY=d.height-d.panelHeight/2,panelZ=-.155;
  mesh('curved-rear-shell-1800r',curved(new THREE.BoxGeometry(d.width,d.panelHeight,.026,64,1,1)),body,0,panelY,panelZ);
  mesh('black-front-bezel',curved(new THREE.PlaneGeometry(d.width-.004,d.panelHeight-.004,64,1)),bezel,0,panelY,panelZ+.0135);
  mesh('curved-oled-screen',curved(new THREE.PlaneGeometry(d.width-.018,d.panelHeight-.032,64,1)),screen,0,panelY+.007,panelZ+.0143);
  mesh('lower-chin',curved(new THREE.BoxGeometry(d.width-.006,.018,.003,64,1,1)),stand,0,d.height-d.panelHeight+.009,panelZ+.015);
  // Central height-adjustable stem, V-shaped front feet and short rear heel.
- mesh('stand-stem',new RoundedBoxGeometry(.057,.205,.047,4,.008),stand,0,.116,-.13);
- mesh('stand-neck',new RoundedBoxGeometry(.073,.06,.066,4,.008),body,0,.265,-.135);
+ mesh('stand-stem',new RoundedBoxGeometry(.057,.205,.018,4,.006),stand,0,.116,-.16);
+ mesh('stand-neck',new RoundedBoxGeometry(.073,.06,.018,4,.006),body,0,.265,-.16);
+ mesh('stand-foot-joint',new RoundedBoxGeometry(.044,.015,.07,3,.004),stand,0,.012,-.125);
  for(const side of [-1,1]){
   // Shape-Y becomes world -Z after rotation, so negative values put the V feet toward the listener.
   const arm=new THREE.Shape();arm.moveTo(0,.08);arm.lineTo(side*.031,.065);arm.lineTo(side*.242,-.165);arm.lineTo(side*.253,-.165);arm.lineTo(side*.253,-.143);arm.lineTo(side*.035,.105);arm.closePath();

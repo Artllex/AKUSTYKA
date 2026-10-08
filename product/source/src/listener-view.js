@@ -30,6 +30,8 @@ export function createSeatedListener(input){
  ellipsoid('nose',scaled([0,headY-0.002,-0.09]),scaled([0.015,0.022,0.022]),headMaterial,headPivot);
  ellipsoid('ear-left',scaled([-0.083,headY,0]),scaled([0.014,0.026,0.018]),earMaterial,headPivot);
  ellipsoid('ear-right',scaled([0.083,headY,0]),scaled([0.014,0.026,0.018]),earMaterial,headPivot);
+ // Non-rendered eye anchors define the viewer's binocular midpoint.
+ for(const side of [-1,1]){const eye=new THREE.Object3D();eye.name=side<0?'eye-left':'eye-right';eye.position.set(side*0.032*s,(headY+0.020)*s,-0.079*s);headPivot.add(eye);}
  for(const side of [-1,1]){const tag=side<0?'left':'right',hip=[side*0.12*s,hipY,-0.025*s],ankle=scaled([side*0.12,0.095,-0.425]),knee=solveKnee(hip,ankle,0.393*s,0.38*s);
   limb('thigh-'+tag,hip,knee,0.078*s,0.06*s);ellipsoid('knee-'+tag,knee,scaled([0.061,0.061,0.061]),joints);limb('shin-'+tag,knee,ankle,0.05*s,0.034*s);ellipsoid('ankle-'+tag,ankle,scaled([0.035,0.04,0.035]),joints);box('foot-'+tag,scaled([side*0.12,0.0375,-0.493]),scaled([0.095,0.075,0.235]),joints);
   const baseline=new THREE.Quaternion().setFromEuler(new THREE.Euler(-THREE.MathUtils.degToRad(DEFAULT_LISTENER_SETTINGS.leanForward),0,0));
@@ -45,7 +47,7 @@ export function createSeatedListener(input){
   ellipsoid('hand-'+tag,hand,scaled([0.038,0.025,0.066]),headMaterial);
  }
  group.position.set(record.position.x,record.position.y,record.position.z);group.rotation.y=record.yaw;group.userData={id:record.id,type:record.type,stature:record.stature,seatHeight:seat};group.updateMatrixWorld(true);
- return {group,getEarHeight(){return (group.getObjectByName('ear-left').getWorldPosition(new THREE.Vector3()).y+group.getObjectByName('ear-right').getWorldPosition(new THREE.Vector3()).y)/2;},dispose(){group.traverse(o=>o.geometry?.dispose());for(const m of [body,joints,headMaterial,chair,metal,earMaterial])m.dispose();}};
+ return {group,getEarHeight(){return (group.getObjectByName('ear-left').getWorldPosition(new THREE.Vector3()).y+group.getObjectByName('ear-right').getWorldPosition(new THREE.Vector3()).y)/2;},getEyePose(){group.updateMatrixWorld(true);const left=group.getObjectByName('eye-left').getWorldPosition(new THREE.Vector3()),right=group.getObjectByName('eye-right').getWorldPosition(new THREE.Vector3());return {position:left.add(right).multiplyScalar(0.5),quaternion:headPivot.getWorldQuaternion(new THREE.Quaternion())};},dispose(){group.traverse(o=>o.geometry?.dispose());for(const m of [body,joints,headMaterial,chair,metal,earMaterial])m.dispose();}};
 }
 
 
