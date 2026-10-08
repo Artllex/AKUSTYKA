@@ -1,6 +1,6 @@
 {
   "name": "akustyka-room-editor",
-  "version": "0.117.2",
+  "version": "0.117.3",
   "private": true,
   "type": "module",
   "scripts": {
