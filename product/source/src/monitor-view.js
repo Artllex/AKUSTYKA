@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import {RoundedBoxGeometry} from 'three/addons/geometries/RoundedBoxGeometry.js';
 import {MM27,MM27_DRIVERS,normalizeMonitorRecord} from './monitor-model.js';
+import {createMonitorSupport} from './monitor-support.js';
 export function createStudioMonitor(record){
  record=normalizeMonitorRecord(record);
  const group=new THREE.Group();group.name=record.id;group.userData.recordId=record.id;group.userData.channel=record.channel;
@@ -9,6 +10,7 @@ export function createStudioMonitor(record){
  for(const [material,layer] of [[metal,1],[cone,2],[darkMetal,2],[rubber,3]]){material.polygonOffset=true;material.polygonOffsetFactor=-layer;material.polygonOffsetUnits=-layer*8;}
  function mesh(name,geometry,material,position,parent=group){const o=new THREE.Mesh(geometry,material);o.name=name;o.position.set(...position);parent.add(o);return o;}
  const {width:w,height:h,depth:d}=MM27.cabinet;
+ group.add(createMonitorSupport(record.position.y));
  mesh('cabinet',new RoundedBoxGeometry(w,h,d,3,0.022),shell,[0,h/2,0]);
  // The pale baffle must sit in front of the black cabinet face (z = d/2).
  mesh('baffle',new RoundedBoxGeometry(0.179,0.441,0.001,2,0.008),frontPlate,[0,h/2,0.1966]);

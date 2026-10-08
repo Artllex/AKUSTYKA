@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import * as THREE from 'three';
 import {MM27,MM27_DRIVERS,createMonitorPair,DEFAULT_MONITOR_EAR_DISTANCE} from './src/monitor-model.js';
 import {createStudioMonitor} from './src/monitor-view.js';
+import {OREA_BORDEAUX,KM_26795} from './src/monitor-support.js';
 import {monitorSideDistance} from './src/monitor-side-distance.js';
 import {createDocument,DEFAULT_ROOM,usesDefaultListeningLayout,placeDefaultListeningLayout} from './src/model.js';
 import {createSeatedListener} from './src/listener-view.js';
@@ -14,11 +15,31 @@ test('MM27 cabinet has real scale and five colored surface centers per monitor',
  const record=createMonitorPair(DEFAULT_ROOM)[0];record.position={x:0,y:0,z:0};record.yaw=0;
  const view=createStudioMonitor(record),size=new THREE.Box3().setFromObject(view.group.getObjectByName('cabinet')).getSize(new THREE.Vector3());
  for(const [a,b] of [[size.x,0.241],[size.y,0.521],[size.z,0.394]])assert.ok(Math.abs(a-b)<1e-6);
- const body=new THREE.Box3();view.group.traverse(o=>{if(o.isMesh&&!o.name.startsWith('center-'))body.union(new THREE.Box3().setFromObject(o));});const overall=body.getSize(new THREE.Vector3());
+ const body=new THREE.Box3();for(const child of view.group.children){if(child.name==='km-26795-support')continue;child.traverse(o=>{if(o.isMesh&&!o.name.startsWith('center-'))body.union(new THREE.Box3().setFromObject(o));});}const overall=body.getSize(new THREE.Vector3());
  for(const [a,b] of [[overall.x,MM27.overall.width],[overall.y,MM27.overall.height],[overall.z,MM27.overall.depth]])assert.ok(Math.abs(a-b)<0.0005,`${a} != ${b}`);
  assert.equal(view.getDriverCenters().length,5);
  for(const driver of MM27_DRIVERS){const p=view.getDriverCenters().find(p=>p.id===driver.id);assert.deepEqual(p.position.toArray(),driver.center);const marker=view.group.getObjectByName('center-'+driver.id);assert.equal(marker.material.color.getHex(),driver.color);assert.ok(marker.visible);assert.ok(marker.getWorldPosition(new THREE.Vector3()).distanceTo(p.position)<=0.004501);}
  assert.deepEqual(MM27_DRIVERS.slice(3).map(d=>d.normal),[[-1,0,0],[1,0,0]]);view.dispose();
+});
+test('each MM27 rests on three Bordeaux isolators and a floor-standing K&M 26795',()=>{
+ const record=createMonitorPair(DEFAULT_ROOM)[0];record.yaw=0;const view=createStudioMonitor(record),support=view.group.getObjectByName('km-26795-support');
+ assert.ok(support);
+ const pucks=support.children.filter(child=>child.name.startsWith('orea-bordeaux-'));
+ assert.equal(pucks.length,3);
+ for(let i=0;i<3;i++){
+  assert.ok(Math.abs(pucks[i].position.x-OREA_BORDEAUX.positions[i][0])<1e-9);
+  assert.ok(Math.abs(pucks[i].position.z-OREA_BORDEAUX.positions[i][1])<1e-9);
+  const contact=new THREE.Box3().setFromObject(pucks[i]);
+  assert.ok(Math.abs(contact.max.y-record.position.y)<0.001,'isolator must touch cabinet underside');
+  assert.ok(Math.abs(contact.min.y-(record.position.y-OREA_BORDEAUX.height))<0.001,'isolator must touch plate');
+ }
+ const plate=support.getObjectByName('km-26792-bearing-plate'),base=support.getObjectByName('km-26795-cast-base');
+ const plateBox=new THREE.Box3().setFromObject(plate),baseBox=new THREE.Box3().setFromObject(base);
+ assert.ok(Math.abs(plateBox.max.y-(record.position.y-OREA_BORDEAUX.height))<1e-6);
+ assert.ok(Math.abs(baseBox.min.y)<1e-6,'stand base must rest on floor');
+ assert.ok(Math.abs(baseBox.getSize(new THREE.Vector3()).x-KM_26795.baseWidth)<1e-6);
+ assert.ok(OREA_BORDEAUX.positions.every(([x,z])=>Math.abs(x)+OREA_BORDEAUX.diameter/2<KM_26795.plateWidth/2&&Math.abs(z)+OREA_BORDEAUX.diameter/2<KM_26795.plateDepth/2));
+ view.dispose();
 });
 test('Gen2 finish has silver front and rear plates, side cones and amplifier details',()=>{
  const record=createMonitorPair(DEFAULT_ROOM)[0];record.position={x:0,y:0,z:0};record.yaw=0;
