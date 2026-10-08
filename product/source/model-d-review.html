@@ -1,0 +1,24 @@
+<!doctype html><html lang="pl"><meta charset="utf-8"><title>Model D — kontrola modelu</title>
+<style>body{margin:0;background:#141a20;color:#e6ecf1;font:18px Arial}#views{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:10px}figure{margin:0;background:#737b80;border:1px solid #3d4850}figcaption{padding:10px;background:#1d2832}canvas{display:block;width:100%;height:480px}</style>
+<div id="views"></div>
+<script type="module">
+import * as THREE from 'three';
+import {createBehringerModelD} from './src/studio-peripherals.js';
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x849096);
+scene.add(new THREE.AmbientLight(0xffffff,2.8));
+const key=new THREE.DirectionalLight(0xffffff,3);key.position.set(-.4,1.2,-1);scene.add(key);
+const model=createBehringerModelD();model.group.position.set(0,0,0);scene.add(model.group);
+const views=[
+ ['panel z góry',[0,.6,0],[0,0,0],[0,0,1],.28],
+ ['przód pod kątem',[.28,.24,-.55],[0,0,0],[0,1,0],.28],
+ ['profil boczny',[.55,.07,0],[0,0,0],[0,1,0],.16],
+ ['tył',[0,.07,.6],[0,0,0],[0,1,0],.28]
+];
+for(const [title,position,target,up,half] of views){
+ const figure=document.createElement('figure'),caption=document.createElement('figcaption');caption.textContent=title;
+ const renderer=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});renderer.setSize(720,480,false);renderer.setPixelRatio(1);renderer.outputColorSpace=THREE.SRGBColorSpace;
+ const camera=new THREE.OrthographicCamera(-half,half,half*480/720,-half*480/720,.01,10);
+ camera.up.fromArray(up);camera.position.fromArray(position);camera.lookAt(...target);renderer.render(scene,camera);
+ figure.append(caption,renderer.domElement);document.querySelector('#views').append(figure);
+}
+</script></html>

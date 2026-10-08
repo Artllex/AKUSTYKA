@@ -38,6 +38,11 @@ function builder(name){
  const cylinder=(name,radius,height,material,x,y,z,parent=group)=>{
   const geometry=new THREE.CylinderGeometry(radius,radius,height,24),item=new THREE.Mesh(geometry,material);item.name=name;item.position.set(x,y,z);parent.add(item);geometries.push(geometry);return item;
  };
+ const repeatedCylinder=(name,radius,height,material,positions,parent=group)=>{
+  const geometry=new THREE.CylinderGeometry(radius,radius,height,16),item=new THREE.InstancedMesh(geometry,material,positions.length);
+  const matrix=new THREE.Matrix4();positions.forEach((position,index)=>item.setMatrixAt(index,matrix.makeTranslation(position.x,position.y,position.z)));
+  item.instanceMatrix.needsUpdate=true;item.name=name;parent.add(item);geometries.push(geometry);return item;
+ };
  const mesh=(name,geometry,material,x=0,y=0,z=0,parent=group)=>{
   const item=new THREE.Mesh(geometry,material);item.name=name;item.position.set(x,y,z);parent.add(item);geometries.push(geometry);return item;
  };
@@ -53,9 +58,9 @@ function builder(name){
  const image=(name,canvas,w,h,x,y,z,parent=group)=>{
   const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;textures.push(texture);
   const geometry=new THREE.PlaneGeometry(w,h),material=new THREE.MeshBasicMaterial({map:texture,side:THREE.DoubleSide});
-  const item=new THREE.Mesh(geometry,material);item.name=name;item.position.set(x,y,z);parent.add(item);geometries.push(geometry);materials.push(material);
+  const item=new THREE.Mesh(geometry,material);item.name=name;item.position.set(x,y,z);parent.add(item);geometries.push(geometry);materials.push(material);return item;
  };
- return {group,mat,box,round,repeatedRound,cylinder,mesh,label,image,dispose(){geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());textures.forEach(t=>t.dispose());}};
+ return {group,mat,box,round,repeatedRound,cylinder,repeatedCylinder,mesh,label,image,dispose(){geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());textures.forEach(t=>t.dispose());}};
 }
 
 function moniconWedge(width){
@@ -140,17 +145,78 @@ function rackModule(name,dimensions,centerY){
 }
 
 export function createBehringerModelD(){
- const r=rackModule('behringer-model-d',MODEL_D,.165);
- const {b,group,mat,box,label,knob,jack,faceZ}=r;
- const wood=mat(0x5c3924,.05,.8),line=mat(0x8e9290),red=mat(0xc34c3e);
- for(const side of [-1,1])box('wood-side-cheek',.006,MODEL_D.rackHeight-.014,.003,wood,side*(MODEL_D.width/2-.005),0,faceZ);
- for(const x of [-.112,-.033,.055,.128])box('section-divider',.0008,MODEL_D.rackHeight-.025,.001,line,x,0,faceZ-.002);
- label('model-d-name','MODEL D',.065,.013,'#292c2d','#ecece6',-.145,.051,faceZ-.002);
- label('behringer-brand','BEHRINGER',.067,.012,'#292c2d','#deded8',.139,.051,faceZ-.002);
- // Controllers, three oscillators, mixer, filter and two contour groups.
- for(const [x,ys] of [[-.151,[-.028,.004,.030]],[-.079,[-.031,.003,.030]],[-.046,[-.031,.003,.030]],[-.013,[-.031,.003,.030]],[.024,[-.031,.003,.030]],[.061,[-.031,.003,.030]],[.097,[-.031,.003,.030]],[.143,[-.031,.003,.030]]])for(const y of ys)knob('model-d-knob',x,y,y===.030?.007:.0053);
- for(const x of [-.105,-.095,.039,.050,.074])box('red-toggle',.003,.008,.004,red,x,-.047,faceZ-.006);
- for(const x of [-.160,-.144])jack('model-d-patch-jack',x,-.050);
+ const b=builder('behringer-model-d'),{group,mat,box,round,cylinder,repeatedCylinder,mesh,label,image}=b;
+ const centerY=.165,front=-RACK_15U.depth/2+.003+Math.tan(RACK_15U.leanDegrees*Math.PI/180)*(centerY-.06)-.003;
+ group.position.set(0,centerY,front+MODEL_D.depth/2);
+ const panel=mat(0x101114,.21,.72),wood=mat(0x38292e,.06,.66),edge=mat(0x1b1c1f,.3,.55);
+ const black=mat(0x090a0c,.19,.52),silver=mat(0xaaa7a2,.58,.37),white=mat(0xc7c5c1,.31,.53);
+ const red=mat(0xc4393a,.1,.56),blue=mat(0x214fb0,.1,.52),steel=mat(0x292b2c,.51,.54);
+ const depth=MODEL_D.depth/2,profile=[[-depth,-.044],[depth,-.044],[depth,.034],[-depth,-.021]];
+ const wedge=width=>{
+  const shape=new THREE.Shape();profile.forEach(([z,y],i)=>i?shape.lineTo(-z,y):shape.moveTo(-z,y));shape.closePath();
+  const geometry=new THREE.ExtrudeGeometry(shape,{depth:width,steps:1,bevelEnabled:false});
+  geometry.rotateY(Math.PI/2);geometry.translate(-width/2,0,0);return geometry;
+ };
+ mesh('model-d-formed-chassis',wedge(.356),edge);
+ for(const side of [-1,1]){
+  mesh('model-d-wood-side',wedge(.009),wood,side*.1825);
+  for(const [y,z] of [[-.027,-.047],[-.029,.015],[.013,.052]]){
+   const screw=cylinder('model-d-side-screw',.0022,.0007,black,side*.1872,y,z);screw.rotation.z=Math.PI/2;
+  }
+ }
+ // Narrow front lip and the 3U adapter are independent of the instrument.
+ box('synth-front-panel',MODEL_D.width,.018,.003,panel,0,-.031,-depth-.001);
+ for(const side of [-1,1]){
+  const earWidth=(.4826-MODEL_D.width)/2;
+  box('3u-rack-ear',earWidth,MODEL_D.rackHeight-.006,.004,steel,side*(MODEL_D.width/2+earWidth/2),0,-depth-.002);
+  for(const y of [-MODEL_D.rackHeight/2+.013,MODEL_D.rackHeight/2-.013]){
+   const screw=cylinder('rack-screw',.0032,.002,silver,side*.231,y,-depth-.005);screw.rotation.x=Math.PI/2;
+  }
+ }
+ const controls=new THREE.Group();controls.name='model-d-sloped-control-panel';controls.position.y=.0065;controls.rotation.x=-Math.atan2(.055,MODEL_D.depth);group.add(controls);
+ box('model-d-control-face',.356,.0018,.146,panel,0,0,0,controls);
+ if(typeof document!=='undefined'){
+  const canvas=document.createElement('canvas');canvas.width=1200;canvas.height=492;
+  const ctx=canvas.getContext('2d');ctx.fillStyle='#0b0c0e';ctx.fillRect(0,0,1200,492);
+  ctx.strokeStyle='#a9aaad';ctx.lineWidth=2;
+  const sections=[52,236,528,756,1023,1148];
+  for(let i=0;i<sections.length-1;i++)ctx.strokeRect(sections[i],26,sections[i+1]-sections[i],440);
+  ctx.textAlign='center';ctx.fillStyle='#e2e1dc';
+  ctx.font='bold 22px Arial';
+  for(const [text,x] of [['CONTROLLERS',144],['OSCILLATOR BANK',382],['MIXER',642],['MODIFIERS',890],['OUTPUT',1085]])ctx.fillText(text,x,447);
+  ctx.font='bold 13px Arial';
+  for(const [text,x,y] of [['MIDI IN',80,65],['MIDI THRU',153,65],['TUNE',142,125],['GLIDE',100,225],['RANGE',340,69],['WAVEFORM',459,69],['OSCILLATOR 1',345,135],['OSCILLATOR 2',345,245],['OSCILLATOR 3',345,350],['EXT IN',555,100],['VOLUME',628,160],['NOISE',672,304],['FILTER',840,90],['CUTOFF',830,160],['RESONANCE',918,160],['LOUDNESS CONTOUR',892,342],['VOLUME',1070,100],['MAIN OUT',1100,380]])ctx.fillText(text,x,y);
+  const art=image('model-d-panel-print',canvas,.354,.144,0,.002,0,controls);
+  art.rotation.x=-Math.PI/2;art.rotateZ(Math.PI);
+ }
+ const knobs=[
+  [-.15,-.039],[-.15,.005],[-.122,-.039],[-.122,.005],
+  [-.093,-.041],[-.093,.005],[-.093,.044],[-.062,-.041],[-.062,.005],[-.062,.044],[-.030,-.041],[-.030,.005],[-.030,.044],
+  [.004,-.042],[.004,.004],[.004,.046],[.035,-.042],[.035,.004],[.035,.046],
+  [.068,-.041],[.068,.005],[.068,.046],[.095,-.041],[.095,.005],[.095,.046],[.123,-.041],[.123,.005],[.123,.046],
+  [.151,-.041],[.151,.005],[.151,.046]
+ ];
+ for(const [name,points,radius] of [['model-d',knobs.filter(([x])=>x<.14),.0055],['model-d-output',knobs.filter(([x])=>x>=.14),.0048]]){
+  repeatedCylinder(`${name}-knob-collars`,radius*1.28,.001,silver,points.map(([x,z])=>({x,y:.003,z})),controls);
+  repeatedCylinder(`${name}-knobs`,radius,.010,black,points.map(([x,z])=>({x,y:.009,z})),controls);
+  repeatedCylinder(`${name}-knob-caps`,radius*.73,.0007,edge,points.map(([x,z])=>({x,y:.0145,z})),controls);
+ }
+ for(const [x,z,color] of [[-.143,.028,blue],[-.105,.028,red],[-.045,.027,blue],[.018,.027,red],[.049,-.017,red],[.114,.028,blue],[.155,.030,red]])round('model-d-colored-switch',.008,.008,.005,.001,color,x,.007,z,controls);
+ for(const [x,z] of [[-.155,.050],[-.135,.050],[-.115,.050],[.037,.053],[.061,.053],[.151,-.058]]){
+  const rim=mesh('model-d-top-jack',new THREE.TorusGeometry(.0042,.001,6,14),silver,x,.003,z,controls);rim.rotation.x=-Math.PI/2;
+  const hole=mesh('model-d-top-jack-hole',new THREE.CircleGeometry(.0028,14),black,x,.0032,z,controls);hole.rotation.x=-Math.PI/2;
+ }
+ // Rear connections sit in the tall, nearly vertical end of the wedge.
+ box('model-d-rear-panel',.352,.045,.002,panel,0,-.019,depth+.001);
+ label('model-d-rear-logo','D',.024,.020,'#101114','#e2e1dc',0,.022,depth+.002);
+ for(const x of [.082,.108]){
+  const rim=mesh('model-d-rear-output-rim',new THREE.TorusGeometry(.006,.0012,6,16),silver,x,-.021,depth+.003);
+  const hole=mesh('model-d-rear-output-hole',new THREE.CircleGeometry(.004,16),black,x,-.021,depth+.0031);
+  rim.rotation.y=hole.rotation.y=Math.PI;
+ }
+ for(const [name,x] of [['midi-channel',.132],['power-switch',.154],['power-in',.172]])box(`model-d-${name}`,.009,.009,.002,black,x,-.021,depth+.003);
+ label('model-d-rear-brand','behringer',.046,.011,'#101114','#d7d3cf',-.015,-.027,depth+.002);
+ group.userData.dimensions=MODEL_D;
  group.userData.rackUnits=3;
  return b;
 }

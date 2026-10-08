@@ -50,6 +50,25 @@ test('Model D and Kobol Expander occupy separate 3U bays below MOTU in the 19-in
  for(const view of views)view.dispose();
 });
 
+test('Model D has the sloped instrument body, wooden sides and rear output pair',()=>{
+ const view=createBehringerModelD();
+ const group=view.group,body=group.getObjectByName('model-d-formed-chassis');
+ const vertices=body.geometry.getAttribute('position');
+ let frontTop=-Infinity,rearTop=-Infinity;
+ for(let i=0;i<vertices.count;i++){
+  if(Math.abs(vertices.getZ(i)+MODEL_D.depth/2)<.0001)frontTop=Math.max(frontTop,vertices.getY(i));
+  if(Math.abs(vertices.getZ(i)-MODEL_D.depth/2)<.0001)rearTop=Math.max(rearTop,vertices.getY(i));
+ }
+ assert.ok(rearTop-frontTop>.05,'instrument must rise toward its rear');
+ assert.ok(group.getObjectByName('model-d-sloped-control-panel').rotation.x<0);
+ assert.equal(group.getObjectsByProperty('name','model-d-wood-side').length,2);
+ assert.equal(group.getObjectsByProperty('name','model-d-rear-output-rim').length,2);
+ assert.equal(group.getObjectByName('model-d-knobs').count,28);
+ assert.equal(group.getObjectByName('model-d-output-knobs').count,3);
+ assert.ok(renderCost(group).draws<60,'repeated controls should share draw calls');
+ view.dispose();
+});
+
 for(const [name,record,halfWidth,rear,front,top] of [
  ['A',createDeskRecord(room),COMBODESK_88.worktop.width/2,-COMBODESK_88.worktop.depth+(COMBODESK_88.depth-COMBODESK_88.worktop.depth)/2+COMBODESK_88.worktop.depth/2,(COMBODESK_88.depth-COMBODESK_88.worktop.depth)/2+COMBODESK_88.worktop.depth/2,COMBODESK_88.worktop.top],
  ['B',createModulDeskRecord(room),MODUL_STUDIO_DESK.top.width/2,MODUL_STUDIO_DESK.top.frontZ-MODUL_STUDIO_DESK.top.depth,MODUL_STUDIO_DESK.top.frontZ,MODUL_STUDIO_DESK.height]
