@@ -16,7 +16,7 @@ test('AW3423DWF stands on either selected worktop, inside its footprint',()=>{
  const doc=createDocument();
  for(const [id,top,rear,front] of [
   ['desk-combodesk-88',COMBODESK_88.worktop.top,-.317,.358],
-  ['desk-modul-2025',MODUL_STUDIO_DESK.height,-.25,.35]
+  ['desk-modul-2025',MODUL_STUDIO_DESK.height,MODUL_STUDIO_DESK.top.frontZ-MODUL_STUDIO_DESK.top.depth,MODUL_STUDIO_DESK.top.frontZ]
  ]){
   chooseDesk(doc,id);
   assert.equal(doc.objects.filter(o=>o.type==='studio-desk').length,1);
@@ -26,21 +26,16 @@ test('AW3423DWF stands on either selected worktop, inside its footprint',()=>{
   const bounds=new THREE.Box3().setFromObject(display.group);
   const base=new THREE.Box3();
   for(const part of display.group.children.filter(item=>item.name==='v-foot'||item.name==='rear-foot'))base.expandByObject(part);
+  const screen=new THREE.Box3().setFromObject(display.group.getObjectByName('curved-oled-screen'));
+  const post=new THREE.Box3().setFromObject(display.group.getObjectByName('stand-stem'));
   assert.ok(bounds.min.y>=top-1e-7);
   assert.ok(base.min.z>=rear-1e-7);
-  assert.ok(base.min.z<rear+.01);
+  assert.ok(base.min.z<rear+.005);
   assert.ok(base.max.z<=front+1e-7);
+  assert.ok(base.max.z<screen.min.z,'neither V foot projects in front of the display');
+  assert.ok(post.getSize(new THREE.Vector3()).x>.075&&post.getSize(new THREE.Vector3()).z>.035,'support post has a substantial cross-section');
   assert.ok(bounds.min.z>=rear-.045,'rear shell and vent overhang the back edge by at most 4.5 cm');
   assert.ok(bounds.max.x-bounds.min.x<=AW3423DWF.width+.002);
-  for(const foot of display.group.children.filter(part=>part.name==='v-foot')){
-   const vertices=foot.geometry.attributes.position;
-   let tip=-Infinity,root=Infinity;
-   for(let i=0;i<vertices.count;i++){
-    if(Math.abs(vertices.getX(i))>.22)tip=Math.max(tip,vertices.getZ(i));
-    if(Math.abs(vertices.getX(i))<.04)root=Math.min(root,vertices.getZ(i));
-   }
-   assert.ok(tip>.14&&root<0,'V feet point toward the listener (+Z)');
-  }
   display.dispose();
  }
 });
@@ -87,10 +82,15 @@ test('OLED panel curves toward the viewer by the specified 1800R radius',()=>{
  display.dispose();
 });
 
-test('height-adjustment stem and neck stay behind the OLED screen',()=>{
+test('rear housing hangs from the thick stand on a separate mounting arm',()=>{
  const display=createAlienwareDisplay(createDeskRecord({width:2.477,length:3.715}));
  const screen=new THREE.Box3().setFromObject(display.group.getObjectByName('curved-oled-screen'));
- for(const name of ['stand-stem','stand-neck']){
+ const housing=new THREE.Box3().setFromObject(display.group.getObjectByName('rear-equipment-housing'));
+ const arm=new THREE.Box3().setFromObject(display.group.getObjectByName('mounting-arm'));
+ const post=new THREE.Box3().setFromObject(display.group.getObjectByName('stand-stem'));
+ assert.ok(housing.min.z>post.max.z,'rear housing must be forward of the post');
+ assert.ok(arm.intersectsBox(housing)&&arm.intersectsBox(post),'the arm joins the housing to the post');
+ for(const name of ['stand-stem','mounting-arm','stand-pivot']){
   const part=new THREE.Box3().setFromObject(display.group.getObjectByName(name));
   assert.ok(part.max.z<screen.min.z,`${name} must not pierce the visible screen`);
  }
