@@ -116,18 +116,20 @@ test('Monicon XL follows the photographed wedge profile and control layout',()=>
  assert.ok(!group.getObjectByName('wood-side-cheek'));
  const upper=group.getObjectByName('upper-control-panel');
  const lower=group.getObjectByName('lower-control-panel');
+ assert.ok(group.getObjectByName('rear-top-shelf'),'branding needs its own horizontal rear shelf');
  assert.ok(upper.position.z<lower.position.z&&upper.position.y>lower.position.y);
  assert.ok(upper.rotation.x>0&&lower.rotation.x>0);
  const body=group.getObjectByName('formed-metal-chassis');
  body.geometry.computeBoundingBox();
  const vertices=body.geometry.getAttribute('position');
- let rearTop=0,frontTop=0;
- for(let i=0;i<vertices.count;i++){
-  const z=vertices.getZ(i),y=vertices.getY(i);
-  if(z<-.1)rearTop=Math.max(rearTop,y);
-  if(z>.1)frontTop=Math.max(frontTop,y);
- }
- assert.ok(rearTop-frontTop>.04,'rear must be taller than the front lip');
+ const topAt=z=>{
+  let top=0;
+  for(let i=0;i<vertices.count;i++)if(Math.abs(vertices.getZ(i)-z)<.0001)top=Math.max(top,vertices.getY(i));
+  return top;
+ };
+ const rearTop=topAt(-MONICON_XL.depth/2),shelfEnd=topAt(-.078),ridge=topAt(-.012),frontTop=topAt(MONICON_XL.depth/2);
+ assert.ok(Math.abs(rearTop-shelfEnd)<1e-6,'rear shelf must be level across its depth');
+ assert.ok(shelfEnd>ridge+.02&&ridge>frontTop+.02,'two distinct slopes must follow the shelf');
  const knob=group.getObjectByName('main-volume-knob');
  assert.ok(knob.geometry.parameters.radiusTop<.02,'main knob should not dominate the panel');
  view.dispose();

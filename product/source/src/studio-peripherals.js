@@ -59,7 +59,9 @@ function builder(name){
 }
 
 function moniconWedge(width){
- const depth=MONICON_XL.depth/2,outline=[[-depth,.006],[depth,.006],[depth,.031],[-.012,.055],[-depth,.078]];
+ // Side silhouette: a short level rear shelf, a steep control bank and a
+ // shallower front bank. Both end caps share this exact outline.
+ const depth=MONICON_XL.depth/2,outline=[[-depth,.006],[depth,.006],[depth,.031],[-.012,.055],[-.078,.078],[-depth,.078]];
  const shape=new THREE.Shape();
  outline.forEach(([z,y],i)=>i?shape.lineTo(-z,y):shape.moveTo(-z,y));shape.closePath();
  const geometry=new THREE.ExtrudeGeometry(shape,{depth:width,steps:1,bevelEnabled:false});
@@ -226,26 +228,27 @@ export function createMoniconXL(desk){
  mesh('formed-metal-chassis',moniconWedge(MONICON_XL.width-.016),chassis);
  for(const side of [-1,1]){
   mesh('textured-side-cap',moniconWedge(.008),sideCap,side*(MONICON_XL.width/2-.004));
-  const seam=new THREE.CatmullRomCurve3([
-   new THREE.Vector3(side*.119,.078,-MONICON_XL.depth/2),
-   new THREE.Vector3(side*.119,.055,-.012),
-   new THREE.Vector3(side*.119,.031,MONICON_XL.depth/2)
-  ]);
-  mesh('orange-side-seam',new THREE.TubeGeometry(seam,16,.0011,5,false),orange);
+  const outline=[[-MONICON_XL.depth/2,.078],[-.078,.078],[-.012,.055],[MONICON_XL.depth/2,.031]];
+  const seam=new THREE.CurvePath();
+  for(let i=1;i<outline.length;i++)seam.add(new THREE.LineCurve3(
+   new THREE.Vector3(side*.119,outline[i-1][1],outline[i-1][0]),
+   new THREE.Vector3(side*.119,outline[i][1],outline[i][0])
+  ));
+  mesh('orange-side-seam',new THREE.TubeGeometry(seam,24,.0011,5,false),orange);
   for(const [y,z] of [[.057,-.070],[.026,.070]]){
    const screw=cylinder('side-screw',.0015,.0008,dark,side*.1273,y,z);screw.rotation.z=Math.PI/2;
   }
  }
  for(const x of [-.101,.101])for(const z of [-.080,.080])round('rubber-foot',.018,.004,.014,.002,black,x,.004,z);
 
- // Two real slopes meet at the middle ridge: a higher meter/source panel and
- // a shallower front surface for the volume and headphone controls.
- const upper=new THREE.Group();upper.name='upper-control-panel';upper.position.set(0,.066,-.058);upper.rotation.x=.236;group.add(upper);
+ // The branding sits on its own level rear shelf, behind the two slopes.
+ round('rear-top-shelf',.230,.002,.029,.0015,upperMat,0,.079,-.093);
+ label('monicon-name','monicon XL',.060,.009,'#17191c','#a3a6a5',-.074,.081,-.093,group,-Math.PI/2);
+ label('palmer-brand','Palmer',.055,.010,'#17191c','#a3a6a5',.075,.081,-.093,group,-Math.PI/2);
+ const upper=new THREE.Group();upper.name='upper-control-panel';upper.position.set(0,.0665,-.045);upper.rotation.x=Math.atan2(.023,.066);group.add(upper);
  const lower=new THREE.Group();lower.name='lower-control-panel';lower.position.set(0,.043,.045);lower.rotation.x=.208;group.add(lower);
- round('upper-face',.230,.002,.092,.0015,upperMat,0,.001,0,upper);
+ round('upper-face',.230,.002,.070,.0015,upperMat,0,.001,0,upper);
  round('lower-face',.230,.002,.114,.0015,lowerMat,0,.001,0,lower);
- label('monicon-name','monicon XL',.060,.009,'#17191c','#a3a6a5',-.074,.003,-.033,upper,-Math.PI/2);
- label('palmer-brand','Palmer',.055,.010,'#17191c','#a3a6a5',.075,.003,-.033,upper,-Math.PI/2);
 
  const knob=(name,parent,x,z,r,h)=>{
   cylinder(name+'-ring',r*1.17,.0014,silver,x,.003,z,parent);
