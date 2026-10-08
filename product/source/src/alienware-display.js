@@ -15,6 +15,35 @@ export function displayPlacement(desk){
 }
 
 function sag(x){return AW3423DWF.curveRadius-Math.sqrt(AW3423DWF.curveRadius**2-x*x);}
+function rearSurface(x){return -.199+sag(x);}
+
+// Rear emblems are decals on the curved housing, not raised spheres or tubes.
+function rearDecalEllipse(cx,cy,rx,ry,offset){
+ const p=[cx,cy,rearSurface(cx)-offset],faces=[];
+ for(let i=0;i<=32;i++){
+  const angle=i*Math.PI/16,x=cx+rx*Math.cos(angle);
+  p.push(x,cy+ry*Math.sin(angle),rearSurface(x)-offset);
+  if(i>0)faces.push(0,i,i+1);
+ }
+ const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(p,3));
+ geometry.setIndex(faces);geometry.computeVertexNormals();return geometry;
+}
+
+function rearDecalStroke(points,originX,originY,width){
+ const curve=new THREE.CatmullRomCurve3(points.map(([x,y])=>new THREE.Vector3(x,y,0)),false,'centripetal');
+ const p=[],faces=[],steps=points.length*5;
+ for(let i=0;i<=steps;i++){
+  const t=i/steps,point=curve.getPoint(t),tangent=curve.getTangent(t),length=Math.hypot(tangent.x,tangent.y)||1;
+  const dx=-tangent.y/length*width/2,dy=tangent.x/length*width/2;
+  for(const side of [-1,1]){
+   const x=originX-(point.x+side*dx);
+   p.push(x,originY+point.y+side*dy,rearSurface(x)-.0004);
+  }
+  if(i>0){const a=(i-1)*2,b=i*2;faces.push(a,b,a+1,a+1,b,b+1);}
+ }
+ const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(p,3));
+ geometry.setIndex(faces);geometry.computeVertexNormals();return geometry;
+}
 
 // The display is a bent, closed slab. Each edge has its own quads, so the top
 // and bottom cannot become a large diagonal sheet when seen from above.
@@ -116,9 +145,10 @@ export function createAlienwareDisplay(desk){
  const bezel=new THREE.MeshStandardMaterial({color:0x090b0d,roughness:.52});
  const stand=new THREE.MeshStandardMaterial({color:0x292e34,roughness:.43,metalness:.28});
  const ventMaterial=new THREE.MeshStandardMaterial({color:0x101318,roughness:.68});
- const turquoise=new THREE.MeshBasicMaterial({color:0x26dcd9});
+ const turquoise=new THREE.MeshBasicMaterial({color:0x26dcd9,side:THREE.DoubleSide});
+ const ledDark=new THREE.MeshBasicMaterial({color:0x090b0d,side:THREE.DoubleSide});
  const texture=scenicTexture(),screen=new THREE.MeshBasicMaterial({map:texture,side:THREE.DoubleSide});
- const materials=[body,bezel,stand,ventMaterial,turquoise,screen],geometries=[];
+ const materials=[body,bezel,stand,ventMaterial,turquoise,ledDark,screen],geometries=[];
  function mesh(name,geometry,material,x=0,y=0,z=0){const item=new THREE.Mesh(geometry,material);item.name=name;item.position.set(x,y,z);group.add(item);geometries.push(geometry);return item;}
 
  const d=AW3423DWF,panelY=d.height-d.panelHeight/2,panelBottom=panelY-d.panelHeight/2;
@@ -136,15 +166,14 @@ export function createAlienwareDisplay(desk){
  }
  group.add(fins);geometries.push(finGeometry);
  const vent=mesh('rear-vent',new THREE.TorusGeometry(.042,.0045,8,48),ventMaterial,0,.270,-.201);vent.scale.y=2.15;
- const alien=mesh('rear-alien-mark',new THREE.SphereGeometry(.016,16,12),turquoise,.205,.260,-.191);alien.scale.set(1,1.3,.18);
- for(const x of [.199,.211]){const eye=mesh('rear-alien-eye',new THREE.SphereGeometry(.0035,10,8),bezel,x,.260,-.195);eye.scale.z=.25;}
- const label=new THREE.Group();label.name='rear-34-mark';label.position.set(-.205,.260,-.193);label.rotation.y=Math.PI;group.add(label);
+ mesh('rear-alien-mark',rearDecalEllipse(.205,.260,.016,.021,.0004),turquoise);
+ for(const x of [.199,.211])mesh('rear-alien-eye',rearDecalEllipse(x,.260,.0035,.0035,.0007),ledDark);
+ const label=new THREE.Group();label.name='rear-34-mark';group.add(label);
  for(const points of [
   [[-.045,.021],[-.021,.021],[-.015,.016],[-.015,.005],[-.023,0],[-.015,-.005],[-.015,-.016],[-.021,-.021],[-.045,-.021]],
   [[.013,.021],[.013,-.003],[.044,-.003]],[[.037,.021],[.037,-.021]]
  ]){
-  const curve=new THREE.CatmullRomCurve3(points.map(([x,y])=>new THREE.Vector3(x,y,0)),false,'centripetal');
-  const geometry=new THREE.TubeGeometry(curve,points.length*3,.0027,5,false);
+  const geometry=rearDecalStroke(points,-.205,.260,.0054);
   const stroke=new THREE.Mesh(geometry,turquoise);label.add(stroke);geometries.push(geometry);
  }
 

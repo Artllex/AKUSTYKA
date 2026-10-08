@@ -108,3 +108,18 @@ test('rear housing hangs from the thick stand on a separate mounting arm',()=>{
  }
  display.dispose();
 });
+
+test('rear turquoise LEDs follow the housing surface without protruding',()=>{
+ const display=createAlienwareDisplay(createDeskRecord({width:2.477,length:3.715}));
+ const marks=[display.group.getObjectByName('rear-alien-mark'),...display.group.children.filter(part=>part.name==='rear-alien-eye'),...display.group.getObjectByName('rear-34-mark').children];
+ assert.equal(marks.length,6);
+ for(const mark of marks){
+  const positions=mark.geometry.attributes.position;
+  for(let i=0;i<positions.count;i++){
+   const x=positions.getX(i),z=positions.getZ(i);
+   const housingRear=-.199+AW3423DWF.curveRadius-Math.sqrt(AW3423DWF.curveRadius**2-x*x);
+   assert.ok(housingRear-z>=0&&housingRear-z<.001,`${mark.name||'34'} must sit flush on the rear shell`);
+  }
+ }
+ display.dispose();
+});
