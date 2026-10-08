@@ -65,6 +65,9 @@ test('Model D has the sloped instrument body, wooden sides and rear output pair'
  assert.equal(group.getObjectsByProperty('name','model-d-rear-output-rim').length,2);
  assert.equal(group.getObjectByName('model-d-knobs').count,28);
  assert.equal(group.getObjectByName('model-d-output-knobs').count,3);
+ const ear=new THREE.Box3().setFromObject(group.getObjectByName('3u-rack-ear'));
+ assert.ok(ear.getSize(new THREE.Vector3()).y<.025,'mounting tabs must stay below the instrument face');
+ assert.ok(group.getObjectByName('model-d-rack-front-crossbar'),'mounting tabs need a continuous support');
  assert.ok(renderCost(group).draws<60,'repeated controls should share draw calls');
  view.dispose();
 });
