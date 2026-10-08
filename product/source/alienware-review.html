@@ -1,0 +1,25 @@
+<!doctype html><html lang="pl"><meta charset="utf-8"><title>AW3423DWF — kontrola geometrii</title>
+<style>body{margin:0;background:#141a20;color:#e6ecf1;font:18px Arial}#views{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:10px}figure{margin:0;background:#64717b;border:1px solid #3d4850}figcaption{padding:10px;background:#1d2832}canvas{display:block;width:100%;height:420px}</style>
+<div id="views"></div>
+<script type="module">
+import * as THREE from 'three';
+import {createAlienwareDisplay} from './src/alienware-display.js';
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x75828b);
+scene.add(new THREE.AmbientLight(0xffffff,2.5));
+const key=new THREE.DirectionalLight(0xffffff,3);key.position.set(-.5,1.5,1.3);scene.add(key);
+const floor=new THREE.Mesh(new THREE.PlaneGeometry(2,2),new THREE.MeshStandardMaterial({color:0x43484c,roughness:.8}));floor.rotation.x=-Math.PI/2;floor.position.y=-.003;scene.add(floor);
+const model=createAlienwareDisplay({id:'desk-combodesk-88'});model.group.position.set(0,0,0);scene.add(model.group);
+const views=[
+ ['przód',[0,.29,1.2],[0,.22,-.15],[0,1,0],.48],
+ ['tył',[0,.47,-1.2],[0,.22,-.17],[0,1,0],.48],
+ ['góra',[0,1.2,-.17],[0,.12,-.17],[0,0,-1],.48],
+ ['bok',[1.1,.24,-.17],[0,.21,-.17],[0,1,0],.52]
+];
+for(const [label,position,target,up,half] of views){
+ const figure=document.createElement('figure'),caption=document.createElement('figcaption');caption.textContent=label;
+ const renderer=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});renderer.setSize(900,420,false);renderer.setPixelRatio(1);renderer.outputColorSpace=THREE.SRGBColorSpace;
+ const camera=new THREE.OrthographicCamera(-half,half,half*420/900,-half*420/900,.01,10);
+ camera.up.fromArray(up);camera.position.fromArray(position);camera.lookAt(...target);renderer.render(scene,camera);
+ figure.append(caption,renderer.domElement);document.querySelector('#views').append(figure);
+}
+</script></html>

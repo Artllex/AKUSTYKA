@@ -3,25 +3,94 @@ import {RoundedBoxGeometry} from 'three/addons/geometries/RoundedBoxGeometry.js'
 import {COMBODESK_88} from './desk-model.js';
 import {MODUL_DESK_ID,MODUL_STUDIO_DESK} from './modul-desk-model.js';
 
-// Dell AW3423DWF, at the stand's lowest position. Metres.
+// Dell Alienware AW3423DWF at the stand's lowest setting; dimensions in metres.
 export const AW3423DWF=Object.freeze({width:.81525,height:.41557,depth:.30571,curveRadius:1.8,panelHeight:.352});
+const SEGMENTS=64;
 
 export function displayPlacement(desk){
  const modul=desk.id===MODUL_DESK_ID;
  const top=modul?MODUL_STUDIO_DESK.height:COMBODESK_88.worktop.top;
  const rear=modul?MODUL_STUDIO_DESK.top.frontZ-MODUL_STUDIO_DESK.top.depth:(COMBODESK_88.depth-COMBODESK_88.worktop.depth)/2-COMBODESK_88.worktop.depth/2;
- // The rear heel stays on the worktop while the V feet end at the display plane.
  return {x:0,y:top,z:rear+.241};
 }
 
-function curved(geometry,radius=AW3423DWF.curveRadius){
- const p=geometry.attributes.position;
- for(let i=0;i<p.count;i++){
-  const x=p.getX(i);
-  p.setZ(i,p.getZ(i)+radius-Math.sqrt(radius*radius-x*x));
+function sag(x){return AW3423DWF.curveRadius-Math.sqrt(AW3423DWF.curveRadius**2-x*x);}
+
+// The display is a bent, closed slab. Each edge has its own quads, so the top
+// and bottom cannot become a large diagonal sheet when seen from above.
+function bentSlab(width,height,front,back,corner=0){
+ const p=[],uv=[],faces=[];
+ for(let i=0;i<=SEGMENTS;i++){
+  const u=i/SEGMENTS,x=(u-.5)*width,s=sag(x),round=Math.max(0,Math.abs(x)-(width/2-corner));
+  const halfHeight=corner?height/2-corner+Math.sqrt(Math.max(0,corner*corner-round*round)):height/2;
+  p.push(x,-halfHeight,front+s,x,halfHeight,front+s,x,-halfHeight,back+s,x,halfHeight,back+s);
+  uv.push(u,0,u,1,u,0,u,1);
  }
- geometry.computeVertexNormals();
- return geometry;
+ const quad=(a,b,c,d)=>faces.push(a,b,c,a,c,d);
+ for(let i=0;i<SEGMENTS;i++){
+  const a=i*4,b=(i+1)*4;
+  quad(a,b,b+1,a+1);       // face towards the listener
+  quad(a+2,a+3,b+3,b+2); // rear
+  quad(a+1,b+1,b+3,a+3); // top
+  quad(a+2,b+2,b,a);     // bottom
+ }
+ quad(0,1,3,2);
+ const last=SEGMENTS*4;quad(last+2,last+3,last+1,last);
+ const geometry=new THREE.BufferGeometry();
+ geometry.setAttribute('position',new THREE.Float32BufferAttribute(p,3));
+ geometry.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));
+ geometry.setIndex(faces);geometry.computeVertexNormals();return geometry;
+}
+
+function bentFace(width,height){
+ const p=[],uv=[],faces=[];
+ for(let i=0;i<=SEGMENTS;i++){
+  const u=i/SEGMENTS,x=(u-.5)*width,z=sag(x);
+  p.push(x,-height/2,z,x,height/2,z);uv.push(u,0,u,1);
+ }
+ for(let i=0;i<SEGMENTS;i++){const a=i*2,b=a+2;faces.push(a,b,b+1,a,b+1,a+1);}
+ const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(p,3));
+ geometry.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));geometry.setIndex(faces);geometry.computeVertexNormals();return geometry;
+}
+
+// Eight-sided rounded-rectangle sections make the upright a single solid:
+// broad at the foot, slimmer at the top, with a distinct front and rear face.
+function columnGeometry(){
+ const sections=[
+  {y:.020,w:.047,front:-.211,rear:-.284},
+  {y:.060,w:.045,front:-.221,rear:-.282},
+  {y:.337,w:.034,front:-.228,rear:-.270},
+  {y:.378,w:.031,front:-.228,rear:-.265}
+ ];
+ const p=[],faces=[];
+ for(const {y,w,front,rear} of sections){
+  const r=.009;
+  for(const [x,z] of [[-w+r,front],[w-r,front],[w,front-r],[w,rear+r],[w-r,rear],[-w+r,rear],[-w,rear+r],[-w,front-r]])p.push(x,y,z);
+ }
+ for(let row=0;row<sections.length-1;row++)for(let i=0;i<8;i++){
+  const a=row*8+i,b=row*8+(i+1)%8,c=b+8,d=a+8;faces.push(a,b,c,a,c,d);
+ }
+ for(let i=1;i<7;i++)faces.push(0,i+1,i,24,24+i,24+i+1);
+ const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(p,3));
+ geometry.setIndex(faces);geometry.computeVertexNormals();return geometry;
+}
+
+function vFootGeometry(side){
+ const outline=[[0,-.238],[.046,-.235],[.254,-.158],[.265,-.149],[.252,-.145],[.038,-.210],[0,-.215]];
+ const p=[],faces=[],n=outline.length;
+ for(const [x,z] of outline){const t=Math.min(1,x/.265);p.push(side*x,.003+.017*(1-t),z);}
+ for(const [x,z] of outline){const t=Math.min(1,x/.265);p.push(side*x,.013+.027*(1-t),z);}
+ for(let i=1;i<n-1;i++){
+  if(side>0)faces.push(0,i+1,i,n,n+i,n+i+1);
+  else faces.push(0,i,i+1,n,n+i+1,n+i);
+ }
+ for(let i=0;i<n;i++){
+  const j=(i+1)%n;
+  if(side>0)faces.push(i,j,n+j,i,n+j,n+i);
+  else faces.push(j,i,n+i,j,n+i,n+j);
+ }
+ const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(p,3));
+ geometry.setIndex(faces);geometry.computeVertexNormals();return geometry;
 }
 
 function scenicTexture(){
@@ -43,43 +112,50 @@ function scenicTexture(){
 export function createAlienwareDisplay(desk){
  const group=new THREE.Group();group.name='computer-display-aw3423dwf';group.userData.collision=false;
  const placement=displayPlacement(desk);group.position.set(placement.x,placement.y,placement.z);
- const body=new THREE.MeshStandardMaterial({color:0x171b1f,roughness:.62,metalness:.18});
- const bezel=new THREE.MeshStandardMaterial({color:0x080a0c,roughness:.53});
- const stand=new THREE.MeshStandardMaterial({color:0x25292d,roughness:.47,metalness:.26});
+ const body=new THREE.MeshStandardMaterial({color:0x20252b,roughness:.64,metalness:.12});
+ const bezel=new THREE.MeshStandardMaterial({color:0x090b0d,roughness:.52});
+ const stand=new THREE.MeshStandardMaterial({color:0x292e34,roughness:.43,metalness:.28});
+ const ventMaterial=new THREE.MeshStandardMaterial({color:0x101318,roughness:.68});
  const turquoise=new THREE.MeshBasicMaterial({color:0x26dcd9});
  const texture=scenicTexture(),screen=new THREE.MeshBasicMaterial({map:texture,side:THREE.DoubleSide});
- const materials=[body,bezel,stand,turquoise,screen],geometries=[];
+ const materials=[body,bezel,stand,ventMaterial,turquoise,screen],geometries=[];
  function mesh(name,geometry,material,x=0,y=0,z=0){const item=new THREE.Mesh(geometry,material);item.name=name;item.position.set(x,y,z);group.add(item);geometries.push(geometry);return item;}
- // The panel is suspended in front of a separate, substantial stand.
- const d=AW3423DWF,panelY=d.height-d.panelHeight/2,panelZ=-.155;
- mesh('curved-rear-shell-1800r',curved(new THREE.BoxGeometry(d.width,d.panelHeight,.026,64,1,1)),body,0,panelY,panelZ);
- mesh('black-front-bezel',curved(new THREE.PlaneGeometry(d.width-.004,d.panelHeight-.004,64,1)),bezel,0,panelY,panelZ+.0135);
- mesh('curved-oled-screen',curved(new THREE.PlaneGeometry(d.width-.018,d.panelHeight-.032,64,1)),screen,0,panelY+.007,panelZ+.0143);
- mesh('lower-chin',curved(new THREE.BoxGeometry(d.width-.006,.018,.003,64,1,1)),stand,0,d.height-d.panelHeight+.009,panelZ+.015);
- // Rounded equipment housing on the back, with a short pivot arm to the post.
- mesh('rear-equipment-housing',new RoundedBoxGeometry(.44,.275,.026,4,.009),body,0,.245,-.177);
- mesh('mounting-arm',new RoundedBoxGeometry(.068,.039,.035,4,.006),stand,0,.262,-.197);
- const pivot=mesh('stand-pivot',new THREE.CylinderGeometry(.024,.024,.075,24),body,0,.262,-.204);pivot.rotation.z=Math.PI/2;
- // A thick, tapered side profile; the foot and post form one continuous silhouette.
- const profile=new THREE.Shape();
- profile.moveTo(.202,.044);profile.lineTo(.201,.349);profile.quadraticCurveTo(.202,.375,.218,.383);
- profile.lineTo(.230,.383);profile.quadraticCurveTo(.239,.382,.240,.370);
- profile.lineTo(.240,.060);profile.lineTo(.230,.022);profile.lineTo(.212,.018);profile.closePath();
- const stem=new THREE.ExtrudeGeometry(profile,{depth:.078,steps:1,bevelEnabled:true,bevelSegments:2,bevelSize:.002,bevelThickness:.002});
- stem.rotateY(Math.PI/2);
- mesh('stand-stem',stem,stand,-.039,0,0);
- mesh('stand-foot-joint',new RoundedBoxGeometry(.084,.030,.048,3,.005),stand,0,.018,-.215);
- for(const side of [-1,1]){
-  // Shape-Y becomes world -Z: the tips stop behind the front face of the panel.
-  const arm=new THREE.Shape();arm.moveTo(0,.225);arm.lineTo(side*.040,.219);arm.lineTo(side*.249,.151);arm.lineTo(side*.254,.151);arm.lineTo(side*.254,.169);arm.lineTo(side*.046,.237);arm.closePath();
-  const foot=new THREE.ExtrudeGeometry(arm,{depth:.012,bevelEnabled:true,bevelSegments:2,steps:1,bevelSize:.002,bevelThickness:.001});foot.rotateX(-Math.PI/2);
-  mesh('v-foot',foot,stand,0,.002,0);
+
+ const d=AW3423DWF,panelY=d.height-d.panelHeight/2,panelBottom=panelY-d.panelHeight/2;
+ mesh('curved-rear-shell-1800r',bentSlab(d.width,d.panelHeight,-.145,-.159,.005),bezel,0,panelY);
+ mesh('curved-oled-screen',bentFace(d.width-.018,d.panelHeight-.030),screen,0,panelY+.007,-.1437);
+ mesh('lower-chin',bentSlab(d.width-.002,.016,-.141,-.144),stand,0,panelBottom+.008);
+
+ // The smaller equipment pod follows the screen's arc, leaving the outer rim exposed.
+ mesh('rear-equipment-housing',bentSlab(.690,.294,-.160,-.199,.018),body,0,.242);
+ mesh('top-rear-vent-band',bentSlab(.730,.010,-.164,-.176),ventMaterial,0,.398);
+ const finGeometry=new THREE.BoxGeometry(.0032,.009,.004),fins=new THREE.InstancedMesh(finGeometry,bezel,69),finPose=new THREE.Object3D();
+ fins.name='top-rear-vent-fins';
+ for(let i=-34;i<=34;i++){
+  const x=i*.0104;finPose.position.set(x,.398,-.178+sag(x));finPose.updateMatrix();fins.setMatrixAt(i+34,finPose.matrix);
  }
- mesh('rear-foot',new RoundedBoxGeometry(.054,.012,.036,3,.004),stand,0,.008,-.218);
- // Rounded vertical vent and luminous marks on the rear, visible when orbiting.
- const vent=mesh('rear-vent',new THREE.TorusGeometry(.044,.006,8,36),bezel,0,.257,-.191);vent.scale.y=2.05;
- const alien=mesh('rear-alien-mark',new THREE.SphereGeometry(.014,16,8),turquoise,-.205,.245,-.191);alien.scale.set(1,.78,.1);
- for(const [x,y,w] of [[.165,.249,.037],[.205,.249,.037],[.205,.220,.037]])mesh('rear-34-mark',new THREE.BoxGeometry(w,.007,.001),turquoise,x,y,-.191);
+ group.add(fins);geometries.push(finGeometry);
+ const vent=mesh('rear-vent',new THREE.TorusGeometry(.042,.0045,8,48),ventMaterial,0,.270,-.201);vent.scale.y=2.15;
+ const alien=mesh('rear-alien-mark',new THREE.SphereGeometry(.016,16,12),turquoise,.205,.260,-.191);alien.scale.set(1,1.3,.18);
+ for(const x of [.199,.211]){const eye=mesh('rear-alien-eye',new THREE.SphereGeometry(.0035,10,8),bezel,x,.260,-.195);eye.scale.z=.25;}
+ const label=new THREE.Group();label.name='rear-34-mark';label.position.set(-.205,.260,-.193);label.rotation.y=Math.PI;group.add(label);
+ for(const points of [
+  [[-.045,.021],[-.021,.021],[-.015,.016],[-.015,.005],[-.023,0],[-.015,-.005],[-.015,-.016],[-.021,-.021],[-.045,-.021]],
+  [[.013,.021],[.013,-.003],[.044,-.003]],[[.037,.021],[.037,-.021]]
+ ]){
+  const curve=new THREE.CatmullRomCurve3(points.map(([x,y])=>new THREE.Vector3(x,y,0)),false,'centripetal');
+  const geometry=new THREE.TubeGeometry(curve,points.length*3,.0027,5,false);
+  const stroke=new THREE.Mesh(geometry,turquoise);label.add(stroke);geometries.push(geometry);
+ }
+
+ // Only the short horizontal pivot connects the hanging panel to the upright.
+ mesh('mounting-arm',new RoundedBoxGeometry(.056,.044,.057,3,.006),stand,0,.275,-.215);
+ const pivot=mesh('stand-pivot',new THREE.CylinderGeometry(.022,.022,.015,24),ventMaterial,0,.275,-.234);
+ pivot.rotation.x=Math.PI/2;
+ mesh('stand-column',columnGeometry(),stand);
+ mesh('stand-foot-joint',new RoundedBoxGeometry(.100,.027,.041,3,.007),stand,0,.019,-.219);
+ for(const side of [-1,1])mesh('v-foot',vFootGeometry(side),stand);
+
  group.userData.dimensions={width:d.width,height:d.height,depth:d.depth,curveRadius:d.curveRadius};
  return {group,dispose(){for(const geometry of geometries)geometry.dispose();for(const material of materials)material.dispose();texture.dispose();}};
 }
