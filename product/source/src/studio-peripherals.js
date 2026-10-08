@@ -8,6 +8,10 @@ import {RACK_15U} from './rack-model.js';
 export const MOTU_24AI=Object.freeze({width:.4826,depth:.1778,height:.04445});
 export const MONICON_XL=Object.freeze({width:.254,depth:.215,height:.084});
 export const PROART_P16=Object.freeze({width:.3549,depth:.2469,baseHeight:.0183,screenHeight:.224});
+export const STREAM_DECK_XL=Object.freeze({width:.182,depth:.112,height:.034,keys:32});
+export const GXT_144_REXX=Object.freeze({width:.072,depth:.121,height:.077});
+export const MODEL_D=Object.freeze({width:.374,depth:.136,height:.090,rackHeight:3*.04445});
+export const KOBOL_EXPANDER=Object.freeze({width:.424,depth:.136,height:.094,rackHeight:3*.04445});
 
 function builder(name){
  const group=new THREE.Group();group.name=name;group.userData.collision=false;
@@ -79,7 +83,113 @@ export function deskPeripheralPlacement(desk){
  const modul=desk.id===MODUL_DESK_ID;
  const top=modul?MODUL_STUDIO_DESK.height:COMBODESK_88.worktop.top;
  // Both worktops contain these footprints, even though B is shallower and narrower.
- return {top,laptop:{x:-.49,z:.10},monicon:{x:.49,z:.10}};
+ return {top,laptop:{x:-.49,z:.10},monicon:{x:.49,z:.10},streamDeck:{x:-.145,z:.178},mouse:{x:.18,z:.177}};
+}
+
+// 3U rack ears align each module's front to the RIVECO's leaned rails.
+function rackModule(name,dimensions,centerY){
+ const b=builder(name),{group,mat,box,round,cylinder,label}=b;
+ const front=-RACK_15U.depth/2+.003+Math.tan(RACK_15U.leanDegrees*Math.PI/180)*(centerY-.06)-.003;
+ group.position.set(0,centerY,front+dimensions.depth/2);
+ const shell=mat(0x17191b,.35,.62),panel=mat(0x292c2d,.28,.58),ear=mat(0x24282a,.55,.5),black=mat(0x090b0c,.2,.54),silver=mat(0xb8bab4,.55,.42),white=mat(0xd2d3cd);
+ round('synth-chassis',dimensions.width,dimensions.height,dimensions.depth,.005,shell);
+ box('synth-front-panel',dimensions.width,dimensions.rackHeight-.006,.003,panel,0,0,-dimensions.depth/2-.001);
+ const faceZ=-dimensions.depth/2-.004;
+ for(const side of [-1,1]){
+  const earWidth=(.4826-dimensions.width)/2;
+  box('3u-rack-ear',earWidth,dimensions.rackHeight-.006,.004,ear,side*(dimensions.width/2+earWidth/2),0,faceZ+.001);
+  for(const y of [-dimensions.rackHeight/2+.013,dimensions.rackHeight/2-.013]){
+   const screw=cylinder('rack-screw',.0032,.002,silver,side*.231,y,faceZ-.002);screw.rotation.x=Math.PI/2;
+  }
+ }
+ const knob=(name,x,y,r=.006)=>{
+  const item=cylinder(name,r,.006,black,x,y,faceZ-.006);item.rotation.x=Math.PI/2;
+  const cap=cylinder(name+'-cap',r*.44,.0015,silver,x,y,faceZ-.009);cap.rotation.x=Math.PI/2;
+ };
+ const jack=(name,x,y)=>{
+  const socket=cylinder(name,.0043,.0018,silver,x,y,faceZ-.004);socket.rotation.x=Math.PI/2;
+  const hole=cylinder(name+'-hole',.0025,.002,black,x,y,faceZ-.006);hole.rotation.x=Math.PI/2;
+ };
+ group.userData.dimensions=dimensions;
+ return {b,group,mat,box,round,cylinder,label,knob,jack,faceZ,white,black};
+}
+
+export function createBehringerModelD(){
+ const r=rackModule('behringer-model-d',MODEL_D,.165);
+ const {b,group,mat,box,label,knob,jack,faceZ}=r;
+ const wood=mat(0x5c3924,.05,.8),line=mat(0x8e9290),red=mat(0xc34c3e);
+ for(const side of [-1,1])box('wood-side-cheek',.006,MODEL_D.rackHeight-.014,.003,wood,side*(MODEL_D.width/2-.005),0,faceZ);
+ for(const x of [-.112,-.033,.055,.128])box('section-divider',.0008,MODEL_D.rackHeight-.025,.001,line,x,0,faceZ-.002);
+ label('model-d-name','MODEL D',.065,.013,'#292c2d','#ecece6',-.145,.051,faceZ-.002);
+ label('behringer-brand','BEHRINGER',.067,.012,'#292c2d','#deded8',.139,.051,faceZ-.002);
+ // Controllers, three oscillators, mixer, filter and two contour groups.
+ for(const [x,ys] of [[-.151,[-.028,.004,.030]],[-.079,[-.031,.003,.030]],[-.046,[-.031,.003,.030]],[-.013,[-.031,.003,.030]],[.024,[-.031,.003,.030]],[.061,[-.031,.003,.030]],[.097,[-.031,.003,.030]],[.143,[-.031,.003,.030]]])for(const y of ys)knob('model-d-knob',x,y,y===.030?.007:.0053);
+ for(const x of [-.105,-.095,.039,.050,.074])box('red-toggle',.003,.008,.004,red,x,-.047,faceZ-.006);
+ for(const x of [-.160,-.144])jack('model-d-patch-jack',x,-.050);
+ group.userData.rackUnits=3;
+ return b;
+}
+
+export function createBehringerKobolExpander(){
+ const r=rackModule('behringer-kobol-expander',KOBOL_EXPANDER,.315);
+ const {b,group,mat,box,label,knob,jack,faceZ}=r;
+ const line=mat(0xb5b4aa),orange=mat(0xe1a259),led=mat(0x80d177);
+ label('kobol-name','KOBOL EXPANDER',.11,.013,'#292c2d','#deded8',-.145,.051,faceZ-.002);
+ label('kobol-brand','BEHRINGER',.066,.011,'#292c2d','#deded8',.159,.051,faceZ-.002);
+ for(const x of [-.148,-.065,.021,.105])box('kobol-section-line',.0008,.102,.001,line,x,-.008,faceZ-.002);
+ // Two variable-wave oscillators, filter, dual envelopes and patch bay.
+ for(const x of [-.174,-.138,-.102,-.061,-.024,.012,.053,.089]){
+  knob('kobol-control-knob',x,.019,.006);
+  knob('kobol-control-knob',x,-.019,.005);
+ }
+ for(let row=0;row<5;row++)for(let col=0;col<6;col++){
+  jack('kobol-patch-jack',.119+col*.014,-.045+row*.019);
+ }
+ jack('kobol-patch-jack',.202,.031);
+ for(const x of [-.174,-.061,.053])box('kobol-status-led',.003,.003,.001,x<0?orange:led,x,.047,faceZ-.002);
+ group.userData.rackUnits=3;
+ return b;
+}
+
+export function createStreamDeckXL(desk){
+ const b=builder('elgato-stream-deck-xl'),{group,mat,round,box,label}=b;
+ const p=deskPeripheralPlacement(desk);group.position.set(p.streamDeck.x,p.top,p.streamDeck.z);
+ const black=mat(0x101418,.18,.55),bezel=mat(0x242b30,.28,.45),screen=mat(0x131d24,.05,.35),foot=mat(0x303538,.35,.65);
+ round('stream-deck-foot',.170,.007,.102,.004,foot,0,.004,0);
+ // Magnetic stand raises the back of the 8 × 4 key surface.
+ const face=new THREE.Group();face.name='stream-deck-angled-face';face.position.set(0,.033,0);face.rotation.x=.43;group.add(face);
+ round('stream-deck-body',STREAM_DECK_XL.width,.012,STREAM_DECK_XL.depth,.005,black,0,0,0,face);
+ round('stream-deck-glass',.174,.001,.104,.003,bezel,0,.007,0,face);
+ const colors=[0x30718b,0xb34e61,0x4d86a0,0xc18a50,0x647cb6,0x4b9a7b,0xb1699a,0x5b95af];
+ for(let row=0;row<4;row++)for(let col=0;col<8;col++){
+  const x=-.074+col*.0211,z=-.037+row*.0246;
+  round('stream-deck-lcd-key',.017,.002,.020,.0018,screen,x,.008,z,face);
+  round('stream-deck-key-icon',.009,.0004,.009,.001,mat(colors[(row*3+col)%colors.length],.05,.42),x,.0092,z,face);
+ }
+ label('stream-deck-brand','elgato',.050,.009,'#101418','#d9e5e8',0,.009,.052,face,-Math.PI/2);
+ // Rear support remains behind the visible key face.
+ box('stream-deck-stand',.130,.035,.006,foot,0,.018,-.038);
+ group.userData.dimensions=STREAM_DECK_XL;
+ return b;
+}
+
+export function createGxt144Rexx(desk){
+ const b=builder('trust-gxt-144-rexx'),{group,mat,box,round,cylinder,label}=b;
+ const p=deskPeripheralPlacement(desk);group.position.set(p.mouse.x,p.top,p.mouse.z);
+ const shell=mat(0x171b20,.25,.54),grip=mat(0x242a30,.14,.73),button=mat(0x11151a,.22,.55),light=mat(0x36b7cc,.05,.4),wheel=mat(0x080a0d,.16,.72);
+ round('mouse-sole',GXT_144_REXX.width,.008,GXT_144_REXX.depth,.005,shell,0,.005,0);
+ // Ergonomic upright shell: the hand rests on a pitched right-side ridge.
+ const body=round('vertical-mouse-shell',.060,.060,.108,.014,grip,-.001,.038,0);body.rotation.z=-.24;
+ const upper=round('vertical-mouse-back',.035,.051,.080,.012,shell,-.018,.046,-.008);upper.rotation.z=-.22;
+ round('thumb-rest',.030,.014,.066,.006,shell,.027,.019,.006);
+ const left=round('left-click',.014,.004,.047,.002,button,-.021,.069,.026);left.rotation.z=-.30;
+ const right=round('right-click',.014,.004,.047,.002,button,-.002,.073,.026);right.rotation.z=-.30;
+ const scroll=cylinder('scroll-wheel',.006,.012,wheel,-.012,.078,.033);scroll.rotation.z=Math.PI/2;
+ for(const z of [-.022,-.001])round('thumb-button',.003,.007,.013,.001,button,.031,.040,z);
+ box('rgb-side-strip',.002,.002,.064,light,.034,.021,.003);
+ label('rexx-brand','GXT',.024,.008,'#242a30','#bcc5ca',-.012,.069,-.025);
+ group.userData.dimensions=GXT_144_REXX;
+ return b;
 }
 
 export function createMoniconXL(desk){

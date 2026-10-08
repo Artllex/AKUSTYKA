@@ -40,6 +40,9 @@ app.whenReady().then(async()=>{
 
   if(result.baseboardCount!==9||result.reflections<1||result.deskReflections<1||result.tweeterRays!==2||result.headHits!==2||!result.raysVisible||result.monitorCount!==2||result.monitorOptions!==2||!result.listenerPanel||!result.earHeight.includes('118,5')||!result.canvas||!result.desktop||!result.dimensions.includes('247,7')||result.bench.join(',')!=='File,Edit,View'||errors.length)throw new Error(JSON.stringify({result,errors}));
 
+  const peripheralCheck=await window.webContents.executeJavaScript(`(()=>{const d=document.getElementById('viewport').dataset;return {streamDeck:Number(d.streamDeckXLCount),mouse:Number(d.gxt144RexxCount),modelD:Number(d.modelDCount),kobol:Number(d.kobolExpanderCount),motu:Number(d.motu24AiCount)};})()`);
+  if(Object.values(peripheralCheck).some(count=>count!==1))throw new Error(JSON.stringify(peripheralCheck));result.peripheralCheck=peripheralCheck;
+
   const clearanceCheck=await window.webContents.executeJavaScript(`(()=>{const d=document.getElementById('viewport').dataset;return {tooClose:Number(d.tooCloseMonitors),colors:d.tweeterRayColors,walls:d.wallClearanceWarnings,count:Number(d.wallClearanceCount),rays:d.rayDistances,wallDistances:d.wallDistances,rearCenters:d.rearCenterDistances,rearTooClose:Number(d.rearCenterTooClose)};})()`);
   if(clearanceCheck.tooClose!==2||clearanceCheck.colors!=='ff303d,ff303d'||clearanceCheck.count<2||!clearanceCheck.walls.includes('monitor-L:wall-front')||clearanceCheck.rays.split(' cm').length!==3||clearanceCheck.wallDistances.split(' cm').length<3||clearanceCheck.rearCenters.split(' cm').length!==3)throw new Error(JSON.stringify(clearanceCheck));result.clearanceCheck=clearanceCheck;
   const pose=()=>window.webContents.executeJavaScript(`(()=>{const d=document.getElementById('viewport').dataset;return {position:d.cameraPosition.split(',').map(Number),target:d.cameraTarget.split(',').map(Number)};})()`);
