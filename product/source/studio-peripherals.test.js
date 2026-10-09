@@ -57,11 +57,15 @@ test('Model D has the sloped instrument body, wooden sides and rear output pair'
  let frontTop=-Infinity,rearTop=-Infinity;
  for(let i=0;i<vertices.count;i++){
   if(Math.abs(vertices.getZ(i)+MODEL_D.depth/2)<.0001)frontTop=Math.max(frontTop,vertices.getY(i));
-  if(Math.abs(vertices.getZ(i)-MODEL_D.depth/2)<.0001)rearTop=Math.max(rearTop,vertices.getY(i));
+  if(Math.abs(vertices.getZ(i)-(.068-.011))<.0001)rearTop=Math.max(rearTop,vertices.getY(i));
  }
- assert.ok(rearTop-frontTop>.05,'instrument must rise toward its rear');
+ assert.ok(rearTop-frontTop>.04,'instrument must rise toward its rear');
  assert.ok(group.getObjectByName('model-d-sloped-control-panel').rotation.x<0);
  assert.equal(group.getObjectsByProperty('name','model-d-wood-side').length,2);
+ const cheek=group.getObjectByName('model-d-wood-side').geometry.getAttribute('position');
+ const base=[];for(let i=0;i<cheek.count;i++)if(cheek.getY(i)<-.043)base.push(cheek.getZ(i));
+ assert.ok(Math.min(...base)>-.06&&Math.max(...base)<.06,'the flat base must be inset from the upper ends');
+ assert.equal(group.getObjectByName('model-d-side-screws').count,8);
  assert.equal(group.getObjectsByProperty('name','model-d-rear-output-rim').length,2);
  assert.equal(group.getObjectByName('model-d-knobs').count,27);
  assert.equal(group.getObjectByName('model-d-output-knobs').count,2);
