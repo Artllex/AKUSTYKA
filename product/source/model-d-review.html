@@ -9,16 +9,19 @@ scene.add(new THREE.AmbientLight(0xffffff,2.8));
 const key=new THREE.DirectionalLight(0xffffff,3);key.position.set(-.4,1.2,-1);scene.add(key);
 const model=createBehringerModelD();model.group.position.set(0,0,0);scene.add(model.group);
 const views=[
- ['panel z góry',[0,.6,0],[0,0,0],[0,0,1],.28],
+ ['panel z góry',[0,.6,0],[0,0,0],[0,0,1],.205],
  ['przód pod kątem',[.28,.24,-.55],[0,0,0],[0,1,0],.28],
  ['profil boczny',[.55,.07,0],[0,0,0],[0,1,0],.16],
  ['tył',[0,.07,.6],[0,0,0],[0,1,0],.28]
 ];
+const renderViews=[];
 for(const [title,position,target,up,half] of views){
  const figure=document.createElement('figure'),caption=document.createElement('figcaption');caption.textContent=title;
  const renderer=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});renderer.setSize(720,480,false);renderer.setPixelRatio(1);renderer.outputColorSpace=THREE.SRGBColorSpace;
  const camera=new THREE.OrthographicCamera(-half,half,half*480/720,-half*480/720,.01,10);
  camera.up.fromArray(up);camera.position.fromArray(position);camera.lookAt(...target);renderer.render(scene,camera);
+ renderViews.push(()=>renderer.render(scene,camera));
  figure.append(caption,renderer.domElement);document.querySelector('#views').append(figure);
 }
+window.addEventListener('model-d-texture-ready',()=>renderViews.forEach(render=>render()));
 </script></html>
