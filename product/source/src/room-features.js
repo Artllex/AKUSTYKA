@@ -95,14 +95,14 @@ export function createRoomFeatureViews(room,features){
   D.box('door-hinge',[.016,.052,.02],[x,y,room.length-.023],steel);
   D.box('door-hinge-outside',[.016,.052,.02],[x,y,room.length+.01],steel);
  }
- const w=features.window,W=create('window'),reveal=W.mat(WALL_PAINT_COLOR),stepMaterial=W.mat(WALL_PAINT_COLOR),sillMaterial=W.mat(WALL_PAINT_COLOR,{polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1});
+ const w=features.window,W=create('window'),reveal=W.mat(WALL_PAINT_COLOR),clearBacking=W.mat(WALL_PAINT_COLOR,{transparent:true,opacity:0,depthWrite:false}),stepMaterial=W.mat(WALL_PAINT_COLOR),sillMaterial=W.mat(WALL_PAINT_COLOR,{polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1});
  const middle=w.bottom+w.height/2,hasStep=w.stepDepth>0&&w.stepHeight>0;
  for(const side of [-1,1]){
   const x=w.center+side*(w.width/2-0.005);
   W.box('window-reveal-side',[0.01,w.height-(hasStep?w.stepHeight:0),w.depth],[x,w.bottom+(hasStep?w.stepHeight:0)+(w.height-(hasStep?w.stepHeight:0))/2,-w.depth/2],reveal);
   if(hasStep)W.box('window-reveal-side-lower',[0.01,w.stepHeight,w.depth-w.stepDepth],[x,w.bottom+w.stepHeight/2,-(w.depth-w.stepDepth)/2],reveal);
  }
- W.box('recess-back',[w.width,w.height-(hasStep?w.stepHeight:0),0.01],[w.center,w.bottom+(hasStep?w.stepHeight:0)+(w.height-(hasStep?w.stepHeight:0))/2,-w.depth-0.005],reveal);
+ W.box('recess-back',[w.width,w.height-(hasStep?w.stepHeight:0),0.01],[w.center,w.bottom+(hasStep?w.stepHeight:0)+(w.height-(hasStep?w.stepHeight:0))/2,-w.depth-0.005],clearBacking);
  if(hasStep){
   const sillThickness=Math.min(.015,w.stepHeight),baseHeight=w.stepHeight-sillThickness;
   if(baseHeight>0)W.box('niche-step',[w.width,baseHeight,w.stepDepth],[w.center,w.bottom+baseHeight/2,-w.depth+w.stepDepth/2],stepMaterial);

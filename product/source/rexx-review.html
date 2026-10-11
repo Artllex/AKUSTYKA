@@ -1,0 +1,24 @@
+<!doctype html><html lang="pl"><meta charset="utf-8"><title>GXT 144 Rexx — kontrola modelu</title>
+<style>body{margin:0;background:#141a20;color:#e6ecf1;font:18px Arial}#views{display:grid;grid-template-columns:1fr;gap:10px;padding:10px;max-width:900px}figure{min-width:0;margin:0;background:#858b8d;border:1px solid #3d4850}figcaption{padding:10px;background:#1d2832}canvas{display:block;width:100%;height:auto}</style>
+<div id="views"></div>
+<script type="module">
+import * as THREE from 'three';
+import {createGxt144Rexx} from './src/studio-peripherals.js';
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x858b8d);
+scene.add(new THREE.AmbientLight(0xffffff,2.8));
+const key=new THREE.DirectionalLight(0xffffff,3);key.position.set(.4,1.2,-1);scene.add(key);
+const model=createGxt144Rexx({id:'review-desk'});model.group.position.set(0,0,0);scene.add(model.group);
+const views=[
+ ['strona przycisków',[.24,.14,-.24],[0,.036,0],[0,1,0],.10],
+ ['widok z góry',[0,.5,0],[0,.035,0],[0,0,-1],.105],
+ ['profil kciuka',[.5,.08,0],[0,.035,0],[0,1,0],.095],
+ ['strona przeciwna',[-.3,.10,.14],[0,.035,0],[0,1,0],.105]
+];
+for(const [title,position,target,up,half] of views){
+ const figure=document.createElement('figure'),caption=document.createElement('figcaption');caption.textContent=title;
+ const renderer=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});renderer.setSize(550,380,false);renderer.setPixelRatio(1);renderer.outputColorSpace=THREE.SRGBColorSpace;
+ const camera=new THREE.OrthographicCamera(-half,half,half*380/550,-half*380/550,.01,10);
+ camera.up.fromArray(up);camera.position.fromArray(position);camera.lookAt(...target);renderer.render(scene,camera);
+ figure.append(caption,renderer.domElement);document.querySelector('#views').append(figure);
+}
+</script></html>

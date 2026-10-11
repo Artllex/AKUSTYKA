@@ -116,6 +116,12 @@ for(const [name,record,halfWidth,rear,front,top] of [
  assert.ok(views[0].group.getObjectByName('stream-deck-stand'));
  assert.ok(views[1].group.getObjectByName('vertical-mouse-shell'));
  assert.ok(boxes[1].getSize(new THREE.Vector3()).y<=GXT_144_REXX.height+.01);
+ const rexx=views[1].group;
+ for(const part of ['mouse-sole','thumb-lip-seam','left-click','right-click','button-seam','scroll-wheel','red-wheel-light','braided-cable'])assert.ok(rexx.getObjectByName(part),part);
+ assert.ok(rexx.getObjectByName('vertical-mouse-shell').geometry.getAttribute('color'),'the thumb recess is shaded on the continuous shell');
+ assert.equal(rexx.getObjectsByProperty('name','thumb-button').length,2);
+ assert.ok(rexx.getObjectByName('mouse-sole').geometry.type==='ExtrudeGeometry','the foot follows an organic outline');
+ assert.ok(renderCost(rexx).triangles<8000&&renderCost(rexx).draws<20);
  assert.ok(renderCost(views[0].group).triangles<9000);
  assert.ok(renderCost(views[0].group).draws<10);
  for(const view of views)view.dispose();

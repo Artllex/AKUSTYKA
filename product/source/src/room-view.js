@@ -44,6 +44,7 @@ export function createRoom(room,features,transforms={}){
  if(depth>0){
   const center=(left+right)/2,width=right-left,top=Math.min(h,niche.bottom+niche.height+(shift.y??0)),stepHeight=niche.stepHeight,stepDepth=niche.stepDepth,front=-depth+stepDepth;
   surface('niche-back',width,top-stepHeight,[center,(top+stepHeight)/2,-depth],[0,0,0],[0,0,-1],WALL_PAINT_COLOR);
+  const backing=surfaces.at(-1).material;backing.transparent=true;backing.opacity=0;backing.depthWrite=false;
   for(const [name,x,normal] of [['niche-left',left,[-1,0,0]],['niche-right',right,[1,0,0]]]){
    surface(name,depth,top-stepHeight,[x,(top+stepHeight)/2,-depth/2],[0,Math.PI/2,0],normal,WALL_PAINT_COLOR);
    if(stepHeight>0&&depth>stepDepth)surface(name+'-lower',depth-stepDepth,stepHeight,[x,stepHeight/2,front/2],[0,Math.PI/2,0],normal,WALL_PAINT_COLOR);

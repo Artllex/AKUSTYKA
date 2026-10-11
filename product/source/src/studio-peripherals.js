@@ -190,22 +190,165 @@ export function createStreamDeckXL(desk){
  return b;
 }
 
+// Cross-sections trace the near-vertical front and the low, wide palm end.
+// z<0 is the cable/front end; the ergonomic thumb flange is on +x.
+const REXX_SECTIONS=[
+ [-.060,-.003,.002,.005,.034],[-.057,-.003,.012,.005,.053],
+ [-.048,-.003,.020,.005,.069],[-.034,-.002,.024,.005,.077],
+ [-.018,-.001,.026,.005,.075],[0,0,.028,.005,.064],
+ [.025,.001,.028,.005,.049],[.045,.002,.026,.005,.035],
+ [.057,.002,.017,.005,.022],[.061,.002,.002,.005,.010]
+];
+function rexxSection(z){
+ let i=0;while(i<REXX_SECTIONS.length-2&&REXX_SECTIONS[i+1][0]<z)i++;
+ const a=REXX_SECTIONS[i],b=REXX_SECTIONS[i+1],before=REXX_SECTIONS[Math.max(0,i-1)],after=REXX_SECTIONS[Math.min(REXX_SECTIONS.length-1,i+2)],t=THREE.MathUtils.clamp((z-a[0])/(b[0]-a[0]),0,1);
+ return a.map((value,k)=>k?.5*((2*value)+(-before[k]+b[k])*t+(2*before[k]-5*value+4*b[k]-after[k])*t*t+(-before[k]+3*value-3*b[k]+after[k])*t*t*t):z);
+}
+function rexxPoint(z,angle){
+ const [,cx,r,bottom,top]=rexxSection(z),side=Math.max(0,Math.cos(angle));
+ const pocket=.0085*Math.exp(-(Math.pow((z-.013)/.034,2)+Math.pow((angle-.08)/.46,2)))*side;
+ const lip=.005*Math.exp(-(Math.pow((z-.013)/.038,2)+Math.pow((angle+.90)/.32,2)))*side;
+ const x=cx+r*Math.cos(angle)-pocket+lip;
+ return new THREE.Vector3(x,(bottom+top)/2+(top-bottom)/2*Math.sin(angle)+.18*(x-cx),z);
+}
+function rexxSurface(z,x){
+ const [,cx,r,bottom,top]=rexxSection(z),u=THREE.MathUtils.clamp((x-cx)/r,-.995,.995);
+ return (bottom+top)/2+(top-bottom)/2*Math.sqrt(1-u*u)+.18*(x-cx);
+}
+function rexxBodyGeometry(){
+ const radial=32,axial=48,points=[],colors=[],indices=[];
+ for(let j=0;j<=axial;j++){
+  const z=-.060+j*.121/axial;
+  for(let i=0;i<radial;i++){
+   const angle=i<=radial/2?2*Math.PI*i/radial:2*Math.PI*i/radial-2*Math.PI;
+   const point=rexxPoint(z,angle);
+   points.push(...point.toArray());
+   const shade=1-.38*Math.exp(-(Math.pow((z-.013)/.040,4)+Math.pow((angle-.04)/.72,4)))*Math.max(0,Math.cos(angle));
+   colors.push(shade,shade,shade);
+  }
+ }
+ for(let j=0;j<axial;j++)for(let i=0;i<radial;i++){
+  const a=j*radial+i,b=j*radial+(i+1)%radial,c=(j+1)*radial+i,d=(j+1)*radial+(i+1)%radial;
+  indices.push(a,b,c,b,d,c);
+ }
+ for(const [end,reverse] of [[0,true],[axial,false]]){
+  const center=points.length/3,z=end? .061:-.060;
+  points.push(0,.012,z);colors.push(1,1,1);
+  for(let i=0;i<radial;i++){
+   const a=end*radial+i,b=end*radial+(i+1)%radial;
+   indices.push(...(reverse?[center,b,a]:[center,a,b]));
+  }
+ }
+ const geometry=new THREE.BufferGeometry();
+ geometry.setAttribute('position',new THREE.Float32BufferAttribute(points,3));geometry.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));geometry.setIndex(indices);geometry.computeVertexNormals();
+ return geometry;
+}
+function rexxSidePatch(zCenter,zRadius,angleCenter,angleRadius,lift=0){
+ const points=[],indices=[],rows=10,cols=6;
+ for(let row=0;row<=rows;row++){
+  const v=row/rows,z=zCenter+(v*2-1)*zRadius;
+  for(let col=0;col<=cols;col++){
+   const u=col/cols,rounded=Math.sqrt(Math.max(.02,1-(v*2-1)**2));
+   const angle=angleCenter+(u*2-1)*angleRadius*rounded;
+   const point=rexxPoint(z,angle);point.x+=lift;points.push(...point.toArray());
+  }
+ }
+ for(let row=0;row<rows;row++)for(let col=0;col<cols;col++){
+  const a=row*(cols+1)+col,b=a+1,c=a+cols+1,d=c+1;indices.push(a,b,c,b,d,c);
+ }
+ const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(points,3));geometry.setIndex(indices);geometry.computeVertexNormals();return geometry;
+}
+function rexxClickGeometry(side){
+ const positions=[],indices=[],rows=10,cols=5;
+ for(let row=0;row<=rows;row++){
+  const z=-.052+row*.046/rows,t=row/rows;
+  for(let col=0;col<=cols;col++){
+   const u=col/cols,outer=.0175*(1-.20*Math.abs(2*t-1));
+   const x=side*(.0015+outer*u);
+   positions.push(x,rexxSurface(z,x)+.00065,z);
+  }
+ }
+ for(let row=0;row<rows;row++)for(let col=0;col<cols;col++){
+  const a=row*(cols+1)+col,b=a+1,c=a+cols+1,d=c+1;
+  indices.push(a,b,c,b,d,c);
+ }
+ const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
+ geometry.setIndex(indices);geometry.computeVertexNormals();return geometry;
+}
+function rexxSoleGeometry(){
+ const outline=new THREE.Shape();
+ outline.moveTo(0,-.060);
+ outline.bezierCurveTo(.018,-.061,.024,-.051,.028,-.030);
+ outline.bezierCurveTo(.034,-.004,.037,.026,.034,.045);
+ outline.bezierCurveTo(.031,.058,.013,.062,0,.061);
+ outline.bezierCurveTo(-.016,.062,-.032,.054,-.034,.041);
+ outline.bezierCurveTo(-.035,.011,-.032,-.015,-.026,-.039);
+ outline.bezierCurveTo(-.021,-.054,-.011,-.060,0,-.060);
+ const geometry=new THREE.ExtrudeGeometry(outline,{depth:.003,steps:1,bevelEnabled:true,bevelThickness:.0007,bevelSize:.0007,bevelSegments:2,curveSegments:8});
+ geometry.rotateX(Math.PI/2);geometry.translate(0,.005,0);return geometry;
+}
+function rexxLogoCanvas(){
+ const canvas=document.createElement('canvas');canvas.width=256;canvas.height=128;
+ const ctx=canvas.getContext('2d');ctx.clearRect(0,0,256,128);
+ ctx.shadowColor='#ff2538';ctx.shadowBlur=18;ctx.strokeStyle='#ff4150';ctx.lineWidth=7;
+ ctx.beginPath();ctx.moveTo(128,14);ctx.lineTo(221,72);ctx.lineTo(128,114);ctx.lineTo(35,72);ctx.closePath();ctx.stroke();
+ ctx.shadowBlur=0;ctx.fillStyle='#ff7780';ctx.font='bold 52px Arial';ctx.textAlign='center';ctx.fillText('GXT',128,86);
+ return canvas;
+}
 export function createGxt144Rexx(desk){
- const b=builder('trust-gxt-144-rexx'),{group,mat,box,round,cylinder,label}=b;
+ const b=builder('trust-gxt-144-rexx'),{group,mat,box,round,cylinder,mesh,image}=b;
  const p=deskPeripheralPlacement(desk);group.position.set(p.mouse.x,p.top,p.mouse.z);
- const shell=mat(0x171b20,.25,.54),grip=mat(0x242a30,.14,.73),button=mat(0x11151a,.22,.55),light=mat(0x36b7cc,.05,.4),wheel=mat(0x080a0d,.16,.72);
- round('mouse-sole',GXT_144_REXX.width,.008,GXT_144_REXX.depth,.005,shell,0,.005,0);
- // Ergonomic upright shell: the hand rests on a pitched right-side ridge.
- const body=round('vertical-mouse-shell',.060,.060,.108,.014,grip,-.001,.038,0);body.rotation.z=-.24;
- const upper=round('vertical-mouse-back',.035,.051,.080,.012,shell,-.018,.046,-.008);upper.rotation.z=-.22;
- round('thumb-rest',.030,.014,.066,.006,shell,.027,.019,.006);
- const left=round('left-click',.014,.004,.047,.002,button,-.021,.069,.026);left.rotation.z=-.30;
- const right=round('right-click',.014,.004,.047,.002,button,-.002,.073,.026);right.rotation.z=-.30;
- const scroll=cylinder('scroll-wheel',.006,.012,wheel,-.012,.078,.033);scroll.rotation.z=Math.PI/2;
- for(const z of [-.022,-.001])round('thumb-button',.003,.007,.013,.001,button,.031,.040,z);
- box('rgb-side-strip',.002,.002,.064,light,.034,.021,.003);
- label('rexx-brand','GXT',.024,.008,'#242a30','#bcc5ca',-.012,.069,-.025);
+ const shell=mat(0x27292c,.06,.86),button=mat(0x202124,.08,.80),wheel=mat(0x0b0c0e,.15,.75);
+ shell.vertexColors=true;button.side=THREE.DoubleSide;
+ const rubber=mat(0x101113,.01,.98),red=mat(0xff293e,.04,.42);red.emissive=new THREE.Color(0xe71c31);red.emissiveIntensity=2.1;
+ red.side=THREE.DoubleSide;
+ mesh('mouse-sole',rexxSoleGeometry(),rubber);
+ mesh('vertical-mouse-shell',rexxBodyGeometry(),shell);
+ // The recessed thumb bowl and its low ledge are sculpted directly into the shell.
+ const lipCurve=new THREE.CatmullRomCurve3(Array.from({length:12},(_,i)=>{
+  const z=-.027+i*.078/11,point=rexxPoint(z,-.93);point.x+=.0005;return point;
+ }));
+ mesh('thumb-lip-seam',new THREE.TubeGeometry(lipCurve,28,.0004,4,false),rubber);
+ mesh('left-click',rexxClickGeometry(-1),button);
+ mesh('right-click',rexxClickGeometry(1),button);
+ const seam=new THREE.CatmullRomCurve3(Array.from({length:10},(_,i)=>{
+  const z=-.052+i*.046/9;return new THREE.Vector3(0,rexxSurface(z,0)+.001,z);
+ }));
+ mesh('button-seam',new THREE.TubeGeometry(seam,24,.0005,4,false),rubber);
+ // The real wheel stands between the two steep click paddles.
+ const roller=cylinder('scroll-wheel',.0056,.011,wheel,0,.0735,-.034);roller.rotation.z=Math.PI/2;
+ round('red-wheel-light',.009,.001,.006,.001,red,0,.073,-.038);
+ for(const side of [-1,1]){
+  const ring=cylinder('wheel-end',.0048,.0007,rubber,side*.0058,.0735,-.034);ring.rotation.z=Math.PI/2;
+ }
+ const ribs=[];
+ for(let i=0;i<14;i++){
+  const a=i*2*Math.PI/14;
+  ribs.push({x:0,y:.0735+.00565*Math.sin(a),z:-.034+.00565*Math.cos(a)});
+ }
+ const ribGeometry=new THREE.BoxGeometry(.0105,.0005,.0005),ribMesh=new THREE.InstancedMesh(ribGeometry,rubber,ribs.length),ribMatrix=new THREE.Matrix4();
+ ribs.forEach((point,i)=>{ribMatrix.makeRotationX(i*2*Math.PI/14);ribMatrix.setPosition(point.x,point.y,point.z);ribMesh.setMatrixAt(i,ribMatrix);});
+ ribMesh.instanceMatrix.needsUpdate=true;ribMesh.name='wheel-grip-ribs';group.add(ribMesh);
+ // Two flush paddles and red index triangles follow the curved upper flank.
+ for(const z of [-.017,.007]){
+  mesh('thumb-button',rexxSidePatch(z,.010,.55,.19,.002),button);
+  const p=[rexxPoint(z-.002,.55),rexxPoint(z+.002,.55),rexxPoint(z,.67)];
+  for(const point of p)point.x+=.0028;
+  const geometry=new THREE.BufferGeometry().setAttribute('position',new THREE.Float32BufferAttribute(p.flatMap(point=>point.toArray()),3));
+  geometry.computeVertexNormals();mesh('thumb-button-red-mark',geometry,red);
+ }
+ const dpi=round('dpi-button',.006,.002,.014,.001,button,-.019,.062,-.040);dpi.rotation.z=-.28;
+ if(typeof document!=='undefined'){
+  const logo=image('rear-red-gxt-logo',rexxLogoCanvas(),.025,.013,-.003,rexxSurface(.044,-.003)+.001,.044);
+  logo.material.transparent=true;logo.material.needsUpdate=true;logo.rotation.x=-Math.PI/2+.33;
+ }
+ const cable=new THREE.CatmullRomCurve3([
+  new THREE.Vector3(-.004,.008,-.060),new THREE.Vector3(-.006,.005,-.078),
+  new THREE.Vector3(-.009,.004,-.101),new THREE.Vector3(-.011,.004,-.117)
+ ]);
+ mesh('braided-cable',new THREE.TubeGeometry(cable,18,.0018,6,false),rubber);
  group.userData.dimensions=GXT_144_REXX;
+ const dispose=b.dispose;b.dispose=()=>{ribGeometry.dispose();dispose();};
  return b;
 }
 

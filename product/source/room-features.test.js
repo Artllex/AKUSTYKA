@@ -42,7 +42,7 @@ test('window and door are true wall openings and retain projection dimensions',(
 });
 test('niche holds an upper tilt pane and a wider fixed lower pane with measured clear openings',()=>{
  const features=defaultRoomFeatures(DEFAULT_ROOM),views=createRoomFeatureViews(DEFAULT_ROOM,features),recess=views.find(v=>v.group.name==='window').group;
- assert.ok(recess.getObjectByName('recess-back'));assert.equal(features.window.bottom,0);assert.equal(features.window.depth,0.151);assert.equal(features.window.stepDepth,0.065);assert.equal(features.window.stepHeight,0.08);assert.ok(Math.abs(features.window.height-2.22)<1e-9);
+ const recessBack=recess.getObjectByName('recess-back');assert.ok(recessBack);assert.equal(recessBack.material.opacity,0);assert.equal(recessBack.material.depthWrite,false);assert.equal(features.window.bottom,0);assert.equal(features.window.depth,0.151);assert.equal(features.window.stepDepth,0.065);assert.equal(features.window.stepHeight,0.08);assert.ok(Math.abs(features.window.height-2.22)<1e-9);
  const nicheCeiling=recess.getObjectByName('window-niche-ceiling');assert.ok(nicheCeiling);recess.updateMatrixWorld(true);
  const roofBounds=new THREE.Box3().setFromObject(nicheCeiling);
  assert.ok(Math.abs(roofBounds.min.y-2.219)<1e-7&&Math.abs(roofBounds.max.z)<1e-7);
@@ -54,11 +54,12 @@ test('niche holds an upper tilt pane and a wider fixed lower pane with measured 
  const undersideHit=new THREE.Raycaster(new THREE.Vector3(features.window.center,.03,-.0785),new THREE.Vector3(0,1,0)).intersectObject(sill);
  assert.ok(undersideHit.length>0&&Math.abs(undersideHit[0].point.y-.065)<1e-7,'the sill has a solid underside');
  const room=createRoom(DEFAULT_ROOM,features);room.group.updateMatrixWorld(true);
+ const nicheBack=room.surfaces.find(surface=>surface.name==='niche-back');assert.equal(nicheBack.material.opacity,0);assert.equal(nicheBack.material.depthWrite,false);
  const front=room.surfaces.find(s=>s.name==='niche-step-front'),sillFront=room.surfaces.find(s=>s.name==='niche-sill-front'),top=room.surfaces.find(s=>s.name==='niche-step-top');
  assert.ok(front&&sillFront&&top);assert.ok(Math.abs(front.position.z+.086)<1e-8&&Math.abs(sillFront.position.z+.071)<1e-8);
  const frontBounds=new THREE.Box3().setFromObject(front),sillBounds=new THREE.Box3().setFromObject(sillFront),topBounds=new THREE.Box3().setFromObject(top);
  assert.ok(Math.abs(frontBounds.max.y-.065)<1e-7&&Math.abs(sillBounds.min.y-.065)<1e-7&&Math.abs(sillBounds.max.y-.08)<1e-7&&Math.abs(topBounds.max.z+.071)<1e-7);room.dispose();
- const upper=recess.getObjectByName('window-upper-tilt-glass'),lower=recess.getObjectByName('window-lower-fixed-glass');assert.ok(upper&&lower);assert.ok(recess.getObjectByName('window-upper-handle'));assert.equal(recess.getObjectByName('window-lower-handle'),undefined);
+ const upper=recess.getObjectByName('window-upper-tilt-glass'),lower=recess.getObjectByName('window-lower-fixed-glass');assert.ok(upper&&lower);for(const pane of [upper,lower]){assert.ok(pane.material.transparent&&pane.material.opacity<.3);assert.equal(pane.material.depthWrite,false);}assert.ok(recess.getObjectByName('window-upper-handle'));assert.equal(recess.getObjectByName('window-lower-handle'),undefined);
  recess.updateMatrixWorld(true);const upperSize=new THREE.Box3().setFromObject(upper).getSize(new THREE.Vector3()),lowerSize=new THREE.Box3().setFromObject(lower).getSize(new THREE.Vector3());
  assert.ok(Math.abs(upperSize.x-.831)<1e-7&&Math.abs(upperSize.y-.893)<1e-7);assert.ok(Math.abs(lowerSize.x-.923)<1e-7&&Math.abs(lowerSize.y-.835)<1e-7);
  const frameMesh=recess.getObjectByName('window-continuous-frame');assert.ok(frameMesh&&recess.getObjectByName('window-upper-tilt-sash'));

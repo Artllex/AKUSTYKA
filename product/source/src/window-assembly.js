@@ -17,7 +17,7 @@ export function addTwoLevelWindow(view,opening){
  const upper={width:DESIGN.upperWidth*sx,height:DESIGN.upperHeight*sy,bottom:DESIGN.upperBottom*sy};
  const frame=view.mat(0xe8e9e5,{roughness:.45,side:THREE.DoubleSide});
  const sash=view.mat(0xf3f4f1,{roughness:.4,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1});
- const glass=view.mat(0xcbdde1,{metalness:.12,roughness:.18,transparent:true,opacity:.91,side:THREE.DoubleSide});
+ const glass=view.mat(0xcbdde1,{metalness:.12,roughness:.18,transparent:true,opacity:.18,depthWrite:false,side:THREE.DoubleSide});
  const hardware=view.mat(0xc4c8c5,{metalness:.55,roughness:.3});
  const rearZ=-opening.depth+.016,frameDepth=.024;
  const body=rectangle(-opening.width/2,0,opening.width/2,opening.height);
