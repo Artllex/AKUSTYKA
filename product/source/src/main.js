@@ -83,6 +83,7 @@ import {updateReflectionVisibility} from './reflection-visibility.js';
 import {normalizeReflectionSettings} from './reflection-model.js';
 
 import {setupReflectionPanel} from './reflection-panel.js';
+import {analyzeAcousticPaths,normalizeAcousticSettings} from './acoustic-simulation.js';
 
 import './style.css';
 
@@ -241,7 +242,24 @@ function project(side){if(!selected)return;projection=surfaceProjection(selected
 
 function refreshCollisions(){if(!view)return;const objects=scene.children.filter(o=>o.isGroup&&!o.userData.helper&&o!==view.group&&o!==tweeterRays?.group),collisions=findMonitorCollisions(monitorViews,objects,doc.room,(doc.roomMesh||doc.roomShape)?view.surfaces:null);for(const object of objects)tintCollision(object,collisions.targets.has(object));for(const surface of view.surfaces){const active=collisions.surfaces.has(surface.name);tintCollision(surface,active);if(!active)surface.material.emissive.setHex(surface===selected?0x17483e:0);}host.dataset.collisionSurfaces=[...collisions.surfaces].sort().join(',');host.dataset.collisionObjects=[...collisions.targets].map(o=>o.userData.recordId??o.userData.id??o.name).sort().join(',');}
 
-function refreshReflections(){if(reflectionView){scene.remove(reflectionView.group);reflectionView.dispose();}reflectionView=createReflectionView(monitorViews,listenerViews[0],doc.room,doc.reflections,view.surfaces,[...featureViews,...rackViews,...deskViews].map(item=>item.group));scene.add(reflectionView.group);host.dataset.reflectionCount=reflectionView.paths.length;host.dataset.deskReflectionCount=reflectionView.paths.filter(path=>path.surface.startsWith('object:desk-combodesk-88:')).length;host.dataset.activeDeskReflectionCount=reflectionView.paths.filter(path=>path.surface.startsWith('object:'+selectedDeskId(doc)+':')).length;reflectionPanel?.sync(reflectionView.paths.length);}
+function includeAcousticMesh(mesh,root){
+ if(doc.acoustics.includeHiddenDeskEquipment)return true;
+ if(!root.name.startsWith('desk-'))return true;
+ for(let node=mesh;node&&node!==root;node=node.parent)if(!node.visible)return false;
+ return true;
+}
+
+function refreshReflections(){
+ if(reflectionView){scene.remove(reflectionView.group);reflectionView.dispose();}
+ const objects=[...featureViews,...(doc.acoustics.includeHiddenRack?rackViews:[]),...deskViews];
+ reflectionView=createReflectionView(monitorViews,listenerViews[0],doc.room,doc.reflections,view.surfaces,objects.map(item=>item.group),includeAcousticMesh);
+ scene.add(reflectionView.group);
+ host.dataset.reflectionCount=reflectionView.paths.length;
+ host.dataset.deskReflectionCount=reflectionView.paths.filter(path=>path.surface.startsWith('object:desk-combodesk-88:')).length;
+ host.dataset.activeDeskReflectionCount=reflectionView.paths.filter(path=>path.surface.startsWith('object:'+selectedDeskId(doc)+':')).length;
+ const report=listenerViews[0]?analyzeAcousticPaths(monitorViews,listenerViews[0],reflectionView.paths,doc.reflections,doc.acoustics,doc.room,{approximateModes:!!(doc.roomMesh||doc.roomShape)}):null;
+ reflectionPanel?.sync(reflectionView.paths.length,report);
+}
 
 function refreshTweeterRays(){if(tweeterRays){scene.remove(tweeterRays.group);tweeterRays.dispose();}if(wallWarnings){scene.remove(wallWarnings.group);wallWarnings.dispose();}if(monitorSpan){scene.remove(monitorSpan.group);monitorSpan.dispose();}monitorSpan=createMonitorSpan(monitorViews);tweeterRays=createTweeterRays(monitorViews,listenerViews[0],doc.room,doc.showTweeterRays,(doc.roomMesh||doc.roomShape)?view.surfaces:null);wallWarnings=createMonitorWallWarnings(monitorViews,view.surfaces);scene.add(tweeterRays.group,wallWarnings.group,monitorSpan.group);host.dataset.monitorSpanDistance=monitorSpan.distance?.toFixed(4)??"";host.dataset.tweeterRayCount=tweeterRays.rayCount;host.dataset.tweeterHeadHits=tweeterRays.hitCount;host.dataset.tooCloseMonitors=tweeterRays.tooCloseCount;host.dataset.tweeterRayColors=tweeterRays.group.children.filter(o=>o.name.startsWith('ray-')).map(o=>o.material.color.getHexString()).join(',');host.dataset.rayDistances=tweeterRays.group.children.filter(o=>o.name.startsWith('distance-ray-')).map(o=>o.userData.label).join(',');host.dataset.wallClearanceWarnings=wallWarnings.warnings.map(w=>w.monitor+':'+w.wall).join(',');host.dataset.wallClearanceCount=wallWarnings.warnings.length;host.dataset.wallDistances=wallWarnings.group.children.filter(o=>o.name.startsWith('wall-distance-')).map(o=>o.userData.label).join(',');host.dataset.rearCenterDistances=wallWarnings.group.children.filter(o=>o.name.startsWith('rear-center-distance-')).map(o=>o.userData.label).join(',');host.dataset.rearCenterTooClose=String(wallWarnings.rearClearances.filter(r=>r.center.distance<0.127-1e-7).length);$('tweeter-rays-visible').checked=doc.showTweeterRays;refreshReflections();refreshCollisions();refreshObjectSelection();}
 
@@ -309,7 +327,7 @@ monitorPanel=setupMonitorPanel({read:()=>doc.objects.filter(o=>o.type==='studio-
 
 $('tweeter-rays-visible').onchange=()=>{doc.showTweeterRays=$('tweeter-rays-visible').checked;history.push(doc);refreshTweeterRays();bench.refresh(history);};
 
-reflectionPanel=setupReflectionPanel({read:()=>doc.reflections,change(settings){doc.reflections=normalizeReflectionSettings(settings);history.push(doc);refreshReflections();bench.refresh(history);}});
+reflectionPanel=setupReflectionPanel({read:()=>doc.reflections,change(settings){doc.reflections=normalizeReflectionSettings(settings);history.push(doc);refreshReflections();bench.refresh(history);},readAcoustics:()=>doc.acoustics,changeAcoustics(settings){doc.acoustics=normalizeAcousticSettings(settings);history.push(doc);refreshReflections();bench.refresh(history);}});
 
 featuresPanel=setupFeaturesPanel({read:()=>doc.roomFeatures,change(features){doc.roomFeatures=normalizeRoomFeatures(features,doc.room);history.push(doc);rebuild();$('error').hidden=true;},showError});
 

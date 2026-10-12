@@ -120,6 +120,9 @@ app.whenReady().then(async()=>{
 
   if(!reflectionCheck.visible||reflectionCheck.all<1||reflectionCheck.oneEar<1||reflectionCheck.oneEar>=reflectionCheck.all||reflectionCheck.oneDriver<1||reflectionCheck.oneDriver>=reflectionCheck.oneEar||reflectionCheck.undone<=reflectionCheck.oneDriver||reflectionCheck.none!==0||reflectionCheck.restored<1)throw new Error(JSON.stringify(reflectionCheck));result.reflectionCheck=reflectionCheck;
 
+  const acousticCheck=await window.webContents.executeJavaScript(`(()=>{const $=id=>document.getElementById(id),band=$('acoustic-band'),before=$('acoustic-materials').textContent;band.value='2000';band.dispatchEvent(new Event('change',{bubbles:true}));const changed=$('acoustic-materials').textContent;$('edit-undo').click();return {rackExcluded:!$('acoustic-hidden-rack').checked,deskEquipmentExcluded:!$('acoustic-hidden-desk').checked,direct:$('acoustic-direct').textContent,reflectionRows:$('acoustic-reflection-results').children.length,modeRows:$('acoustic-modes').children.length,bandRestored:band.value==='1000',coefficientChanged:before!==changed};})()`);
+  if(!acousticCheck.rackExcluded||!acousticCheck.deskEquipmentExcluded||!acousticCheck.direct.includes('ms')||acousticCheck.reflectionRows<1||acousticCheck.modeRows<1||!acousticCheck.bandRestored||!acousticCheck.coefficientChanged)throw new Error(JSON.stringify(acousticCheck));result.acousticCheck=acousticCheck;
+
   const featureCheck=await window.webContents.executeJavaScript(`(()=>{const $=id=>document.getElementById(id);$('toggle-features').click();const width=$('feature-window-width'),before=width.value;width.value='110';$('features-form').requestSubmit();const changed=width.value;$('edit-undo').click();return {count:Number($('viewport').dataset.featureCount),visible:!$('features-panel').hidden,before,changed,undone:width.value};})()`);
 
   if(featureCheck.count!==5||!featureCheck.visible||featureCheck.changed!=='110.0'||featureCheck.before!==featureCheck.undone)throw new Error(JSON.stringify(featureCheck));result.featureCheck=featureCheck;
@@ -163,6 +166,9 @@ app.whenReady().then(async()=>{
   await new Promise(resolve=>setTimeout(resolve,350));if(errors.length)throw new Error(JSON.stringify(errors));
 
   const out=path.join(app.getPath('temp'),'akustyka-verification');await fs.mkdir(out,{recursive:true});
+  await window.webContents.executeJavaScript(`(()=>{const panel=document.getElementById('reflections-panel');if(panel.hidden||document.querySelector('main').classList.contains('panel-hidden'))document.getElementById('toggle-reflections').click();})()`);
+  await new Promise(resolve=>setTimeout(resolve,300));
+  await fs.writeFile(path.join(out,'acoustic-panel.png'),(await window.webContents.capturePage()).toPNG());
   const objectView=await window.webContents.executeJavaScript(`(()=>{const panel=document.getElementById('object-panel');if(panel.hidden)document.getElementById('toggle-object').click();return {visible:!panel.hidden,choice:document.getElementById('desk-choice').value};})()`);
   if(!objectView.visible)throw new Error(JSON.stringify(objectView));result.objectView=objectView;
 

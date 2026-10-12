@@ -5,14 +5,14 @@ const EPS=1e-5;
 
 // Read real, transformed triangles from solid scene objects. Tiny fittings and
 // nonphysical helper meshes cannot produce meaningful specular markers.
-export function objectReflectingFaces(groups){
+export function objectReflectingFaces(groups,includeMesh=()=>true){
  const faces=[],occluders=[];
  for(const group of groups){
   group.updateMatrixWorld(true);
   const objectId=group.userData.recordId??group.userData.id??group.name;
   let partIndex=0;
   group.traverse(mesh=>{
-   if(!mesh.isMesh||mesh.userData.collision===false||!mesh.geometry?.attributes.position)return;
+   if(!mesh.isMesh||mesh.userData.collision===false||!mesh.geometry?.attributes.position||!includeMesh(mesh,group))return;
    const partId=`object:${objectId}:${mesh.name||'part'}:${partIndex++}`;
    const positions=mesh.geometry.attributes.position,index=mesh.geometry.index,count=index?index.count:positions.count;
    let physical=false;

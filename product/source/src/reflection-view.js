@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import {computeFirstReflections,normalizeReflectionSettings} from './reflection-model.js';
-export function createReflectionView(monitors,listener,room,input,surfaces=null,objects=[]){
- const settings=normalizeReflectionSettings(input),paths=computeFirstReflections(monitors,listener,room,settings,surfaces,objects),group=new THREE.Group();group.name='first-reflections';group.userData.helper=true;group.visible=settings.visible;
+export function createReflectionView(monitors,listener,room,input,surfaces=null,objects=[],includeObjectMesh=()=>true){
+ const settings=normalizeReflectionSettings(input),paths=computeFirstReflections(monitors,listener,room,settings,surfaces,objects,includeObjectMesh),group=new THREE.Group();group.name='first-reflections';group.userData.helper=true;group.visible=settings.visible;
  const materials=new Map();function material(color){if(!materials.has(color))materials.set(color,new THREE.MeshBasicMaterial({color,side:THREE.DoubleSide}));return materials.get(color);}
  for(const path of paths){
   const point=new THREE.Mesh(new THREE.RingGeometry(0.014,0.023,24),material(path.color));point.name=`reflection-${path.channel}-${path.driverId}-${path.ear}-${path.surface}`;point.position.copy(path.point).addScaledVector(path.normal,0.003);point.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),path.normal);point.userData=path;group.add(point);

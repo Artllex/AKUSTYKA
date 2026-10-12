@@ -23,10 +23,10 @@ export function firstReflection(source,receiver,surface,room){
  if(!bounds.clone().expandByScalar(1e-9).containsPoint(point))return null;
  return {point,length:source.distanceTo(point)+point.distanceTo(receiver)};
 }
-export function computeFirstReflections(monitors,listener,room,input,meshes=null,objectGroups=[]){
+export function computeFirstReflections(monitors,listener,room,input,meshes=null,objectGroups=[],includeObjectMesh=()=>true){
  const meshSurfaces=meshes?.map(mesh=>{mesh.updateMatrixWorld(true);return {id:mesh.name,normal:mesh.userData.outward.clone().negate(),mesh};});
  const settings=normalizeReflectionSettings(input),paths=[];if(!listener||!settings.selected.length)return paths;
- const objectSurfaces=objectReflectingFaces(objectGroups),occluders=[...(meshes??[]),...objectSurfaces.occluders];
+ const objectSurfaces=objectReflectingFaces(objectGroups,includeObjectMesh),occluders=[...(meshes??[]),...objectSurfaces.occluders];
  listener.group.updateMatrixWorld(true);
  const ears=(settings.ears==='both'?['left','right']:[settings.ears]).map(ear=>({ear,position:listener.group.getObjectByName('ear-'+ear).getWorldPosition(new THREE.Vector3())}));
  for(const monitor of monitors)for(const driver of monitor.getDriverCenters()){
