@@ -1,12 +1,13 @@
 {
   "name": "akustyka-room-editor",
-  "version": "0.117.18",
+  "version": "0.117.19",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1 --port 4173 --strictPort",
     "build": "vite build",
     "test": "node --test",
+    "export:models": "node scripts/export-models.mjs",
     "start": "npm run build && electron .",
     "package:windows": "npm run build && node scripts/package-windows.mjs"
   },

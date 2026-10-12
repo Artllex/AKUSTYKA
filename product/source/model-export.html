@@ -1,0 +1,55 @@
+<!doctype html><html lang="pl"><meta charset="utf-8"><title>Eksport modeli AKUSTYKA</title><script type="module">
+import {GLTFExporter} from 'three/addons/exporters/GLTFExporter.js';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+import {createDeskRecord} from './src/desk-model.js';
+import {createRackRecord} from './src/rack-model.js';
+import {createAlienwareDisplay} from './src/alienware-display.js';
+import {createMoniconXL,createProArtP16,createStreamDeckXL,createGxt144Rexx,createMotu24Ai,createBehringerModelD,createBehringerKobolExpander} from './src/studio-peripherals.js';
+import {createRackView} from './src/rack-view.js';
+
+const room={width:2.477,length:3.715,height:2.605};
+const desk=createDeskRecord(room),rack=createRackRecord(room);
+const models=[
+ ['dell-alienware-aw3423dwf',()=>createAlienwareDisplay(desk)],
+ ['palmer-monicon-xl',()=>createMoniconXL(desk)],
+ ['asus-proart-p16-h7606wr',()=>createProArtP16(desk)],
+ ['elgato-stream-deck-xl',()=>createStreamDeckXL(desk)],
+ ['trust-gxt-144-rexx',()=>createGxt144Rexx(desk)],
+ ['riveco-rack-15u',()=>createRackView(rack)],
+ ['riveco-rack-15u-equipped',()=>{
+  const view=createRackView(rack);
+  const modules=[createMotu24Ai(rack),createBehringerModelD(),createBehringerKobolExpander()];
+  for(const module of modules)view.group.add(module.group);
+  const dispose=view.dispose;
+  view.dispose=()=>{for(const module of modules)module.dispose();dispose();};
+  return view;
+ }],
+ ['motu-24ai',()=>createMotu24Ai(rack)],
+ ['behringer-model-d',()=>createBehringerModelD()],
+ ['behringer-kobol-expander',()=>createBehringerKobolExpander()]
+];
+const base64=arrayBuffer=>new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result.split(',')[1]);reader.onerror=()=>reject(reader.error);reader.readAsDataURL(new Blob([arrayBuffer]));});
+window.exportModels=async()=>{
+ const exporter=new GLTFExporter(),loader=new GLTFLoader(),result=[];
+ for(const [name,create] of models){
+  const modelDReady=name==='behringer-model-d'||name==='riveco-rack-15u-equipped'
+   ?new Promise((resolve,reject)=>{
+    window.addEventListener('model-d-texture-ready',resolve,{once:true});
+    setTimeout(()=>reject(new Error('Model D panel texture did not load')),5000);
+   }):null;
+  const view=create();
+  try{
+   // Each standalone model has its own origin; positions in the room are not baked in.
+   view.group.position.set(0,0,0);view.group.rotation.set(0,0,0);
+   view.group.updateMatrixWorld(true);
+   if(modelDReady)await modelDReady;
+   const binary=await exporter.parseAsync(view.group,{binary:true,onlyVisible:false});
+   const loaded=await loader.parseAsync(binary,'');
+   let meshes=0;loaded.scene.traverse(part=>{if(part.isMesh)meshes++;});
+   if(meshes===0)throw new Error(`Exported model has no geometry: ${name}`);
+   result.push({name,data:await base64(binary)});
+  }finally{view.dispose();}
+ }
+ return result;
+};
+</script></html>
