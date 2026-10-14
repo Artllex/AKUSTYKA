@@ -18,10 +18,14 @@ test('the 1520 mm desk has the supplied three levels, two rack bays and arched s
  chooseDesk(doc,MODUL_1520_DESK_ID);
  const record=doc.objects.find(o=>o.type==='studio-desk'),view=createModul1520DeskView(record),group=view.group;
  const overall=new THREE.Box3().setFromObject(group),top=new THREE.Box3().setFromObject(group.getObjectByName('main-worktop'));
+ const shelf=new THREE.Box3().setFromObject(group.getObjectByName('upper-rack-shelf'));
  assert.equal(record.id,MODUL_1520_DESK_ID);
  assert.equal(doc.objects.filter(o=>o.type==='studio-desk').length,1);
  assert.ok(Math.abs(top.max.z-firstFront)<1e-6,'the main worktop must have the same front edge as A');
  assert.ok(Math.abs(overall.max.x-overall.min.x-D.width)<1e-6);
+ assert.ok(Math.abs(top.max.x-top.min.x-D.worktop.width)<1e-6);
+ assert.ok(Math.abs(shelf.max.x-shelf.min.x-D.upperShelf.width)<1e-6);
+ assert.ok(Math.abs((shelf.max.x-top.max.x)-.08)<1e-6,'upper shelf overhangs the main top by 8 cm on each side');
  assert.ok(Math.abs(overall.max.y-D.height)<1e-6);
  assert.ok(Math.abs(top.max.y-D.worktopHeight)<1e-6);
  assert.equal(group.getObjectsByProperty('name','rack-divider').length,4);

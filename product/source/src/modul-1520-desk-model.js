@@ -3,7 +3,7 @@ import {COMBODESK_88,createDeskRecord} from './desk-model.js';
 // Dimensions from the supplied Modul drawing, in metres. +Z faces the listener.
 export const MODUL_1520_DESK=Object.freeze({
  width:1.52,depth:.79,height:.96,worktopHeight:.74,
- worktop:Object.freeze({width:1.52,depth:.55,thickness:.018,frontZ:.275}),
+ worktop:Object.freeze({width:1.36,depth:.55,thickness:.018,frontZ:.275}),
  upperShelf:Object.freeze({width:1.52,depth:.24,thickness:.018,clearance:.185}),
  tray:Object.freeze({width:1.31,depth:.24,thickness:.018,drop:.08}),
  rack:Object.freeze({leftWidth:.49,centerWidth:.257,rightWidth:.49}),
