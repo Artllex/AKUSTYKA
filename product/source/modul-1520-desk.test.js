@@ -1,0 +1,58 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import * as THREE from 'three';
+import {createDocument,DEFAULT_ROOM} from './src/model.js';
+import {createDocumentHistory} from './src/history.js';
+import {createDeskView} from './src/desk-view.js';
+import {MODUL_1520_DESK_ID,MODUL_1520_DESK as D,createModul1520DeskRecord,moveDefaultModul1520DeskWithRoom} from './src/modul-1520-desk-model.js';
+import {createModul1520DeskView} from './src/modul-1520-desk-view.js';
+import {MODUL_DESK_ID,createModulDeskRecord} from './src/modul-desk-model.js';
+import {THOMANN_DESK_ID,chooseDesk,selectedDeskId} from './src/desk-choice.js';
+import {displayPlacement} from './src/alienware-display.js';
+import {deskPeripheralPlacement} from './src/studio-peripherals.js';
+import {parseRoomDocument} from './src/bench.js';
+
+test('the 1520 mm desk has the supplied three levels, two rack bays and arched side panels',()=>{
+ const doc=createDocument(),first=doc.objects.find(o=>o.id===THOMANN_DESK_ID),firstView=createDeskView(first);
+ const firstFront=new THREE.Box3().setFromObject(firstView.group.getObjectByName('worktop')).max.z;
+ chooseDesk(doc,MODUL_1520_DESK_ID);
+ const record=doc.objects.find(o=>o.type==='studio-desk'),view=createModul1520DeskView(record),group=view.group;
+ const overall=new THREE.Box3().setFromObject(group),top=new THREE.Box3().setFromObject(group.getObjectByName('main-worktop'));
+ assert.equal(record.id,MODUL_1520_DESK_ID);
+ assert.equal(doc.objects.filter(o=>o.type==='studio-desk').length,1);
+ assert.ok(Math.abs(top.max.z-firstFront)<1e-6,'the main worktop must have the same front edge as A');
+ assert.ok(Math.abs(overall.max.x-overall.min.x-D.width)<1e-6);
+ assert.ok(Math.abs(overall.max.y-D.height)<1e-6);
+ assert.ok(Math.abs(top.max.y-D.worktopHeight)<1e-6);
+ assert.equal(group.getObjectsByProperty('name','rack-divider').length,4);
+ assert.equal(group.getObjectsByProperty('name','arched-side-panel').length,2);
+ assert.equal(group.getObjectsByProperty('name','upper-rack-shelf').length,1);
+ assert.equal(group.getObjectsByProperty('name','pull-out-keyboard-tray').length,1);
+ assert.ok(new THREE.Box3().setFromObject(group.getObjectByName('pull-out-keyboard-tray')).max.z>top.max.z);
+ const monitor=displayPlacement(record),peripherals=deskPeripheralPlacement(record);
+ assert.equal(monitor.y,D.worktopHeight);
+ assert.ok(monitor.z>-.035,'monitor stand must stay in front of the high shelf');
+ assert.equal(peripherals.top,D.worktopHeight);
+ firstView.dispose();view.dispose();
+});
+
+test('the third desk survives save, undo, resizing and transitions between all three choices',()=>{
+ const doc=createDocument(),history=createDocumentHistory(doc);
+ doc.transforms[THOMANN_DESK_ID]={x:.05,y:0,z:.02,rx:0,ry:0,rz:0};
+ chooseDesk(doc,MODUL_1520_DESK_ID);history.push(doc);
+ assert.deepEqual(doc.transforms[MODUL_1520_DESK_ID],{x:.05,y:0,z:.02,rx:0,ry:0,rz:0});
+ assert.equal(selectedDeskId(parseRoomDocument(JSON.stringify(doc))),MODUL_1520_DESK_ID);
+ assert.equal(selectedDeskId(history.undo()),THOMANN_DESK_ID);
+ assert.equal(selectedDeskId(history.redo()),MODUL_1520_DESK_ID);
+ chooseDesk(doc,MODUL_DESK_ID);assert.equal(selectedDeskId(doc),MODUL_DESK_ID);
+ assert.equal(doc.transforms[MODUL_1520_DESK_ID],undefined);
+ chooseDesk(doc,MODUL_1520_DESK_ID);assert.equal(doc.objects.filter(o=>o.type==='studio-desk').length,1);
+ const fresh=createDocument();chooseDesk(fresh,MODUL_1520_DESK_ID);
+ const next={...DEFAULT_ROOM,width:3,length:4};moveDefaultModul1520DeskWithRoom(fresh,next);
+ assert.deepEqual(fresh.objects.find(o=>o.id===MODUL_1520_DESK_ID).position,createModul1520DeskRecord(next).position);
+ const moved=createDocument();chooseDesk(moved,MODUL_1520_DESK_ID);
+ moved.objects.find(o=>o.id===MODUL_1520_DESK_ID).position.z+=.1;
+ moveDefaultModul1520DeskWithRoom(moved,next);
+ assert.notDeepEqual(moved.objects.find(o=>o.id===MODUL_1520_DESK_ID).position,createModul1520DeskRecord(next).position);
+ assert.equal(createModulDeskRecord(DEFAULT_ROOM).id,MODUL_DESK_ID);
+});

@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import {RoundedBoxGeometry} from 'three/addons/geometries/RoundedBoxGeometry.js';
 import {COMBODESK_88} from './desk-model.js';
 import {MODUL_DESK_ID,MODUL_STUDIO_DESK} from './modul-desk-model.js';
+import {MODUL_1520_DESK_ID,MODUL_1520_DESK} from './modul-1520-desk-model.js';
 import {RACK_15U} from './rack-model.js';
 
 // Manufacturer dimensions in metres. The MOTU's depth is the 7-inch chassis.
@@ -111,7 +112,7 @@ export function createMotu24Ai(rack){
 
 export function deskPeripheralPlacement(desk){
  const modul=desk.id===MODUL_DESK_ID;
- const top=modul?MODUL_STUDIO_DESK.height:COMBODESK_88.worktop.top;
+ const top=modul?MODUL_STUDIO_DESK.height:desk.id===MODUL_1520_DESK_ID?MODUL_1520_DESK.worktopHeight:COMBODESK_88.worktop.top;
  // Both worktops contain these footprints, even though B is shallower and narrower.
  return {top,laptop:{x:-.49,z:.10},monicon:{x:.49,z:.10},streamDeck:{x:-.145,z:.178},mouse:{x:.18,z:.177}};
 }

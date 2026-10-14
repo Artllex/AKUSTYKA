@@ -4,10 +4,12 @@ import * as THREE from 'three';
 import {AW3423DWF,createAlienwareDisplay} from './src/alienware-display.js';
 import {createDeskRecord,COMBODESK_88} from './src/desk-model.js';
 import {MODUL_STUDIO_DESK} from './src/modul-desk-model.js';
+import {MODUL_1520_DESK,MODUL_1520_DESK_ID} from './src/modul-1520-desk-model.js';
 import {chooseDesk} from './src/desk-choice.js';
 import {createDocument} from './src/model.js';
 import {createDeskView} from './src/desk-view.js';
 import {createModulDeskView} from './src/modul-desk-view.js';
+import {createModul1520DeskView} from './src/modul-1520-desk-view.js';
 import {createStudioMonitor} from './src/monitor-view.js';
 import {createSeatedListener} from './src/listener-view.js';
 import {createTweeterRays} from './src/tweeter-rays.js';
@@ -16,7 +18,8 @@ test('AW3423DWF stands on each selected worktop, inside its footprint',()=>{
  const doc=createDocument();
  for(const [id,top,rear,front] of [
   ['desk-combodesk-88',COMBODESK_88.worktop.top,-.317,.358],
-  ['desk-modul-2025',MODUL_STUDIO_DESK.height,MODUL_STUDIO_DESK.top.frontZ-MODUL_STUDIO_DESK.top.depth,MODUL_STUDIO_DESK.top.frontZ]
+  ['desk-modul-2025',MODUL_STUDIO_DESK.height,MODUL_STUDIO_DESK.top.frontZ-MODUL_STUDIO_DESK.top.depth,MODUL_STUDIO_DESK.top.frontZ],
+  [MODUL_1520_DESK_ID,MODUL_1520_DESK.worktopHeight,-MODUL_1520_DESK.worktop.depth/2,MODUL_1520_DESK.worktop.frontZ]
  ]){
   chooseDesk(doc,id);
   assert.equal(doc.objects.filter(o=>o.type==='studio-desk').length,1);
@@ -30,7 +33,7 @@ test('AW3423DWF stands on each selected worktop, inside its footprint',()=>{
   const post=new THREE.Box3().setFromObject(display.group.getObjectByName('stand-column'));
   assert.ok(bounds.min.y>=top-1e-7);
   assert.ok(base.min.z>=rear-1e-7);
-  assert.ok(base.min.z<rear+.005);
+  if(id!==MODUL_1520_DESK_ID)assert.ok(base.min.z<rear+.005);
   assert.ok(base.max.z<=front+1e-7);
   assert.ok(post.getSize(new THREE.Vector3()).x>.09&&post.getSize(new THREE.Vector3()).z>.07,'the upright has a substantial cross-section');
   assert.ok(bounds.min.z>=rear-.045,'the upright overhangs the rear edge by at most 4.5 cm');
@@ -48,12 +51,12 @@ test('AW3423DWF stands on each selected worktop, inside its footprint',()=>{
  }
 });
 
-test('the two tweeter rays clear the complete display on both desks',()=>{
+test('the two tweeter rays clear the complete display on every desk',()=>{
  const doc=createDocument();
- for(const id of ['desk-combodesk-88','desk-modul-2025']){
+ for(const id of ['desk-combodesk-88','desk-modul-2025',MODUL_1520_DESK_ID]){
   chooseDesk(doc,id);
   const record=doc.objects.find(o=>o.type==='studio-desk');
-  const desk=id==='desk-modul-2025'?createModulDeskView(record):createDeskView(record);
+  const desk=id==='desk-modul-2025'?createModulDeskView(record):id===MODUL_1520_DESK_ID?createModul1520DeskView(record):createDeskView(record);
   const display=createAlienwareDisplay(record);desk.group.add(display.group);desk.group.updateMatrixWorld(true);
   const listener=createSeatedListener(doc.objects.find(o=>o.type==='seated-listener'));
   const speakers=doc.objects.filter(o=>o.type==='studio-monitor').map(createStudioMonitor);
@@ -63,8 +66,8 @@ test('the two tweeter rays clear the complete display on both desks',()=>{
    const {origin,direction,target}=ray.userData;
    const hits=new THREE.Raycaster(origin,direction,0,target.distanceTo(origin)).intersectObject(display.group,true);
    assert.equal(hits.length,0,`${id}: ${ray.name} must clear the display`);
-   // In the top view the beam must also miss the screen's footprint, regardless of height.
-   if(shellBounds.max.z>=origin.z){
+   // The older desks also clear in plan. C's closer screen clears in 3D by height.
+   if(id!==MODUL_1520_DESK_ID&&shellBounds.max.z>=origin.z){
     const x=origin.x+(shellBounds.max.z-origin.z)*direction.x/direction.z;
     assert.ok(direction.x>0?x<shellBounds.min.x-.005:x>shellBounds.max.x+.005,`${id}: ${ray.name} must miss the screen in plan view`);
    }

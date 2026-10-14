@@ -1,19 +1,20 @@
 import {COMBODESK_88,createDeskRecord} from './desk-model.js';
 import {MODUL_DESK_ID,MODUL_STUDIO_DESK,createModulDeskRecord} from './modul-desk-model.js';
+import {MODUL_1520_DESK_ID,createModul1520DeskRecord} from './modul-1520-desk-model.js';
 
 export const THOMANN_DESK_ID='desk-combodesk-88';
 const REMOVED_MILLENIUM_DESK_ID='desk-millenium-sd-180-b';
 export function selectedDeskId(document){return document.objects.find(o=>o.type==='studio-desk')?.id??null;}
 export function chooseDesk(document,id){
- if(![THOMANN_DESK_ID,MODUL_DESK_ID].includes(id))throw new Error('Nieznany model biurka.');
+ if(![THOMANN_DESK_ID,MODUL_DESK_ID,MODUL_1520_DESK_ID].includes(id))throw new Error('Nieznany model biurka.');
  const current=document.objects.find(o=>o.type==='studio-desk');
  if(current?.id===id&&document.objects.filter(o=>o.type==='studio-desk').length===1)return document;
- const record=id===THOMANN_DESK_ID?createDeskRecord(document.room):createModulDeskRecord(document.room);
+ const record=id===THOMANN_DESK_ID?createDeskRecord(document.room):id===MODUL_DESK_ID?createModulDeskRecord(document.room):createModul1520DeskRecord(document.room);
  const index=document.objects.findIndex(o=>o.type==='studio-desk');
  document.objects=document.objects.filter(o=>o.type!=='studio-desk');
  document.objects.splice(index<0?document.objects.length:index,0,record);
  const transform=current&&document.transforms?.[current.id];
- if(document.transforms){for(const deskId of [THOMANN_DESK_ID,MODUL_DESK_ID,REMOVED_MILLENIUM_DESK_ID])delete document.transforms[deskId];if(transform)document.transforms[id]=structuredClone(transform);}
+ if(document.transforms){for(const deskId of [THOMANN_DESK_ID,MODUL_DESK_ID,MODUL_1520_DESK_ID,REMOVED_MILLENIUM_DESK_ID])delete document.transforms[deskId];if(transform)document.transforms[id]=structuredClone(transform);}
  return document;
 }
 // v0.95 saved both desks; keep A on load. A saved B-only desk moves from the rear

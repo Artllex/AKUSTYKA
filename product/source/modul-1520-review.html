@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="pl">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Modul Studio Desk 1520 · podgląd modelu</title>
+<style>
+ html,body{margin:0;width:100%;height:100%;font:15px system-ui,sans-serif;background:#e8e8e5;color:#202326}
+ canvas{display:block}
+ header{position:absolute;left:24px;top:22px;z-index:1;background:#fffde;padding:15px 18px;border:1px solid #bfc3c3;border-radius:12px;box-shadow:0 3px 18px #0002}
+ h1{font-size:18px;margin:0 0 6px}p{margin:0;color:#51585a}
+ nav{position:absolute;right:24px;top:22px;z-index:1;display:flex;gap:6px;flex-wrap:wrap;max-width:330px}
+ button{border:1px solid #a7aeb0;background:#fff;color:#202326;border-radius:7px;padding:9px 12px;cursor:pointer}
+ button:hover{background:#ecf4f1}
+</style>
+<header><h1>modul Studio Desk 1520</h1><p>152 × ok. 79 × 96 cm · obracaj myszą</p></header>
+<nav><button data-view="front">Przód</button><button data-view="rear">Tył</button><button data-view="side">Bok</button><button data-view="top">Z góry</button><button data-view="three">3D</button></nav>
+<script type="module">
+import * as THREE from 'three';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+import {createModul1520DeskRecord} from './src/modul-1520-desk-model.js';
+import {createModul1520DeskView} from './src/modul-1520-desk-view.js';
+const scene=new THREE.Scene();scene.background=new THREE.Color(0xe8e8e5);
+const desk=createModul1520DeskView(createModul1520DeskRecord({width:2.477,length:3.715}));
+desk.group.position.set(0,0,0);scene.add(desk.group);
+const floor=new THREE.Mesh(new THREE.PlaneGeometry(8,8),new THREE.MeshStandardMaterial({color:0xdfdfdc,roughness:1}));
+floor.rotation.x=-Math.PI/2;floor.position.y=-.005;scene.add(floor);
+scene.add(new THREE.HemisphereLight(0xffffff,0x92999c,2.4));
+const sun=new THREE.DirectionalLight(0xffffff,2.1);sun.position.set(-2,4,3);scene.add(sun);
+const camera=new THREE.PerspectiveCamera(35,innerWidth/innerHeight,.01,20),renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;
+document.body.append(renderer.domElement);
+const controls=new OrbitControls(camera,renderer.domElement);controls.target.set(0,.48,0);controls.enableDamping=true;
+const positions={front:[0,1.35,2.8],rear:[0,1.35,-2.8],side:[2.8,1.3,0],top:[0,3.4,.001],three:[2.1,1.55,2.4]};
+function setView(name){camera.position.set(...positions[name]);camera.up.set(0,1,0);camera.lookAt(controls.target);controls.update();}
+document.querySelectorAll('[data-view]').forEach(button=>button.onclick=()=>setView(button.dataset.view));setView('three');
+window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
+function animate(){requestAnimationFrame(animate);controls.update();renderer.render(scene,camera);}animate();
+</script>
+</html>
