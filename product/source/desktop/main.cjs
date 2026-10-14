@@ -40,6 +40,8 @@ app.whenReady().then(async()=>{
 
   if(result.baseboardCount!==9||result.reflections<1||result.deskReflections<1||result.tweeterRays!==2||result.headHits!==2||!result.raysVisible||result.monitorCount!==2||result.monitorOptions!==2||!result.listenerPanel||!result.earHeight.includes('118,5')||!result.canvas||!result.desktop||!result.dimensions.includes('247,7')||result.bench.join(',')!=='File,Edit,View'||errors.length)throw new Error(JSON.stringify({result,errors}));
 
+  const billyCheck=await window.webContents.executeJavaScript(`(()=>{const viewport=document.getElementById('viewport');return {count:Number(viewport.dataset.billyCount),canAdd:!![...document.querySelectorAll('#object-panel button')].find(button=>button.textContent.includes('IKEA BILLY'))};})()`);
+  if(billyCheck.count!==1||!billyCheck.canAdd)throw new Error(JSON.stringify(billyCheck));result.billyCheck=billyCheck;
   const peripheralCheck=await window.webContents.executeJavaScript(`(()=>{const d=document.getElementById('viewport').dataset;return {streamDeck:Number(d.streamDeckXLCount),mouse:Number(d.gxt144RexxCount),modelD:Number(d.modelDCount),kobol:Number(d.kobolExpanderCount),motu:Number(d.motu24AiCount)};})()`);
   if(Object.values(peripheralCheck).some(count=>count!==1))throw new Error(JSON.stringify(peripheralCheck));result.peripheralCheck=peripheralCheck;
 
