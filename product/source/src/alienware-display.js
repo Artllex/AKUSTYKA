@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import {RoundedBoxGeometry} from 'three/addons/geometries/RoundedBoxGeometry.js';
 import {COMBODESK_88} from './desk-model.js';
 import {MODUL_DESK_ID,MODUL_STUDIO_DESK} from './modul-desk-model.js';
+import {MILLENIUM_DESK_ID,MILLENIUM_SD_180_B} from './millenium-desk-model.js';
 
 // Dell Alienware AW3423DWF at the stand's lowest setting; dimensions in metres.
 export const AW3423DWF=Object.freeze({width:.81525,height:.41557,depth:.30571,curveRadius:1.8,panelHeight:.352});
@@ -9,8 +10,9 @@ const SEGMENTS=64;
 
 export function displayPlacement(desk){
  const modul=desk.id===MODUL_DESK_ID;
- const top=modul?MODUL_STUDIO_DESK.height:COMBODESK_88.worktop.top;
- const rear=modul?MODUL_STUDIO_DESK.top.frontZ-MODUL_STUDIO_DESK.top.depth:(COMBODESK_88.depth-COMBODESK_88.worktop.depth)/2-COMBODESK_88.worktop.depth/2;
+ const millenium=desk.id===MILLENIUM_DESK_ID;
+ const top=millenium?MILLENIUM_SD_180_B.worktop.top:modul?MODUL_STUDIO_DESK.height:COMBODESK_88.worktop.top;
+ const rear=millenium?-MILLENIUM_SD_180_B.worktop.depth/2:modul?MODUL_STUDIO_DESK.top.frontZ-MODUL_STUDIO_DESK.top.depth:(COMBODESK_88.depth-COMBODESK_88.worktop.depth)/2-COMBODESK_88.worktop.depth/2;
  return {x:0,y:top,z:rear+.241};
 }
 

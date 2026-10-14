@@ -1,0 +1,51 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import * as THREE from 'three';
+import {createDocument} from './src/model.js';
+import {createDocumentHistory} from './src/history.js';
+import {parseRoomDocument} from './src/bench.js';
+import {chooseDesk,selectedDeskId,THOMANN_DESK_ID} from './src/desk-choice.js';
+import {createDeskView} from './src/desk-view.js';
+import {MILLENIUM_DESK_ID,MILLENIUM_SD_180_B as D,createMilleniumDeskRecord,moveDefaultMilleniumDeskWithRoom} from './src/millenium-desk-model.js';
+import {createMilleniumDeskView} from './src/millenium-desk-view.js';
+import {objectReflectingFaces} from './src/object-reflections.js';
+
+test('SD-180 B has the measured envelope and distinct three-level silhouette',()=>{
+ const doc=createDocument(),first=doc.objects.find(item=>item.id===THOMANN_DESK_ID),a=createDeskView(first);
+ const aFront=new THREE.Box3().setFromObject(a.group.getObjectByName('worktop')).max.z;
+ chooseDesk(doc,MILLENIUM_DESK_ID);
+ const record=doc.objects.find(item=>item.type==='studio-desk'),view=createMilleniumDeskView(record);
+ const bounds=new THREE.Box3().setFromObject(view.group),size=bounds.getSize(new THREE.Vector3());
+ const top=new THREE.Box3().setFromObject(view.group.getObjectByName('sd180-worktop-sculpted'));
+ assert.ok(Math.abs(size.x-D.width)<1e-6);
+ assert.ok(Math.abs(size.y-D.height)<1e-6);
+ assert.ok(Math.abs(size.z-D.depth)<1e-6);
+ assert.ok(Math.abs(top.max.y-D.worktop.top)<1e-6);
+ assert.ok(Math.abs(top.max.z-aFront)<1e-6);
+ assert.equal(view.group.getObjectsByProperty('name','raised-monitor-shelf').length,2);
+ assert.equal(view.group.getObjectsByProperty('name','angled-4u-rack-cheek').length,4);
+ assert.equal(view.group.getObjectsByProperty('name','swivel-caster').length,5);
+ const keyboard=new THREE.Box3().setFromObject(view.group.getObjectByName('sliding-keyboard-tray'));
+ assert.ok(Math.abs(keyboard.max.y-(D.worktop.top-D.keyboardTray.drop))<1e-6);
+ const base=new THREE.Box3().setFromObject(view.group.getObjectByName('sd180-floor-platform-sculpted'));
+ assert.ok(base.max.z>top.max.z,'floor base projects beyond the worktop');
+ const reflecting=objectReflectingFaces([view.group]).faces;
+ assert.ok(reflecting.some(face=>face.mesh.name==='sd180-worktop-sculpted'));
+ a.dispose();view.dispose();
+});
+
+test('third choice saves, undoes and follows default room width without losing object transforms',()=>{
+ const doc=createDocument(),history=createDocumentHistory(doc);
+ doc.transforms[THOMANN_DESK_ID]={x:.04,y:0,z:.03,rx:0,ry:0,rz:0};
+ chooseDesk(doc,MILLENIUM_DESK_ID);history.push(doc);
+ assert.equal(doc.objects.filter(item=>item.type==='studio-desk').length,1);
+ assert.deepEqual(doc.transforms[MILLENIUM_DESK_ID],{x:.04,y:0,z:.03,rx:0,ry:0,rz:0});
+ assert.equal(doc.transforms[THOMANN_DESK_ID],undefined);
+ assert.equal(selectedDeskId(parseRoomDocument(JSON.stringify(doc))),MILLENIUM_DESK_ID);
+ assert.equal(selectedDeskId(history.undo()),THOMANN_DESK_ID);
+ assert.equal(selectedDeskId(history.redo()),MILLENIUM_DESK_ID);
+ delete doc.transforms[MILLENIUM_DESK_ID];
+ const nextRoom={...doc.room,width:3};
+ moveDefaultMilleniumDeskWithRoom(doc,nextRoom);
+ assert.deepEqual(doc.objects.find(item=>item.id===MILLENIUM_DESK_ID).position,createMilleniumDeskRecord(nextRoom).position);
+});

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import * as THREE from 'three';
 import {createDeskRecord,COMBODESK_88} from './src/desk-model.js';
 import {createModulDeskRecord,MODUL_STUDIO_DESK} from './src/modul-desk-model.js';
+import {createMilleniumDeskRecord,MILLENIUM_SD_180_B} from './src/millenium-desk-model.js';
 import {createRackRecord,RACK_15U} from './src/rack-model.js';
 import {createAlienwareDisplay} from './src/alienware-display.js';
 import {createMotu24Ai,createMoniconXL,createProArtP16,createStreamDeckXL,createGxt144Rexx,createBehringerModelD,createBehringerKobolExpander,MOTU_24AI,MONICON_XL,PROART_P16,STREAM_DECK_XL,GXT_144_REXX,MODEL_D,KOBOL_EXPANDER} from './src/studio-peripherals.js';
@@ -78,7 +79,8 @@ test('Model D has the sloped instrument body, wooden sides and rear output pair'
 
 for(const [name,record,halfWidth,rear,front,top] of [
  ['A',createDeskRecord(room),COMBODESK_88.worktop.width/2,-COMBODESK_88.worktop.depth+(COMBODESK_88.depth-COMBODESK_88.worktop.depth)/2+COMBODESK_88.worktop.depth/2,(COMBODESK_88.depth-COMBODESK_88.worktop.depth)/2+COMBODESK_88.worktop.depth/2,COMBODESK_88.worktop.top],
- ['B',createModulDeskRecord(room),MODUL_STUDIO_DESK.top.width/2,MODUL_STUDIO_DESK.top.frontZ-MODUL_STUDIO_DESK.top.depth,MODUL_STUDIO_DESK.top.frontZ,MODUL_STUDIO_DESK.height]
+ ['B',createModulDeskRecord(room),MODUL_STUDIO_DESK.top.width/2,MODUL_STUDIO_DESK.top.frontZ-MODUL_STUDIO_DESK.top.depth,MODUL_STUDIO_DESK.top.frontZ,MODUL_STUDIO_DESK.height],
+ ['C',createMilleniumDeskRecord(room),MILLENIUM_SD_180_B.worktop.width/2,-MILLENIUM_SD_180_B.worktop.depth/2,MILLENIUM_SD_180_B.worktop.frontZ,MILLENIUM_SD_180_B.worktop.top]
 ])test(`Palmer and ASUS remain fully on desk ${name}, clear of the Alienware display`,()=>{
  const palmer=createMoniconXL(record),laptop=createProArtP16(record),display=createAlienwareDisplay(record);
  const left=new THREE.Box3().setFromObject(laptop.group),right=new THREE.Box3().setFromObject(palmer.group),screen=new THREE.Box3().setFromObject(display.group.getObjectByName('curved-oled-screen'));
@@ -100,7 +102,8 @@ for(const [name,record,halfWidth,rear,front,top] of [
 
 for(const [name,record,halfWidth,rear,front,top] of [
  ['A',createDeskRecord(room),COMBODESK_88.worktop.width/2,-COMBODESK_88.worktop.depth+(COMBODESK_88.depth-COMBODESK_88.worktop.depth)/2+COMBODESK_88.worktop.depth/2,(COMBODESK_88.depth-COMBODESK_88.worktop.depth)/2+COMBODESK_88.worktop.depth/2,COMBODESK_88.worktop.top],
- ['B',createModulDeskRecord(room),MODUL_STUDIO_DESK.top.width/2,MODUL_STUDIO_DESK.top.frontZ-MODUL_STUDIO_DESK.top.depth,MODUL_STUDIO_DESK.top.frontZ,MODUL_STUDIO_DESK.height]
+ ['B',createModulDeskRecord(room),MODUL_STUDIO_DESK.top.width/2,MODUL_STUDIO_DESK.top.frontZ-MODUL_STUDIO_DESK.top.depth,MODUL_STUDIO_DESK.top.frontZ,MODUL_STUDIO_DESK.height],
+ ['C',createMilleniumDeskRecord(room),MILLENIUM_SD_180_B.worktop.width/2,-MILLENIUM_SD_180_B.worktop.depth/2,MILLENIUM_SD_180_B.worktop.frontZ,MILLENIUM_SD_180_B.worktop.top]
 ])test(`Stream Deck XL and GXT 144 Rexx fit on desk ${name} beside the existing equipment`,()=>{
  const views=[createStreamDeckXL(record),createGxt144Rexx(record),createMoniconXL(record),createProArtP16(record),createAlienwareDisplay(record)];
  const boxes=views.map(view=>new THREE.Box3().setFromObject(view.group));
