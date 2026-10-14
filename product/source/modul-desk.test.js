@@ -56,3 +56,14 @@ test('choice persists through save and undo; prior two-desk rooms migrate to one
  assert.deepEqual(moved.objects.find(o=>o.id===MODUL_DESK_ID).position,createModulDeskRecord(next).position);
  const bare=parseRoomDocument(JSON.stringify({schemaVersion:1,units:'m',room:DEFAULT_ROOM,objects:[]}));assert.equal(bare.objects.length,0);
 });
+
+test('removed Millenium desk cannot be selected and saved rooms replace it with Thomann',()=>{
+ const doc=createDocument(),removed={id:'desk-millenium-sd-180-b',type:'studio-desk',model:'millenium-sd-180-b-studiodesk',position:{x:1.2,y:0,z:.9},yaw:0};
+ assert.throws(()=>chooseDesk(doc,removed.id),/Nieznany model biurka/);
+ doc.objects=doc.objects.filter(o=>o.type!=='studio-desk');doc.objects.push(removed);
+ doc.transforms[removed.id]={x:.1,y:0,z:0,rx:0,ry:0,rz:0};
+ const loaded=parseRoomDocument(JSON.stringify(doc));
+ assert.equal(selectedDeskId(loaded),THOMANN_DESK_ID);
+ assert.equal(loaded.objects.filter(o=>o.type==='studio-desk').length,1);
+ assert.equal(loaded.transforms[removed.id],undefined);
+});

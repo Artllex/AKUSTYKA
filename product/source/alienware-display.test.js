@@ -4,7 +4,6 @@ import * as THREE from 'three';
 import {AW3423DWF,createAlienwareDisplay} from './src/alienware-display.js';
 import {createDeskRecord,COMBODESK_88} from './src/desk-model.js';
 import {MODUL_STUDIO_DESK} from './src/modul-desk-model.js';
-import {MILLENIUM_SD_180_B} from './src/millenium-desk-model.js';
 import {chooseDesk} from './src/desk-choice.js';
 import {createDocument} from './src/model.js';
 import {createDeskView} from './src/desk-view.js';
@@ -17,8 +16,7 @@ test('AW3423DWF stands on each selected worktop, inside its footprint',()=>{
  const doc=createDocument();
  for(const [id,top,rear,front] of [
   ['desk-combodesk-88',COMBODESK_88.worktop.top,-.317,.358],
-  ['desk-modul-2025',MODUL_STUDIO_DESK.height,MODUL_STUDIO_DESK.top.frontZ-MODUL_STUDIO_DESK.top.depth,MODUL_STUDIO_DESK.top.frontZ],
-  ['desk-millenium-sd-180-b',MILLENIUM_SD_180_B.worktop.top,-MILLENIUM_SD_180_B.worktop.depth/2,MILLENIUM_SD_180_B.worktop.frontZ]
+  ['desk-modul-2025',MODUL_STUDIO_DESK.height,MODUL_STUDIO_DESK.top.frontZ-MODUL_STUDIO_DESK.top.depth,MODUL_STUDIO_DESK.top.frontZ]
  ]){
   chooseDesk(doc,id);
   assert.equal(doc.objects.filter(o=>o.type==='studio-desk').length,1);
