@@ -30,6 +30,11 @@ test('the 1520 mm desk has the supplied three levels, two rack bays and arched s
  assert.ok(Math.abs(top.max.y-D.worktopHeight)<1e-6);
  assert.equal(group.getObjectsByProperty('name','rack-divider').length,4);
  assert.equal(group.getObjectsByProperty('name','arched-side-panel').length,2);
+ const sidePositions=group.getObjectByName('arched-side-panel').geometry.attributes.position;
+ const sideVertices=Array.from({length:sidePositions.count},(_,i)=>({y:sidePositions.getY(i),z:sidePositions.getZ(i)}));
+ assert.ok(sideVertices.some(p=>Math.abs(p.y)<1e-6&&Math.abs(p.z-.275)<1e-6));
+ assert.ok(sideVertices.some(p=>Math.abs(p.y-(D.worktopHeight-D.worktop.thickness))<1e-6&&Math.abs(p.z-.205)<1e-6));
+ assert.ok(sideVertices.every(p=>p.y<.07||Math.abs(p.y-(D.worktopHeight-D.worktop.thickness))<1e-6),'front side edge is one straight slope above the toe cutout');
  assert.equal(group.getObjectsByProperty('name','upper-rack-shelf').length,1);
  assert.equal(group.getObjectsByProperty('name','pull-out-keyboard-tray').length,1);
  assert.ok(new THREE.Box3().setFromObject(group.getObjectByName('pull-out-keyboard-tray')).max.z>top.max.z);

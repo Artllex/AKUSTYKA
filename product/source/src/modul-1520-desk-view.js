@@ -54,7 +54,7 @@ export function createModul1520DeskView(record){
   profile.quadraticCurveTo(-.16,.067,-.085,.065);
   profile.lineTo(.09,.065);profile.quadraticCurveTo(.18,.068,.205,.012);
   profile.lineTo(.205,0);profile.lineTo(.275,0);
-  profile.lineTo(.245,.28);profile.lineTo(.275,D.worktopHeight-D.worktop.thickness);
+  profile.lineTo(.205,D.worktopHeight-D.worktop.thickness);
   profile.lineTo(-.275,D.worktopHeight-D.worktop.thickness);profile.closePath();
   const side=new THREE.ExtrudeGeometry(profile,{depth:D.sideThickness,bevelEnabled:false,curveSegments:16});
   side.rotateY(-Math.PI/2);
