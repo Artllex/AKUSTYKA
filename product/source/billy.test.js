@@ -7,15 +7,18 @@ import {createBillyView} from './src/billy-view.js';
 import {parseRoomDocument} from './src/bench.js';
 import {objectReflectingFaces} from './src/object-reflections.js';
 import {acousticSurfaceCategory,defaultAcousticSettings,pathAcoustics} from './src/acoustic-simulation.js';
+import {bassTrapPlacement} from './src/bass-trap-model.js';
 
 test('BILLY has exact outer dimensions, five open shelves and clears the rear door',()=>{
  const document=createDocument(),record=document.objects.find(object=>object.id===BILLY_BOOKCASE_ID);
  assert.equal(BILLY_BOOKCASE.width,0.6);
  assert.equal(record.model,'ikea-billy-60x28x202');
  const view=createBillyView(record),bounds=new THREE.Box3().setFromObject(view.group),size=bounds.getSize(new THREE.Vector3());
- assert.ok(Math.abs(size.x-BILLY_BOOKCASE.width)<1e-8);
+ const projectedWidth=BILLY_BOOKCASE.width*Math.abs(Math.cos(record.yaw))+BILLY_BOOKCASE.depth*Math.abs(Math.sin(record.yaw));
+ const projectedDepth=BILLY_BOOKCASE.width*Math.abs(Math.sin(record.yaw))+BILLY_BOOKCASE.depth*Math.abs(Math.cos(record.yaw));
+ assert.ok(Math.abs(size.x-projectedWidth)<1e-8);
  assert.ok(Math.abs(size.y-BILLY_BOOKCASE.height)<1e-8);
- assert.ok(Math.abs(size.z-BILLY_BOOKCASE.depth)<1e-8);
+ assert.ok(Math.abs(size.z-projectedDepth)<1e-8);
  assert.equal(view.group.children.filter(part=>/^billy-shelf-\d+$/.test(part.name)).length,5);
  assert.equal(view.group.getObjectByName('billy-side').material.color.getHex(),0x27292b);
  assert.equal(view.group.getObjectByName('billy-shelf-front-1').material.color.getHex(),0x202225);
@@ -31,6 +34,41 @@ test('BILLY has exact outer dimensions, five open shelves and clears the rear do
  assert.equal(acousticSurfaceCategory(reflecting[0].id),'bookcase');
  assert.equal(pathAcoustics({surface:reflecting[0].id,length:3},2,defaultAcousticSettings()).material,'wood');
  view.dispose();
+});
+
+test('BILLY stands parallel to the rear-right trap diagonal with wall and trap clearance',()=>{
+ const document=createDocument(),record=document.objects.find(object=>object.id===BILLY_BOOKCASE_ID);
+ const trap=bassTrapPlacement(document.bassTraps.find(item=>item.corner==='rear-right'),document.room);
+ const diagonal=new THREE.Vector2(trap.diagonal[1][0]-trap.diagonal[0][0],trap.diagonal[1][1]-trap.diagonal[0][1]).normalize();
+ const shelfDirection=new THREE.Vector2(Math.cos(record.yaw),-Math.sin(record.yaw));
+ assert.ok(Math.abs(shelfDirection.dot(diagonal))>1-1e-8);
+ const view=createBillyView(record),bounds=new THREE.Box3().setFromObject(view.group);
+ const corners=[[-1,-1],[-1,1],[1,-1],[1,1]].map(([sx,sz])=>{
+  const x=sx*BILLY_BOOKCASE.width/2,z=sz*BILLY_BOOKCASE.depth/2;
+  return [record.position.x+x*Math.cos(record.yaw)+z*Math.sin(record.yaw),record.position.z-x*Math.sin(record.yaw)+z*Math.cos(record.yaw)];
+ });
+ const maxSum=Math.max(...corners.map(([x,z])=>x+z));
+ const trapLine=document.room.width+document.room.length-trap.leg;
+ assert.ok((trapLine-maxSum)/Math.SQRT2>=0.05,'bookcase must clear the trap face');
+ assert.ok(bounds.max.x<=document.room.width-0.019);
+ assert.ok(bounds.max.z<=document.room.length-0.019);
+ const doorRight=document.roomFeatures.door.center+document.roomFeatures.door.width/2;
+ assert.ok(bounds.min.x>doorRight+0.1);
+ view.dispose();
+});
+
+test('untouched rear-wall BILLY documents migrate to the angled position',()=>{
+ const document=createDocument(),record=document.objects.find(object=>object.id===BILLY_BOOKCASE_ID);
+ const doorRight=document.roomFeatures.door.center+document.roomFeatures.door.width/2;
+ record.position={x:doorRight+(document.room.width-doorRight)/2,y:0,z:document.room.length-BILLY_BOOKCASE.depth/2-0.015};
+ record.yaw=0;
+ const migrated=parseRoomDocument(JSON.stringify(document)).objects.find(object=>object.id===BILLY_BOOKCASE_ID);
+ assert.deepEqual(migrated.position,createBillyRecord(document.room).position);
+ assert.equal(migrated.yaw,Math.PI/4);
+ record.position.x-=0.1;
+ const custom=parseRoomDocument(JSON.stringify(document)).objects.find(object=>object.id===BILLY_BOOKCASE_ID);
+ assert.deepEqual(custom.position,record.position);
+ assert.equal(custom.yaw,0);
 });
 
 test('old 80 cm BILLY documents load as 60 cm without losing placement',()=>{
