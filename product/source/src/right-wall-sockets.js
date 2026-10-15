@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 export const RIGHT_WALL_SOCKETS=Object.freeze({
- front:.623,back:.92,top:.31,columns:4,rows:2,projection:.02
+ front:.623,back:.92,top:.31,columns:4,rows:1,projection:.02
 });
 
 export function createRightWallSockets(room){

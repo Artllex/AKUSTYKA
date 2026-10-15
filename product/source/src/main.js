@@ -275,12 +275,14 @@ function refreshReflections(){
    if(wallPlacement){const wallPanel=createWallPanelView(wallPlacement);wallPanelViews.push(wallPanel);scene.add(wallPanel.group);}
    const prefix=`wallPanel${side==='left'?'Left':'Right'}`;
    host.dataset[`${prefix}CenterY`]=wallPlacement?String(wallPlacement.center.y):'';
+   host.dataset[`${prefix}UpperCenterY`]=wallPlacement?String(wallPlacement.upperCenterY):'';
+   host.dataset[`${prefix}Count`]=String(wallPlacement?.count??0);
    host.dataset[`${prefix}CenterZ`]=wallPlacement?String(wallPlacement.center.z):'';
    host.dataset[`${prefix}Orientation`]=wallPlacement?.orientation??'';
    for(const axis of ['y','z'])for(const [bound,fn] of [['Min',Math.min],['Max',Math.max]])host.dataset[`${prefix}${bound}${axis.toUpperCase()}`]=wallPlacement?String(fn(...wallPlacement.reflectionPoints.map(point=>point[axis]))):'';
   }
-  host.dataset.wallPanelCount=String(wallPanelViews.length);
-  $('wall-panel-summary').textContent=wallPanelViews.length===2?'Pionowe panele lewej i prawej ściany · 100 × 50 × 11 cm · środki według odbić na każdej ścianie.':'Brak miejsca na panel lub punktów odbić na jednej ze ścian bocznych.';
+  host.dataset.wallPanelCount=String(wallPanelViews.reduce((total,panel)=>total+panel.placement.count,0));
+  $('wall-panel-summary').textContent=wallPanelViews.length===2?'Po dwa pionowe panele na lewej i prawej ścianie · każdy 100 × 50 × 11 cm · dolny panel obejmuje punkty pierwszych odbić.':'Brak miejsca na dwa panele lub punktów odbić na jednej ze ścian bocznych.';
   const dropInput=$('ceiling-panel-drop'),offsetInput=$('ceiling-panel-z-offset');
   dropInput.max=String(Math.floor((doc.room.height-CEILING_PANEL.thickness)*1000)/10);
   dropInput.value=String(Math.round(doc.ceilingPanel.drop*1000)/10);
