@@ -88,6 +88,7 @@ import {updateReflectionVisibility} from './reflection-visibility.js';
 import {computeFirstReflections,normalizeReflectionSettings,REFLECTION_KEYS} from './reflection-model.js';
 import {ceilingPanelPlacement,createCeilingPanelView,normalizeCeilingPanelSettings,CEILING_PANEL} from './ceiling-panel.js';
 import {wallPanelPlacement,createWallPanelView} from './wall-panel.js';
+import {createBassTrapView} from './bass-trap-view.js';
 
 import {setupReflectionPanel} from './reflection-panel.js';
 import {analyzeAcousticPaths,normalizeAcousticSettings} from './acoustic-simulation.js';
@@ -132,7 +133,7 @@ const listenerPov=createListenerPov(renderer,scene);
 
 const perspective=new THREE.PerspectiveCamera(42,1,0.01,200);
 
-let camera=perspective,controls,view,featureViews=[],listenerViews=[],monitorViews=[],rackViews=[],deskViews=[],bookcaseViews=[],ceilingPanelView=null,wallPanelViews=[],tweeterRays=null,wallWarnings=null,monitorSpan=null,reflectionView=null,selected=null,projection=null,selectedObjectId=null,povActive=false;
+let camera=perspective,controls,view,featureViews=[],listenerViews=[],monitorViews=[],rackViews=[],deskViews=[],bookcaseViews=[],bassTrapViews=[],ceilingPanelView=null,wallPanelViews=[],tweeterRays=null,wallWarnings=null,monitorSpan=null,reflectionView=null,selected=null,projection=null,selectedObjectId=null,povActive=false;
 
 function bindControls(target){controls?.dispose();controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.minDistance=0.15;controls.maxDistance=60;controls.maxPolarAngle=Math.PI;controls.enableRotate=!projection;controls.target.copy(target);controls.update();}
 
@@ -202,9 +203,9 @@ $('distance-clear').onclick=clearMeasurement;document.addEventListener('keydown'
 
 const selectionOutline=new THREE.BoxHelper(undefined,0x74dcc2);selectionOutline.userData.helper=true;selectionOutline.visible=false;selectionOutline.material.depthTest=false;selectionOutline.renderOrder=20;scene.add(selectionOutline);
 
-const objectLabel=id=>id==='door'?'Drzwi':id==='window'?'Wnęka okna':id==='radiator'?'Kaloryfer':id==='switch'?'Włącznik światła':id==='ceiling-light'?'Lampa sufitowa Govee H60A6':id==='rack-15u'?'Stojak RIVECO 19″ 15U':id===BILLY_BOOKCASE_ID?'Regał IKEA BILLY 80 × 28 × 202 cm':id==='desk-combodesk-88'?'Biurko Thomann ComboDesk 88':id===MODUL_DESK_ID?'Biurko modul Studio Desk 2025':id===MODUL_1520_DESK_ID?'Biurko modul Studio Desk 1520':id.startsWith('monitor-')?'Monitor '+id.slice(8):'Manekin';
+const objectLabel=id=>id==='door'?'Drzwi':id==='window'?'Wnęka okna':id==='radiator'?'Kaloryfer':id==='switch'?'Włącznik światła':id==='ceiling-light'?'Lampa sufitowa Govee H60A6':id==='rack-15u'?'Stojak RIVECO 19″ 15U':id===BILLY_BOOKCASE_ID?'Regał IKEA BILLY 80 × 28 × 202 cm':id==='desk-combodesk-88'?'Biurko Thomann ComboDesk 88':id===MODUL_DESK_ID?'Biurko modul Studio Desk 2025':id===MODUL_1520_DESK_ID?'Biurko modul Studio Desk 1520':id.startsWith('bass-trap-')?'Pułapka basowa '+id.slice(10):id.startsWith('monitor-')?'Monitor '+id.slice(8):'Manekin';
 
-function selectableGroups(){return [...featureViews,...listenerViews,...monitorViews,...rackViews,...deskViews,...bookcaseViews].map(v=>v.group);}
+function selectableGroups(){return [...featureViews,...listenerViews,...monitorViews,...rackViews,...deskViews,...bookcaseViews,...bassTrapViews].map(v=>v.group);}
 
 function refreshObjectSelection(){const object=selectableGroups().find(g=>(g.userData.recordId??g.userData.id??g.name)===selectedObjectId);selectionOutline.visible=!!object;if(object)selectionOutline.setFromObject(object);host.dataset.selectedObject=object?selectedObjectId:'';objectPanel?.sync();refreshMeasurement();}
 
@@ -217,7 +218,7 @@ function resize(){const w=host.clientWidth,h=host.clientHeight;if(!w||!h)return;
 const projectionHidden=new WeakMap();let projectionObjectsVisible=false;
 function updateProjectionVisibility(){
  if(!view)return;
- const objects=[...featureViews,...listenerViews,...monitorViews,...rackViews,...deskViews,...bookcaseViews,...(ceilingPanelView?[ceilingPanelView]:[]),...wallPanelViews].map(v=>v.group),helpers=[tweeterRays?.group,wallWarnings?.group,monitorSpan?.group].filter(Boolean),groups=[...objects,...helpers];
+ const objects=[...featureViews,...listenerViews,...monitorViews,...rackViews,...deskViews,...bookcaseViews,...bassTrapViews,...(ceilingPanelView?[ceilingPanelView]:[]),...wallPanelViews].map(v=>v.group),helpers=[tweeterRays?.group,wallWarnings?.group,monitorSpan?.group].filter(Boolean),groups=[...objects,...helpers];
  const surface=projection?view.surfaces.find(s=>s.name===projection.surfaceName):null;
  for(const group of objects){if(projection){if(!projectionHidden.has(group))projectionHidden.set(group,group.visible);group.visible=!!(projectionObjectsVisible&&projectionHidden.get(group)&&objectOnProjectionSide(group,surface,projection.side));}else if(projectionHidden.has(group)){group.visible=projectionHidden.get(group);projectionHidden.delete(group);}}
  const visibleMonitors=new Set(monitorViews.filter(m=>m.group.visible).map(m=>m.group.name));
@@ -265,7 +266,7 @@ function refreshReflections(){
  if(reflectionView){scene.remove(reflectionView.group);reflectionView.dispose();}
   if(ceilingPanelView){scene.remove(ceilingPanelView.group);ceilingPanelView.dispose();ceilingPanelView=null;}
   for(const wallPanel of wallPanelViews){scene.remove(wallPanel.group);wallPanel.dispose();}wallPanelViews=[];
- const objects=[...featureViews,...(doc.acoustics.includeHiddenRack?rackViews:[]),...deskViews,...bookcaseViews];
+ const objects=[...featureViews,...(doc.acoustics.includeHiddenRack?rackViews:[]),...deskViews,...bookcaseViews,...bassTrapViews];
   const targets=computeFirstReflections(monitorViews,listenerViews[0],doc.room,{...doc.reflections,ears:'both',selected:REFLECTION_KEYS},view.surfaces,objects.map(item=>item.group),includeAcousticMesh);
   const placement=ceilingPanelPlacement(targets,doc.room,doc.ceilingPanel);
   if(placement)doc.ceilingPanel=placement.settings;
@@ -315,7 +316,8 @@ function refreshListeners(){for(const listener of listenerViews){scene.remove(li
 
 function refreshMonitors(){for(const monitor of monitorViews){scene.remove(monitor.group);monitor.dispose();}monitorViews=doc.objects.filter(o=>o.type==='studio-monitor').map(record=>{const monitor=createStudioMonitor(record);applyObjectTransform(monitor.group,doc.transforms);scene.add(monitor.group);return monitor;});host.dataset.monitorCount=monitorViews.length;monitorPanel?.sync();refreshTweeterRays();}
 
-function refreshRacks(){for(const rack of rackViews){scene.remove(rack.group);rack.dispose();}rackViews=doc.objects.filter(o=>o.type==='studio-rack').map(record=>{const rack=createRackView(record);const attachments=[createMotu24Ai(record),createBehringerModelD(),createBehringerKobolExpander()];for(const item of attachments)rack.group.add(item.group);const disposeRack=rack.dispose;rack.dispose=()=>{for(const item of attachments)item.dispose();disposeRack();};applyObjectTransform(rack.group,doc.transforms);rack.group.visible=false;scene.add(rack.group);return rack;});host.dataset.rackCount=rackViews.length;host.dataset.motu24AiCount=rackViews.length;host.dataset.modelDCount=rackViews.length;host.dataset.kobolExpanderCount=rackViews.length;if(rackAddButton)rackAddButton.hidden=!!rackViews.length;refreshCollisions();refreshObjectSelection();}
+function refreshBassTraps(){for(const trap of bassTrapViews){scene.remove(trap.group);trap.dispose();}bassTrapViews=(doc.bassTraps??[]).map(record=>{const trap=createBassTrapView(record,doc.room);applyObjectTransform(trap.group,doc.transforms);scene.add(trap.group);return trap;});host.dataset.bassTrapCount=String(bassTrapViews.length);host.dataset.leftFrontBassTrapCount=String(bassTrapViews.filter(trap=>trap.placement.corner==='front-left').length);}
+function refreshRacks(){refreshBassTraps();for(const rack of rackViews){scene.remove(rack.group);rack.dispose();}rackViews=doc.objects.filter(o=>o.type==='studio-rack').map(record=>{const rack=createRackView(record);const attachments=[createMotu24Ai(record),createBehringerModelD(),createBehringerKobolExpander()];for(const item of attachments)rack.group.add(item.group);const disposeRack=rack.dispose;rack.dispose=()=>{for(const item of attachments)item.dispose();disposeRack();};applyObjectTransform(rack.group,doc.transforms);rack.group.visible=false;scene.add(rack.group);return rack;});host.dataset.rackCount=rackViews.length;host.dataset.motu24AiCount=rackViews.length;host.dataset.modelDCount=rackViews.length;host.dataset.kobolExpanderCount=rackViews.length;if(rackAddButton)rackAddButton.hidden=!!rackViews.length;refreshCollisions();refreshObjectSelection();}
 
 function refreshBookcases(){for(const bookcase of bookcaseViews){scene.remove(bookcase.group);bookcase.dispose();}bookcaseViews=doc.objects.filter(o=>o.type==='bookcase'&&o.id===BILLY_BOOKCASE_ID).map(record=>{const bookcase=createBillyView(record);applyObjectTransform(bookcase.group,doc.transforms);scene.add(bookcase.group);return bookcase;});host.dataset.billyCount=bookcaseViews.length;if(billyAddButton)billyAddButton.hidden=!!bookcaseViews.length;refreshCollisions();refreshObjectSelection();}
 
