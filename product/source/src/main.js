@@ -84,7 +84,8 @@ import {findMonitorCollisions,tintCollision} from './monitor-collisions.js';
 import {createReflectionView} from './reflection-view.js';
 import {updateReflectionVisibility} from './reflection-visibility.js';
 
-import {normalizeReflectionSettings} from './reflection-model.js';
+import {computeFirstReflections,normalizeReflectionSettings} from './reflection-model.js';
+import {ceilingPanelPlacement,createCeilingPanelView} from './ceiling-panel.js';
 
 import {setupReflectionPanel} from './reflection-panel.js';
 import {analyzeAcousticPaths,normalizeAcousticSettings} from './acoustic-simulation.js';
@@ -98,6 +99,9 @@ const doc=createDocument();chooseDesk(doc,MODUL_1520_DESK_ID);const history=crea
 try{renderer=new THREE.WebGLRenderer({antialias:true});}catch(error){$('error').hidden=false;$('error').textContent='Nie można uruchomić widoku 3D. Sprawdź obsługę WebGL w przeglądarce.';throw error;}
 
 renderer.setPixelRatio(Math.min(devicePixelRatio,2));host.append(renderer.domElement);renderer.setClearColor(0x16212b);
+const panelInfo=document.createElement('section');panelInfo.id='ceiling-panel-distances';panelInfo.setAttribute('aria-label','Odległości narożników panelu sufitowego');
+panelInfo.innerHTML='<strong>Panel sufitowy · 100 × 50 × 11 cm</strong><small>Odległości narożników od ścian</small><table><thead><tr><th>Nr</th><th>Przednia</th><th>Lewa</th><th>Prawa</th></tr></thead><tbody></tbody></table>';
+panelInfo.hidden=true;host.append(panelInfo);
 let laserCursor=null;
 host.addEventListener('pointermove',event=>{
  if(event.target.closest?.('button,input,label,#edit-popup,#edit-tools,#axis-gizmo,.view-tools,#distance-label,#edge-insert')){laserCursor=null;return;}
@@ -124,7 +128,7 @@ const listenerPov=createListenerPov(renderer,scene);
 
 const perspective=new THREE.PerspectiveCamera(42,1,0.01,200);
 
-let camera=perspective,controls,view,featureViews=[],listenerViews=[],monitorViews=[],rackViews=[],deskViews=[],bookcaseViews=[],tweeterRays=null,wallWarnings=null,monitorSpan=null,reflectionView=null,selected=null,projection=null,selectedObjectId=null,povActive=false;
+let camera=perspective,controls,view,featureViews=[],listenerViews=[],monitorViews=[],rackViews=[],deskViews=[],bookcaseViews=[],ceilingPanelView=null,tweeterRays=null,wallWarnings=null,monitorSpan=null,reflectionView=null,selected=null,projection=null,selectedObjectId=null,povActive=false;
 
 function bindControls(target){controls?.dispose();controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.minDistance=0.15;controls.maxDistance=60;controls.maxPolarAngle=Math.PI;controls.enableRotate=!projection;controls.target.copy(target);controls.update();}
 
@@ -209,7 +213,7 @@ function resize(){const w=host.clientWidth,h=host.clientHeight;if(!w||!h)return;
 const projectionHidden=new WeakMap();let projectionObjectsVisible=false;
 function updateProjectionVisibility(){
  if(!view)return;
- const objects=[...featureViews,...listenerViews,...monitorViews,...rackViews,...deskViews,...bookcaseViews].map(v=>v.group),helpers=[tweeterRays?.group,wallWarnings?.group,monitorSpan?.group].filter(Boolean),groups=[...objects,...helpers];
+ const objects=[...featureViews,...listenerViews,...monitorViews,...rackViews,...deskViews,...bookcaseViews,...(ceilingPanelView?[ceilingPanelView]:[])].map(v=>v.group),helpers=[tweeterRays?.group,wallWarnings?.group,monitorSpan?.group].filter(Boolean),groups=[...objects,...helpers];
  const surface=projection?view.surfaces.find(s=>s.name===projection.surfaceName):null;
  for(const group of objects){if(projection){if(!projectionHidden.has(group))projectionHidden.set(group,group.visible);group.visible=!!(projectionObjectsVisible&&projectionHidden.get(group)&&objectOnProjectionSide(group,surface,projection.side));}else if(projectionHidden.has(group)){group.visible=projectionHidden.get(group);projectionHidden.delete(group);}}
  const visibleMonitors=new Set(monitorViews.filter(m=>m.group.visible).map(m=>m.group.name));
@@ -255,8 +259,15 @@ function includeAcousticMesh(mesh,root){
 
 function refreshReflections(){
  if(reflectionView){scene.remove(reflectionView.group);reflectionView.dispose();}
+  if(ceilingPanelView){scene.remove(ceilingPanelView.group);ceilingPanelView.dispose();ceilingPanelView=null;}
  const objects=[...featureViews,...(doc.acoustics.includeHiddenRack?rackViews:[]),...deskViews,...bookcaseViews];
- reflectionView=createReflectionView(monitorViews,listenerViews[0],doc.room,doc.reflections,view.surfaces,objects.map(item=>item.group),includeAcousticMesh);
+  const targets=computeFirstReflections(monitorViews,listenerViews[0],doc.room,{...doc.reflections,ears:'both',selected:['L:tweeter','R:tweeter']},view.surfaces,objects.map(item=>item.group),includeAcousticMesh);
+  const placement=ceilingPanelPlacement(targets,doc.room);
+  if(placement){ceilingPanelView=createCeilingPanelView(placement);scene.add(ceilingPanelView.group);}
+  panelInfo.hidden=!placement;panelInfo.querySelector('tbody').replaceChildren();
+  if(placement)for(const corner of placement.corners){const row=document.createElement('tr');for(const key of ['index','front','left','right']){const cell=document.createElement('td');cell.textContent=key==='index'?String(corner.index):format(corner[key]*100,1)+' cm';row.append(cell);}panelInfo.querySelector('tbody').append(row);}
+  host.dataset.ceilingPanelCount=placement?'1':'0';host.dataset.ceilingPanelYaw=placement?placement.yaw.toFixed(5):'';
+  reflectionView=createReflectionView(monitorViews,listenerViews[0],doc.room,doc.reflections,view.surfaces,[...objects.map(item=>item.group),...(ceilingPanelView?[ceilingPanelView.group]:[])],includeAcousticMesh);
  scene.add(reflectionView.group);
  host.dataset.reflectionCount=reflectionView.paths.length;
  host.dataset.deskReflectionCount=reflectionView.paths.filter(path=>path.surface.startsWith('object:'+selectedDeskId(doc)+':')).length;

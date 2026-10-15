@@ -1,0 +1,45 @@
+import * as THREE from 'three';
+
+export const CEILING_PANEL=Object.freeze({width:1,depth:.5,thickness:.11});
+
+// The two tweeter clusters determine the long axis. Both ears contribute to
+// each cluster, so the panel follows the listening geometry as it changes.
+export function ceilingPanelPlacement(paths,room){
+ const points=paths.filter(path=>path.surface==='ceiling'&&path.driverId==='tweeter');
+ const left=points.filter(path=>path.channel==='L'),right=points.filter(path=>path.channel==='R');
+ if(!left.length||!right.length)return null;
+ const average=items=>items.reduce((sum,path)=>sum.add(path.point),new THREE.Vector3()).divideScalar(items.length);
+ const a=average(left),b=average(right),center=average(points);
+ const yaw=Math.atan2(-(b.z-a.z),b.x-a.x);
+ const c=Math.cos(yaw),s=Math.sin(yaw),corners=[];
+ for(const [index,x,z] of [[1,-.5,-.25],[2,.5,-.25],[3,.5,.25],[4,-.5,.25]]){
+  const px=center.x+x*c+z*s,pz=center.z-x*s+z*c;
+  corners.push({index,x:px,z:pz,front:pz,left:px,right:room.width-px});
+ }
+ if(corners.some(corner=>corner.left<0||corner.right<0||corner.front<0||corner.z>room.length))return null;
+ return {center:{x:center.x,y:room.height-CEILING_PANEL.thickness/2,z:center.z},yaw,corners,reflectionPoints:points.map(path=>path.point.clone())};
+}
+
+export function createCeilingPanelView(placement){
+ const group=new THREE.Group();group.name='ceiling-panel';group.userData.recordId='ceiling-panel';
+ const fabric=new THREE.MeshStandardMaterial({color:0x343a3c,roughness:1});
+ const markerMaterial=new THREE.MeshBasicMaterial({color:0xffd470,depthTest:false});
+ const panel=new THREE.Mesh(new THREE.BoxGeometry(CEILING_PANEL.width,CEILING_PANEL.thickness,CEILING_PANEL.depth),fabric);
+ panel.name='absorber';panel.position.set(placement.center.x,placement.center.y,placement.center.z);panel.rotation.y=placement.yaw;group.add(panel);
+ const markerGeometry=new THREE.SphereGeometry(.015,12,8);
+ const textures=[];
+ for(const corner of placement.corners){
+  const marker=new THREE.Mesh(markerGeometry,markerMaterial);marker.name=`corner-${corner.index}`;
+  marker.position.set(corner.x,placement.center.y-CEILING_PANEL.thickness/2-.012,corner.z);
+  marker.userData.collision=false;marker.renderOrder=32;group.add(marker);
+  if(typeof document!=='undefined'){
+   const canvas=document.createElement('canvas');canvas.width=64;canvas.height=64;
+   const ctx=canvas.getContext('2d');ctx.fillStyle='#172127';ctx.beginPath();ctx.arc(32,32,29,0,Math.PI*2);ctx.fill();
+   ctx.strokeStyle='#ffd470';ctx.lineWidth=4;ctx.stroke();ctx.fillStyle='#ffd470';ctx.font='bold 36px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(String(corner.index),32,34);
+   const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;textures.push(texture);
+   const label=new THREE.Sprite(new THREE.SpriteMaterial({map:texture,transparent:true,depthTest:false,depthWrite:false}));
+   label.name=`corner-label-${corner.index}`;label.position.copy(marker.position);label.position.y-=.045;label.scale.set(.095,.095,1);label.userData.collision=false;label.renderOrder=33;group.add(label);
+  }
+ }
+ return {group,placement,dispose(){panel.geometry.dispose();markerGeometry.dispose();fabric.dispose();markerMaterial.dispose();for(const child of group.children)if(child.isSprite)child.material.dispose();for(const texture of textures)texture.dispose();}};
+}

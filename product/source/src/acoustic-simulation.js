@@ -9,8 +9,8 @@ export const ACOUSTIC_MATERIALS=Object.freeze({
  metal:{label:'Metal · założenie',absorption:[.03,.03,.02,.02,.02,.03]},
  absorber:{label:'Panel pochłaniający · przykład',absorption:[.20,.42,.72,.88,.92,.92]}
 });
-export const ACOUSTIC_SURFACES=Object.freeze({walls:'Ściany i wnęka',ceiling:'Sufit',floor:'Podłoga',window:'Okno',door:'Drzwi',radiator:'Grzejnik',desk:'Biurko',bookcase:'Regał',rack:'Rack'});
-export const DEFAULT_ACOUSTIC_MATERIALS=Object.freeze({walls:'painted',ceiling:'painted',floor:'laminate',window:'glass',door:'wood',radiator:'metal',desk:'wood',bookcase:'wood',rack:'metal'});
+export const ACOUSTIC_SURFACES=Object.freeze({walls:'Ściany i wnęka',ceiling:'Sufit',panel:'Panel sufitowy',floor:'Podłoga',window:'Okno',door:'Drzwi',radiator:'Grzejnik',desk:'Biurko',bookcase:'Regał',rack:'Rack'});
+export const DEFAULT_ACOUSTIC_MATERIALS=Object.freeze({walls:'painted',ceiling:'painted',panel:'absorber',floor:'laminate',window:'glass',door:'wood',radiator:'metal',desk:'wood',bookcase:'wood',rack:'metal'});
 export const DEFAULT_SOUND_SPEED=343.2; // m/s, about 20 °C
 
 export function defaultAcousticSettings(){return {materials:{...DEFAULT_ACOUSTIC_MATERIALS},includeHiddenRack:false,includeHiddenDeskEquipment:false,band:1000};}
@@ -31,6 +31,7 @@ export function normalizeAcousticSettings(input){
 export function acousticSurfaceCategory(id){
  if(id==='floor')return 'floor';
  if(id==='ceiling')return 'ceiling';
+ if(id.startsWith('object:ceiling-panel:'))return 'panel';
  if(id==='niche-back'||id.startsWith('object:window:'))return 'window';
  if(id.startsWith('object:door:'))return 'door';
  if(id.startsWith('object:radiator:'))return 'radiator';
