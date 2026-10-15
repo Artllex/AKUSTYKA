@@ -2,11 +2,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from 'three';
 import {createDocument} from './src/model.js';
+import {parseRoomDocument} from './src/bench.js';
 import {createStudioMonitor} from './src/monitor-view.js';
 import {createSeatedListener} from './src/listener-view.js';
 import {createRoom} from './src/room-view.js';
 import {computeFirstReflections} from './src/reflection-model.js';
-import {CEILING_PANEL,ceilingPanelPlacement,createCeilingPanelView} from './src/ceiling-panel.js';
+import {CEILING_PANEL,ceilingPanelPlacement,createCeilingPanelView,normalizeCeilingPanelSettings} from './src/ceiling-panel.js';
 import {acousticSurfaceCategory,defaultAcousticSettings,pathAcoustics} from './src/acoustic-simulation.js';
 
 test('100 × 50 × 11 cm panel is centered over all ceiling reflections in both axes',()=>{
@@ -59,4 +60,36 @@ test('panel centers on extremes rather than the mean when reflections are uneven
  assert.equal(placement.reflectionPoints.length,4);
  assert.ok(Math.abs(placement.center.x-1.2)<1e-9);
  assert.ok(Math.abs(placement.center.z-.8)<1e-9);
+});
+
+test('ceiling gap and longitudinal offset move the actual panel and all corner markers',()=>{
+ const room={width:2.5,length:3,height:2.6},paths=[{surface:'ceiling',point:new THREE.Vector3(1,2.6,1)},{surface:'ceiling',point:new THREE.Vector3(1.5,2.6,1.1)}];
+ const initial=ceilingPanelPlacement(paths,room);
+ const moved=ceilingPanelPlacement(paths,room,{drop:.15,zOffset:-.12});
+ const panel=createCeilingPanelView(moved),body=new THREE.Box3().setFromObject(panel.group.getObjectByName('absorber'));
+ assert.ok(Math.abs(moved.center.y-(initial.center.y-.15))<1e-9);
+ assert.ok(Math.abs(moved.center.z-(initial.center.z-.12))<1e-9);
+ assert.ok(Math.abs(body.max.y-(room.height-.15))<1e-9);
+ for(let i=0;i<4;i++){
+  assert.ok(Math.abs(moved.corners[i].z-(initial.corners[i].z-.12))<1e-9);
+  assert.ok(Math.abs(panel.group.getObjectByName('corner-'+(i+1)).position.y-(room.height-.15-CEILING_PANEL.thickness-.012))<1e-9);
+ }
+ assert.deepEqual(moved.settings,{drop:.15,zOffset:-.12});
+ panel.dispose();
+});
+
+test('panel settings validate, default old documents, and limit travel to the room',()=>{
+ const room={width:2.5,length:3,height:2.6};
+ assert.deepEqual(normalizeCeilingPanelSettings(undefined,room),{drop:0,zOffset:0});
+ assert.throws(()=>normalizeCeilingPanelSettings({drop:-.01,zOffset:0},room));
+ assert.throws(()=>normalizeCeilingPanelSettings({drop:2.6,zOffset:0},room));
+ assert.throws(()=>normalizeCeilingPanelSettings({drop:0,zOffset:Infinity},room));
+ const paths=[{surface:'ceiling',point:new THREE.Vector3(1,2.6,1)}];
+ const far=ceilingPanelPlacement(paths,room,{drop:0,zOffset:3});
+ assert.ok(Math.abs(far.corners[2].z-room.length)<1e-9);
+ assert.ok(far.settings.zOffset<3);
+ const document=createDocument();document.ceilingPanel={drop:.15,zOffset:-.12};
+ assert.deepEqual(parseRoomDocument(JSON.stringify(document)).ceilingPanel,document.ceilingPanel);
+ delete document.ceilingPanel;
+ assert.deepEqual(parseRoomDocument(JSON.stringify(document)).ceilingPanel,{drop:0,zOffset:0});
 });

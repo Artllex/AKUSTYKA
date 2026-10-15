@@ -1,11 +1,18 @@
 import * as THREE from 'three';
 
 export const CEILING_PANEL=Object.freeze({width:1,depth:.5,thickness:.11});
+export const DEFAULT_CEILING_PANEL_SETTINGS=Object.freeze({drop:0,zOffset:0});
+
+export function normalizeCeilingPanelSettings(input,room){
+ const settings=input??DEFAULT_CEILING_PANEL_SETTINGS;
+ if(!settings||typeof settings!=='object'||typeof settings.drop!=='number'||!Number.isFinite(settings.drop)||typeof settings.zOffset!=='number'||!Number.isFinite(settings.zOffset)||settings.drop<0||settings.drop>room.height-CEILING_PANEL.thickness||Math.abs(settings.zOffset)>room.length)throw new Error('Nieprawidłowe ustawienia panelu sufitowego.');
+ return {drop:settings.drop,zOffset:settings.zOffset};
+}
 
 // Center the panel over the complete footprint of ceiling reflections.
 // The bounding midpoint keeps both opposite edges equally distant from the
 // outermost reflection points even when different drivers have unequal counts.
-export function ceilingPanelPlacement(paths,room){
+export function ceilingPanelPlacement(paths,room,settings=DEFAULT_CEILING_PANEL_SETTINGS){
  const points=paths.filter(path=>path.surface==='ceiling'&&path.point);
  if(!points.length)return null;
  const xs=points.map(path=>path.point.x),zs=points.map(path=>path.point.z);
@@ -13,12 +20,17 @@ export function ceilingPanelPlacement(paths,room){
  const center={x:(minX+maxX)/2,z:(minZ+maxZ)/2};
  const yaw=maxZ-minZ>maxX-minX?Math.PI/2:0;
  const c=Math.cos(yaw),s=Math.sin(yaw),corners=[];
+ const halfZ=(CEILING_PANEL.width*Math.abs(s)+CEILING_PANEL.depth*Math.abs(c))/2;
+ const zOffsetLimits={min:halfZ-center.z,max:room.length-halfZ-center.z};
+ const zOffset=Math.min(zOffsetLimits.max,Math.max(zOffsetLimits.min,settings.zOffset));
+ const drop=Math.min(room.height-CEILING_PANEL.thickness,Math.max(0,settings.drop));
+ center.z+=zOffset;
  for(const [index,x,z] of [[1,-.5,-.25],[2,.5,-.25],[3,.5,.25],[4,-.5,.25]]){
   const px=center.x+x*c+z*s,pz=center.z-x*s+z*c;
   corners.push({index,x:px,z:pz,front:pz,left:px,right:room.width-px});
  }
  if(corners.some(corner=>corner.left<0||corner.right<0||corner.front<0||corner.z>room.length))return null;
- return {center:{x:center.x,y:room.height-CEILING_PANEL.thickness/2,z:center.z},yaw,corners,reflectionPoints:points.map(path=>path.point.clone())};
+ return {center:{x:center.x,y:room.height-drop-CEILING_PANEL.thickness/2,z:center.z},yaw,corners,reflectionPoints:points.map(path=>path.point.clone()),settings:{drop,zOffset},zOffsetLimits};
 }
 
 export function createCeilingPanelView(placement){
