@@ -86,6 +86,7 @@ import {updateReflectionVisibility} from './reflection-visibility.js';
 
 import {computeFirstReflections,normalizeReflectionSettings,REFLECTION_KEYS} from './reflection-model.js';
 import {ceilingPanelPlacement,createCeilingPanelView,normalizeCeilingPanelSettings,CEILING_PANEL} from './ceiling-panel.js';
+import {wallPanelPlacement,createWallPanelView} from './wall-panel.js';
 
 import {setupReflectionPanel} from './reflection-panel.js';
 import {analyzeAcousticPaths,normalizeAcousticSettings} from './acoustic-simulation.js';
@@ -103,6 +104,7 @@ const panelInfo=document.createElement('section');panelInfo.id='ceiling-panel-di
 panelInfo.innerHTML='<strong>Panel sufitowy · 100 × 50 × 11 cm</strong><small>Odległości narożników od ścian</small><table><thead><tr><th>Nr</th><th>Przednia</th><th>Lewa</th><th>Prawa</th></tr></thead><tbody></tbody></table>';
 panelInfo.hidden=true;host.append(panelInfo);
 $('reflection-count').insertAdjacentHTML('afterend','<section class="ceiling-panel-controls" aria-label="Ustawienie panelu sufitowego"><h2>Panel sufitowy</h2><label for="ceiling-panel-drop">Odstęp od sufitu · w dół<div><input id="ceiling-panel-drop" type="number" min="0" step="0.1" value="0"><span>cm</span></div></label><label for="ceiling-panel-z-offset">Przesunięcie wzdłuż pokoju · + ku tyłowi<div><input id="ceiling-panel-z-offset" type="number" step="0.1" value="0"><span>cm</span></div></label><p class="muted">0 cm oznacza środek wyliczonych odbić. Wartość ujemna przesuwa panel ku przedniej ścianie.</p></section>');
+$('reflections-panel').insertAdjacentHTML('beforeend','<p id="wall-panel-summary" class="muted" aria-live="polite"></p>');
 let laserCursor=null;
 host.addEventListener('pointermove',event=>{
  if(event.target.closest?.('button,input,label,#edit-popup,#edit-tools,#axis-gizmo,.view-tools,#distance-label,#edge-insert')){laserCursor=null;return;}
@@ -129,7 +131,7 @@ const listenerPov=createListenerPov(renderer,scene);
 
 const perspective=new THREE.PerspectiveCamera(42,1,0.01,200);
 
-let camera=perspective,controls,view,featureViews=[],listenerViews=[],monitorViews=[],rackViews=[],deskViews=[],bookcaseViews=[],ceilingPanelView=null,tweeterRays=null,wallWarnings=null,monitorSpan=null,reflectionView=null,selected=null,projection=null,selectedObjectId=null,povActive=false;
+let camera=perspective,controls,view,featureViews=[],listenerViews=[],monitorViews=[],rackViews=[],deskViews=[],bookcaseViews=[],ceilingPanelView=null,wallPanelViews=[],tweeterRays=null,wallWarnings=null,monitorSpan=null,reflectionView=null,selected=null,projection=null,selectedObjectId=null,povActive=false;
 
 function bindControls(target){controls?.dispose();controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.minDistance=0.15;controls.maxDistance=60;controls.maxPolarAngle=Math.PI;controls.enableRotate=!projection;controls.target.copy(target);controls.update();}
 
@@ -214,7 +216,7 @@ function resize(){const w=host.clientWidth,h=host.clientHeight;if(!w||!h)return;
 const projectionHidden=new WeakMap();let projectionObjectsVisible=false;
 function updateProjectionVisibility(){
  if(!view)return;
- const objects=[...featureViews,...listenerViews,...monitorViews,...rackViews,...deskViews,...bookcaseViews,...(ceilingPanelView?[ceilingPanelView]:[])].map(v=>v.group),helpers=[tweeterRays?.group,wallWarnings?.group,monitorSpan?.group].filter(Boolean),groups=[...objects,...helpers];
+ const objects=[...featureViews,...listenerViews,...monitorViews,...rackViews,...deskViews,...bookcaseViews,...(ceilingPanelView?[ceilingPanelView]:[]),...wallPanelViews].map(v=>v.group),helpers=[tweeterRays?.group,wallWarnings?.group,monitorSpan?.group].filter(Boolean),groups=[...objects,...helpers];
  const surface=projection?view.surfaces.find(s=>s.name===projection.surfaceName):null;
  for(const group of objects){if(projection){if(!projectionHidden.has(group))projectionHidden.set(group,group.visible);group.visible=!!(projectionObjectsVisible&&projectionHidden.get(group)&&objectOnProjectionSide(group,surface,projection.side));}else if(projectionHidden.has(group)){group.visible=projectionHidden.get(group);projectionHidden.delete(group);}}
  const visibleMonitors=new Set(monitorViews.filter(m=>m.group.visible).map(m=>m.group.name));
@@ -261,11 +263,22 @@ function includeAcousticMesh(mesh,root){
 function refreshReflections(){
  if(reflectionView){scene.remove(reflectionView.group);reflectionView.dispose();}
   if(ceilingPanelView){scene.remove(ceilingPanelView.group);ceilingPanelView.dispose();ceilingPanelView=null;}
+  for(const wallPanel of wallPanelViews){scene.remove(wallPanel.group);wallPanel.dispose();}wallPanelViews=[];
  const objects=[...featureViews,...(doc.acoustics.includeHiddenRack?rackViews:[]),...deskViews,...bookcaseViews];
   const targets=computeFirstReflections(monitorViews,listenerViews[0],doc.room,{...doc.reflections,ears:'both',selected:REFLECTION_KEYS},view.surfaces,objects.map(item=>item.group),includeAcousticMesh);
   const placement=ceilingPanelPlacement(targets,doc.room,doc.ceilingPanel);
   if(placement)doc.ceilingPanel=placement.settings;
   if(placement){ceilingPanelView=createCeilingPanelView(placement);scene.add(ceilingPanelView.group);}
+  for(const side of ['left','right']){
+   const wallPlacement=wallPanelPlacement(targets,doc.room,side);
+   if(wallPlacement){const wallPanel=createWallPanelView(wallPlacement);wallPanelViews.push(wallPanel);scene.add(wallPanel.group);}
+   const prefix=`wallPanel${side==='left'?'Left':'Right'}`;
+   host.dataset[`${prefix}CenterY`]=wallPlacement?String(wallPlacement.center.y):'';
+   host.dataset[`${prefix}CenterZ`]=wallPlacement?String(wallPlacement.center.z):'';
+   for(const axis of ['y','z'])for(const [bound,fn] of [['Min',Math.min],['Max',Math.max]])host.dataset[`${prefix}${bound}${axis.toUpperCase()}`]=wallPlacement?String(fn(...wallPlacement.reflectionPoints.map(point=>point[axis]))):'';
+  }
+  host.dataset.wallPanelCount=String(wallPanelViews.length);
+  $('wall-panel-summary').textContent=wallPanelViews.length===2?'Panele lewej i prawej ściany · 100 × 50 × 11 cm · środki według odbić na każdej ścianie.':'Brak miejsca na panel lub punktów odbić na jednej ze ścian bocznych.';
   const dropInput=$('ceiling-panel-drop'),offsetInput=$('ceiling-panel-z-offset');
   dropInput.max=String(Math.floor((doc.room.height-CEILING_PANEL.thickness)*1000)/10);
   dropInput.value=String(Math.round(doc.ceilingPanel.drop*1000)/10);
@@ -282,9 +295,10 @@ function refreshReflections(){
   host.dataset.ceilingReflectionMaxX=placement?String(Math.max(...placement.reflectionPoints.map(point=>point.x))):'';
   host.dataset.ceilingReflectionMinZ=placement?String(Math.min(...placement.reflectionPoints.map(point=>point.z))):'';
   host.dataset.ceilingReflectionMaxZ=placement?String(Math.max(...placement.reflectionPoints.map(point=>point.z))):'';
-  reflectionView=createReflectionView(monitorViews,listenerViews[0],doc.room,doc.reflections,view.surfaces,[...objects.map(item=>item.group),...(ceilingPanelView?[ceilingPanelView.group]:[])],includeAcousticMesh);
+  reflectionView=createReflectionView(monitorViews,listenerViews[0],doc.room,doc.reflections,view.surfaces,[...objects.map(item=>item.group),...(ceilingPanelView?[ceilingPanelView.group]:[]),...wallPanelViews.map(item=>item.group)],includeAcousticMesh);
  scene.add(reflectionView.group);
  host.dataset.reflectionCount=reflectionView.paths.length;
+ for(const side of ['left','right'])host.dataset[`wallPanel${side==='left'?'Left':'Right'}ReflectionCount`]=String(reflectionView.paths.filter(path=>path.surface.startsWith(`object:wall-panel-${side}:`)).length);
  host.dataset.deskReflectionCount=reflectionView.paths.filter(path=>path.surface.startsWith('object:'+selectedDeskId(doc)+':')).length;
  host.dataset.activeDeskReflectionCount=reflectionView.paths.filter(path=>path.surface.startsWith('object:'+selectedDeskId(doc)+':')).length;
  const report=listenerViews[0]?analyzeAcousticPaths(monitorViews,listenerViews[0],reflectionView.paths,doc.reflections,doc.acoustics,doc.room,{approximateModes:!!(doc.roomMesh||doc.roomShape)}):null;
