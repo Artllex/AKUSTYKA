@@ -6,7 +6,7 @@ import {createStudioMonitor} from './src/monitor-view.js';
 import {createSeatedListener} from './src/listener-view.js';
 import {createRoom} from './src/room-view.js';
 import {computeFirstReflections} from './src/reflection-model.js';
-import {WALL_PANEL,WALL_PANEL_GAP,wallPanelPlacement,createWallPanelView} from './src/wall-panel.js';
+import {WALL_PANEL,WALL_PANEL_BOTTOMS,wallPanelPlacement,createWallPanelView} from './src/wall-panel.js';
 import {acousticSurfaceCategory,defaultAcousticSettings,pathAcoustics} from './src/acoustic-simulation.js';
 
 test('two vertical 100 × 50 × 11 cm absorbers stack on each wall while covering reflection footprints',()=>{
@@ -21,16 +21,21 @@ test('two vertical 100 × 50 × 11 cm absorbers stack on each wall while coverin
   assert.equal(placement.reflectionPoints.length,20);
   assert.equal(placement.count,2);
   assert.equal(placement.orientation,'vertical');
-  const ys=placement.reflectionPoints.map(point=>point.y),zs=placement.reflectionPoints.map(point=>point.z);
-  assert.ok(Math.abs(placement.center.y-Math.min((Math.min(...ys)+Math.max(...ys))/2,doc.room.height-1.5*WALL_PANEL.width-WALL_PANEL_GAP))<1e-9);
+  const zs=placement.reflectionPoints.map(point=>point.z);
+  assert.ok(Math.abs(placement.center.y-.82)<1e-9);
+  assert.ok(Math.abs(placement.upperCenterY-1.82)<1e-9);
   assert.ok(Math.abs(placement.center.z-(Math.min(...zs)+Math.max(...zs))/2)<1e-9);
   const lower=view.group.getObjectByName('absorber-lower'),upper=view.group.getObjectByName('absorber-upper');
   const body=new THREE.Box3().setFromObject(lower),upperBody=new THREE.Box3().setFromObject(upper);
-  assert.equal(view.group.children.length,2);
+  assert.equal(view.group.children.filter(child=>child.name.startsWith('absorber-')).length,2);
+  assert.ok(view.group.getObjectByName('panel-joint'));
   assert.equal(lower.material.color.getHex(),0xfffff0);
   assert.equal(upper.material.color.getHex(),0xfffff0);
   assert.ok(Math.abs(body.max.y-body.min.y-WALL_PANEL.width)<1e-9);
-  assert.ok(Math.abs(upperBody.min.y-body.max.y-WALL_PANEL_GAP)<1e-9);
+  assert.ok(Math.abs(body.min.y-WALL_PANEL_BOTTOMS[0])<1e-9);
+  assert.ok(Math.abs(body.max.y-WALL_PANEL_BOTTOMS[1])<1e-9);
+  assert.ok(Math.abs(upperBody.min.y-WALL_PANEL_BOTTOMS[1])<1e-9);
+  assert.ok(Math.abs(upperBody.max.y-2.32)<1e-9);
   assert.ok(upperBody.max.y<=doc.room.height+1e-9);
   assert.ok(Math.abs(body.max.z-body.min.z-WALL_PANEL.depth)<1e-9);
   assert.ok(Math.abs(body.max.x-body.min.x-WALL_PANEL.thickness)<1e-9);
@@ -58,14 +63,14 @@ test('wall panel stays vertical when the reflection spread is taller',()=>{
  assert.equal(placement.orientation,'vertical');
  assert.equal(placement.height,1);
  assert.equal(placement.length,.5);
- assert.ok(Math.abs(placement.center.y-1.2)<1e-9);
- assert.ok(Math.abs(placement.upperCenterY-2.21)<1e-9);
+ assert.ok(Math.abs(placement.center.y-.82)<1e-9);
+ assert.ok(Math.abs(placement.upperCenterY-1.82)<1e-9);
  assert.ok(Math.abs(placement.center.z-.65)<1e-9);
  assert.equal(placement.reflectionPoints.length,3);
 });
 
-test('two wall panels require enough height for both panels and the gap',()=>{
+test('two wall panels require enough height for their specified mounting elevations',()=>{
  const paths=[{surface:'wall-left',point:new THREE.Vector3(0,1,.8)}];
- assert.equal(wallPanelPlacement(paths,{width:2.5,length:3,height:2},'left'),null);
- assert.equal(wallPanelPlacement(paths,{width:2.5,length:3,height:2.01},'left')?.count,2);
+ assert.equal(wallPanelPlacement(paths,{width:2.5,length:3,height:2.31},'left'),null);
+ assert.equal(wallPanelPlacement(paths,{width:2.5,length:3,height:2.32},'left')?.count,2);
 });

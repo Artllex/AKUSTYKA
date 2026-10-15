@@ -282,7 +282,7 @@ function refreshReflections(){
    for(const axis of ['y','z'])for(const [bound,fn] of [['Min',Math.min],['Max',Math.max]])host.dataset[`${prefix}${bound}${axis.toUpperCase()}`]=wallPlacement?String(fn(...wallPlacement.reflectionPoints.map(point=>point[axis]))):'';
   }
   host.dataset.wallPanelCount=String(wallPanelViews.reduce((total,panel)=>total+panel.placement.count,0));
-  $('wall-panel-summary').textContent=wallPanelViews.length===2?'Po dwa pionowe panele na lewej i prawej ścianie · każdy 100 × 50 × 11 cm · dolny panel obejmuje punkty pierwszych odbić.':'Brak miejsca na dwa panele lub punktów odbić na jednej ze ścian bocznych.';
+  $('wall-panel-summary').textContent=wallPanelViews.length===2?'Po dwa pionowe panele na lewej i prawej ścianie · każdy 100 × 50 × 11 cm · dolne krawędzie: 32 i 132 cm nad podłogą.':'Brak miejsca na dwa panele lub punktów odbić na jednej ze ścian bocznych.';
   const dropInput=$('ceiling-panel-drop'),offsetInput=$('ceiling-panel-z-offset');
   dropInput.max=String(Math.floor((doc.room.height-CEILING_PANEL.thickness)*1000)/10);
   dropInput.value=String(Math.round(doc.ceilingPanel.drop*1000)/10);
