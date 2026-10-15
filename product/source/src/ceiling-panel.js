@@ -2,15 +2,16 @@ import * as THREE from 'three';
 
 export const CEILING_PANEL=Object.freeze({width:1,depth:.5,thickness:.11});
 
-// The two tweeter clusters determine the long axis. Both ears contribute to
-// each cluster, so the panel follows the listening geometry as it changes.
+// Center the panel over the complete footprint of ceiling reflections.
+// The bounding midpoint keeps both opposite edges equally distant from the
+// outermost reflection points even when different drivers have unequal counts.
 export function ceilingPanelPlacement(paths,room){
- const points=paths.filter(path=>path.surface==='ceiling'&&path.driverId==='tweeter');
- const left=points.filter(path=>path.channel==='L'),right=points.filter(path=>path.channel==='R');
- if(!left.length||!right.length)return null;
- const average=items=>items.reduce((sum,path)=>sum.add(path.point),new THREE.Vector3()).divideScalar(items.length);
- const a=average(left),b=average(right),center=average(points);
- const yaw=Math.atan2(-(b.z-a.z),b.x-a.x);
+ const points=paths.filter(path=>path.surface==='ceiling'&&path.point);
+ if(!points.length)return null;
+ const xs=points.map(path=>path.point.x),zs=points.map(path=>path.point.z);
+ const minX=Math.min(...xs),maxX=Math.max(...xs),minZ=Math.min(...zs),maxZ=Math.max(...zs);
+ const center={x:(minX+maxX)/2,z:(minZ+maxZ)/2};
+ const yaw=maxZ-minZ>maxX-minX?Math.PI/2:0;
  const c=Math.cos(yaw),s=Math.sin(yaw),corners=[];
  for(const [index,x,z] of [[1,-.5,-.25],[2,.5,-.25],[3,.5,.25],[4,-.5,.25]]){
   const px=center.x+x*c+z*s,pz=center.z-x*s+z*c;

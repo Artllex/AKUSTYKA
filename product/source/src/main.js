@@ -84,7 +84,7 @@ import {findMonitorCollisions,tintCollision} from './monitor-collisions.js';
 import {createReflectionView} from './reflection-view.js';
 import {updateReflectionVisibility} from './reflection-visibility.js';
 
-import {computeFirstReflections,normalizeReflectionSettings} from './reflection-model.js';
+import {computeFirstReflections,normalizeReflectionSettings,REFLECTION_KEYS} from './reflection-model.js';
 import {ceilingPanelPlacement,createCeilingPanelView} from './ceiling-panel.js';
 
 import {setupReflectionPanel} from './reflection-panel.js';
@@ -261,12 +261,17 @@ function refreshReflections(){
  if(reflectionView){scene.remove(reflectionView.group);reflectionView.dispose();}
   if(ceilingPanelView){scene.remove(ceilingPanelView.group);ceilingPanelView.dispose();ceilingPanelView=null;}
  const objects=[...featureViews,...(doc.acoustics.includeHiddenRack?rackViews:[]),...deskViews,...bookcaseViews];
-  const targets=computeFirstReflections(monitorViews,listenerViews[0],doc.room,{...doc.reflections,ears:'both',selected:['L:tweeter','R:tweeter']},view.surfaces,objects.map(item=>item.group),includeAcousticMesh);
+  const targets=computeFirstReflections(monitorViews,listenerViews[0],doc.room,{...doc.reflections,ears:'both',selected:REFLECTION_KEYS},view.surfaces,objects.map(item=>item.group),includeAcousticMesh);
   const placement=ceilingPanelPlacement(targets,doc.room);
   if(placement){ceilingPanelView=createCeilingPanelView(placement);scene.add(ceilingPanelView.group);}
   panelInfo.hidden=!placement;panelInfo.querySelector('tbody').replaceChildren();
   if(placement)for(const corner of placement.corners){const row=document.createElement('tr');for(const key of ['index','front','left','right']){const cell=document.createElement('td');cell.textContent=key==='index'?String(corner.index):format(corner[key]*100,1)+' cm';row.append(cell);}panelInfo.querySelector('tbody').append(row);}
   host.dataset.ceilingPanelCount=placement?'1':'0';host.dataset.ceilingPanelYaw=placement?placement.yaw.toFixed(5):'';
+  host.dataset.ceilingPanelCenterX=placement?String(placement.center.x):'';host.dataset.ceilingPanelCenterZ=placement?String(placement.center.z):'';
+  host.dataset.ceilingReflectionMinX=placement?String(Math.min(...placement.reflectionPoints.map(point=>point.x))):'';
+  host.dataset.ceilingReflectionMaxX=placement?String(Math.max(...placement.reflectionPoints.map(point=>point.x))):'';
+  host.dataset.ceilingReflectionMinZ=placement?String(Math.min(...placement.reflectionPoints.map(point=>point.z))):'';
+  host.dataset.ceilingReflectionMaxZ=placement?String(Math.max(...placement.reflectionPoints.map(point=>point.z))):'';
   reflectionView=createReflectionView(monitorViews,listenerViews[0],doc.room,doc.reflections,view.surfaces,[...objects.map(item=>item.group),...(ceilingPanelView?[ceilingPanelView.group]:[])],includeAcousticMesh);
  scene.add(reflectionView.group);
  host.dataset.reflectionCount=reflectionView.paths.length;
