@@ -10,6 +10,8 @@ import {acousticSurfaceCategory,defaultAcousticSettings,pathAcoustics} from './s
 
 test('BILLY has exact outer dimensions, five open shelves and clears the rear door',()=>{
  const document=createDocument(),record=document.objects.find(object=>object.id===BILLY_BOOKCASE_ID);
+ assert.equal(BILLY_BOOKCASE.width,0.6);
+ assert.equal(record.model,'ikea-billy-60x28x202');
  const view=createBillyView(record),bounds=new THREE.Box3().setFromObject(view.group),size=bounds.getSize(new THREE.Vector3());
  assert.ok(Math.abs(size.x-BILLY_BOOKCASE.width)<1e-8);
  assert.ok(Math.abs(size.y-BILLY_BOOKCASE.height)<1e-8);
@@ -29,6 +31,21 @@ test('BILLY has exact outer dimensions, five open shelves and clears the rear do
  assert.equal(acousticSurfaceCategory(reflecting[0].id),'bookcase');
  assert.equal(pathAcoustics({surface:reflecting[0].id,length:3},2,defaultAcousticSettings()).material,'wood');
  view.dispose();
+});
+
+test('old 80 cm BILLY documents load as 60 cm without losing placement',()=>{
+ const document=createDocument(),record=document.objects.find(object=>object.id===BILLY_BOOKCASE_ID);
+ record.id='bookcase-billy-80x28x202';
+ record.model='ikea-billy-80x28x202';
+ record.position.x+=0.13;
+ document.transforms={'bookcase-billy-80x28x202':{x:0.07,y:0,z:0,rx:0,ry:0,rz:0}};
+ const loaded=parseRoomDocument(JSON.stringify(document));
+ const migrated=loaded.objects.find(object=>object.id===BILLY_BOOKCASE_ID);
+ assert.equal(migrated.model,'ikea-billy-60x28x202');
+ assert.equal(migrated.position.x,record.position.x);
+ assert.equal(loaded.transforms[BILLY_BOOKCASE_ID].x,0.07);
+ assert.equal(loaded.transforms['bookcase-billy-80x28x202'],undefined);
+ assert.equal(loaded.objects.filter(object=>object.type==='bookcase').length,1);
 });
 
 test('BILLY persists, follows default room length and can be added to an old document',()=>{

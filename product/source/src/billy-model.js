@@ -1,7 +1,8 @@
 import {defaultRoomFeatures} from './room-features.js';
 
-export const BILLY_BOOKCASE_ID='bookcase-billy-80x28x202';
-export const BILLY_BOOKCASE=Object.freeze({width:0.8,depth:0.28,height:2.02,shelves:5});
+export const BILLY_BOOKCASE_ID='bookcase-billy-60x28x202';
+export const BILLY_BOOKCASE=Object.freeze({width:0.6,depth:0.28,height:2.02,shelves:5});
+const LEGACY_BILLY_BOOKCASE_ID='bookcase-billy-80x28x202';
 
 export function createBillyRecord(room,door=defaultRoomFeatures(room).door){
  const doorRight=door.center+door.width/2;
@@ -9,7 +10,24 @@ export function createBillyRecord(room,door=defaultRoomFeatures(room).door){
  const x=freeWidth>=BILLY_BOOKCASE.width+0.04
   ?doorRight+freeWidth/2
   :Math.max(BILLY_BOOKCASE.width/2,room.width-BILLY_BOOKCASE.width/2-0.02);
- return {id:BILLY_BOOKCASE_ID,type:'bookcase',model:'ikea-billy-80x28x202',position:{x,y:0,z:room.length-BILLY_BOOKCASE.depth/2-0.015},yaw:0};
+ return {id:BILLY_BOOKCASE_ID,type:'bookcase',model:'ikea-billy-60x28x202',position:{x,y:0,z:room.length-BILLY_BOOKCASE.depth/2-0.015},yaw:0};
+}
+
+export function migrateBilly60(document){
+ const legacy=document.objects.find(record=>record.id===LEGACY_BILLY_BOOKCASE_ID&&record.type==='bookcase');
+ if(!legacy)return document;
+ if(document.objects.some(record=>record.id===BILLY_BOOKCASE_ID)){
+  document.objects=document.objects.filter(record=>record!==legacy);
+  if(document.transforms)delete document.transforms[LEGACY_BILLY_BOOKCASE_ID];
+  return document;
+ }
+ legacy.id=BILLY_BOOKCASE_ID;
+ legacy.model='ikea-billy-60x28x202';
+ if(document.transforms?.[LEGACY_BILLY_BOOKCASE_ID]){
+  document.transforms[BILLY_BOOKCASE_ID]=document.transforms[LEGACY_BILLY_BOOKCASE_ID];
+  delete document.transforms[LEGACY_BILLY_BOOKCASE_ID];
+ }
+ return document;
 }
 
 export function ensureBillyRecord(document){

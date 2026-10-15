@@ -203,7 +203,7 @@ $('distance-clear').onclick=clearMeasurement;document.addEventListener('keydown'
 
 const selectionOutline=new THREE.BoxHelper(undefined,0x74dcc2);selectionOutline.userData.helper=true;selectionOutline.visible=false;selectionOutline.material.depthTest=false;selectionOutline.renderOrder=20;scene.add(selectionOutline);
 
-const objectLabel=id=>id==='door'?'Drzwi':id==='window'?'Wnęka okna':id==='radiator'?'Kaloryfer':id==='switch'?'Włącznik światła':id==='ceiling-light'?'Lampa sufitowa Govee H60A6':id==='rack-15u'?'Stojak RIVECO 19″ 15U':id===BILLY_BOOKCASE_ID?'Regał IKEA BILLY 80 × 28 × 202 cm':id==='desk-combodesk-88'?'Biurko Thomann ComboDesk 88':id===MODUL_DESK_ID?'Biurko modul Studio Desk 2025':id===MODUL_1520_DESK_ID?'Biurko modul Studio Desk 1520':id.startsWith('bass-trap-')?'Pułapka basowa '+id.slice(10):id.startsWith('monitor-')?'Monitor '+id.slice(8):'Manekin';
+const objectLabel=id=>id==='door'?'Drzwi':id==='window'?'Wnęka okna':id==='radiator'?'Kaloryfer':id==='switch'?'Włącznik światła':id==='ceiling-light'?'Lampa sufitowa Govee H60A6':id==='rack-15u'?'Stojak RIVECO 19″ 15U':id===BILLY_BOOKCASE_ID?'Regał IKEA BILLY 60 × 28 × 202 cm':id==='desk-combodesk-88'?'Biurko Thomann ComboDesk 88':id===MODUL_DESK_ID?'Biurko modul Studio Desk 2025':id===MODUL_1520_DESK_ID?'Biurko modul Studio Desk 1520':id.startsWith('bass-trap-')?'Pułapka basowa '+id.slice(10):id.startsWith('monitor-')?'Monitor '+id.slice(8):'Manekin';
 
 function selectableGroups(){return [...featureViews,...listenerViews,...monitorViews,...rackViews,...deskViews,...bookcaseViews,...bassTrapViews].map(v=>v.group);}
 
@@ -398,7 +398,7 @@ function commitObjectTransform(id,transform,recordHistory=true){doc.transforms=u
 
 objectPanel=setupObjectPanel({read:()=>selectedObjectId?{label:objectLabel(selectedObjectId),transform:doc.transforms[selectedObjectId]}:null,change(transform){if(selectedObjectId)commitObjectTransform(selectedObjectId,transform);},clear:()=>selectObject(null),showError});
 rackAddButton=document.createElement('button');rackAddButton.type='button';rackAddButton.textContent='Dodaj stojak RIVECO 19″ 15U';rackAddButton.hidden=doc.objects.some(o=>o.id==='rack-15u');rackAddButton.onclick=()=>{ensureRackRecord(doc);history.push(doc);refreshRacks();refreshReflections();bench.refresh(history);};$('object-panel').append(rackAddButton);
-billyAddButton=document.createElement('button');billyAddButton.type='button';billyAddButton.textContent='Dodaj regał IKEA BILLY 80 × 28 × 202 cm';billyAddButton.hidden=doc.objects.some(o=>o.id===BILLY_BOOKCASE_ID);billyAddButton.onclick=()=>{ensureBillyRecord(doc);history.push(doc);refreshBookcases();refreshReflections();bench.refresh(history);};$('object-panel').append(billyAddButton);
+billyAddButton=document.createElement('button');billyAddButton.type='button';billyAddButton.textContent='Dodaj regał IKEA BILLY 60 × 28 × 202 cm';billyAddButton.hidden=doc.objects.some(o=>o.id===BILLY_BOOKCASE_ID);billyAddButton.onclick=()=>{ensureBillyRecord(doc);history.push(doc);refreshBookcases();refreshReflections();bench.refresh(history);};$('object-panel').append(billyAddButton);
 $('desk-choice').onchange=()=>{const old=selectedDeskId(doc),next=$('desk-choice').value;chooseDesk(doc,next);if(selectedObjectId===old)selectedObjectId=next;history.push(doc);refreshDesks();refreshReflections();updateProjectionVisibility();bench.refresh(history);};
 
 surfacePanel=setupSurfacePanel({read:()=>doc.roomShape??initialFootprint(doc),change(points,commit){
