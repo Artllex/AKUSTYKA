@@ -275,10 +275,11 @@ function refreshReflections(){
    const prefix=`wallPanel${side==='left'?'Left':'Right'}`;
    host.dataset[`${prefix}CenterY`]=wallPlacement?String(wallPlacement.center.y):'';
    host.dataset[`${prefix}CenterZ`]=wallPlacement?String(wallPlacement.center.z):'';
+   host.dataset[`${prefix}Orientation`]=wallPlacement?.orientation??'';
    for(const axis of ['y','z'])for(const [bound,fn] of [['Min',Math.min],['Max',Math.max]])host.dataset[`${prefix}${bound}${axis.toUpperCase()}`]=wallPlacement?String(fn(...wallPlacement.reflectionPoints.map(point=>point[axis]))):'';
   }
   host.dataset.wallPanelCount=String(wallPanelViews.length);
-  $('wall-panel-summary').textContent=wallPanelViews.length===2?'Panele lewej i prawej ściany · 100 × 50 × 11 cm · środki według odbić na każdej ścianie.':'Brak miejsca na panel lub punktów odbić na jednej ze ścian bocznych.';
+  $('wall-panel-summary').textContent=wallPanelViews.length===2?'Pionowe panele lewej i prawej ściany · 100 × 50 × 11 cm · środki według odbić na każdej ścianie.':'Brak miejsca na panel lub punktów odbić na jednej ze ścian bocznych.';
   const dropInput=$('ceiling-panel-drop'),offsetInput=$('ceiling-panel-z-offset');
   dropInput.max=String(Math.floor((doc.room.height-CEILING_PANEL.thickness)*1000)/10);
   dropInput.value=String(Math.round(doc.ceilingPanel.drop*1000)/10);

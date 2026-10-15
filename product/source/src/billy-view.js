@@ -3,9 +3,9 @@ import {BILLY_BOOKCASE} from './billy-model.js';
 
 export function createBillyView(record){
  const group=new THREE.Group();group.name=record.id;group.userData.recordId=record.id;
- const board=new THREE.MeshStandardMaterial({color:0xf3f1eb,roughness:0.78});
- const edge=new THREE.MeshStandardMaterial({color:0xe5e3dc,roughness:0.82});
- const back=new THREE.MeshStandardMaterial({color:0xe9e8e2,roughness:0.88,side:THREE.DoubleSide});
+ const board=new THREE.MeshStandardMaterial({color:0x27292b,roughness:0.78});
+ const edge=new THREE.MeshStandardMaterial({color:0x202225,roughness:0.82});
+ const back=new THREE.MeshStandardMaterial({color:0x222426,roughness:0.88,side:THREE.DoubleSide});
  const geometries=[];
  function panel(name,w,h,d,x,y,z,material=board){
   const geometry=new THREE.BoxGeometry(w,h,d),mesh=new THREE.Mesh(geometry,material);

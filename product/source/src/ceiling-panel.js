@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 export const CEILING_PANEL=Object.freeze({width:1,depth:.5,thickness:.11});
-export const DEFAULT_CEILING_PANEL_SETTINGS=Object.freeze({drop:0,zOffset:0});
+export const DEFAULT_CEILING_PANEL_SETTINGS=Object.freeze({drop:0,zOffset:.01});
 
 export function normalizeCeilingPanelSettings(input,room){
  const settings=input??DEFAULT_CEILING_PANEL_SETTINGS;

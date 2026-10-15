@@ -19,14 +19,14 @@ test('a 100 × 50 × 11 cm absorber is centered over the separate left and right
   const placement=wallPanelPlacement(paths,doc.room,side),view=createWallPanelView(placement);
   panels.push(view);
   assert.equal(placement.reflectionPoints.length,20);
-  assert.equal(placement.orientation,'horizontal');
+  assert.equal(placement.orientation,'vertical');
   const ys=placement.reflectionPoints.map(point=>point.y),zs=placement.reflectionPoints.map(point=>point.z);
   assert.ok(Math.abs(placement.center.y-(Math.min(...ys)+Math.max(...ys))/2)<1e-9);
   assert.ok(Math.abs(placement.center.z-(Math.min(...zs)+Math.max(...zs))/2)<1e-9);
   const body=new THREE.Box3().setFromObject(view.group.getObjectByName('absorber'));
   assert.equal(view.group.getObjectByName('absorber').material.color.getHex(),0xfffff0);
-  assert.ok(Math.abs(body.max.y-body.min.y-WALL_PANEL.depth)<1e-9);
-  assert.ok(Math.abs(body.max.z-body.min.z-WALL_PANEL.width)<1e-9);
+  assert.ok(Math.abs(body.max.y-body.min.y-WALL_PANEL.width)<1e-9);
+  assert.ok(Math.abs(body.max.z-body.min.z-WALL_PANEL.depth)<1e-9);
   assert.ok(Math.abs(body.max.x-body.min.x-WALL_PANEL.thickness)<1e-9);
   assert.ok(Math.abs((side==='left'?body.min.x:body.max.x)-(side==='left'?0:doc.room.width))<1e-9);
   for(const point of placement.reflectionPoints)assert.ok(point.y>=body.min.y&&point.y<=body.max.y&&point.z>=body.min.z&&point.z<=body.max.z);
@@ -41,7 +41,7 @@ test('a 100 × 50 × 11 cm absorber is centered over the separate left and right
  for(const view of panels)view.dispose();room.dispose();listener.dispose();for(const monitor of monitors)monitor.dispose();
 });
 
-test('wall panel chooses the vertical orientation when the reflection spread is taller',()=>{
+test('wall panel stays vertical when the reflection spread is taller',()=>{
  const point=(y,z)=>new THREE.Vector3(0,y,z);
  const placement=wallPanelPlacement([
   {surface:'wall-left',point:point(.8,.6)},

@@ -9,16 +9,15 @@ export function wallPanelPlacement(paths,room,side){
  if(!points.length)return null;
  const ys=points.map(path=>path.point.y),zs=points.map(path=>path.point.z);
  const minY=Math.min(...ys),maxY=Math.max(...ys),minZ=Math.min(...zs),maxZ=Math.max(...zs);
- const vertical=maxY-minY>maxZ-minZ&&room.height>=WALL_PANEL.width;
- const panelHeight=vertical?WALL_PANEL.width:WALL_PANEL.depth;
- const panelLength=vertical?WALL_PANEL.depth:WALL_PANEL.width;
+ const panelHeight=WALL_PANEL.width;
+ const panelLength=WALL_PANEL.depth;
  if(room.height<panelHeight||room.length<panelLength)return null;
  const center={
   x:side==='left'?WALL_PANEL.thickness/2:room.width-WALL_PANEL.thickness/2,
   y:THREE.MathUtils.clamp((minY+maxY)/2,panelHeight/2,room.height-panelHeight/2),
   z:THREE.MathUtils.clamp((minZ+maxZ)/2,panelLength/2,room.length-panelLength/2)
  };
- return {side,center,width:WALL_PANEL.thickness,height:panelHeight,length:panelLength,orientation:vertical?'vertical':'horizontal',reflectionPoints:points.map(path=>path.point.clone())};
+ return {side,center,width:WALL_PANEL.thickness,height:panelHeight,length:panelLength,orientation:'vertical',reflectionPoints:points.map(path=>path.point.clone())};
 }
 
 export function createWallPanelView(placement){

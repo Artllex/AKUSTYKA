@@ -15,6 +15,9 @@ test('BILLY has exact outer dimensions, five open shelves and clears the rear do
  assert.ok(Math.abs(size.y-BILLY_BOOKCASE.height)<1e-8);
  assert.ok(Math.abs(size.z-BILLY_BOOKCASE.depth)<1e-8);
  assert.equal(view.group.children.filter(part=>/^billy-shelf-\d+$/.test(part.name)).length,5);
+ assert.equal(view.group.getObjectByName('billy-side').material.color.getHex(),0x27292b);
+ assert.equal(view.group.getObjectByName('billy-shelf-front-1').material.color.getHex(),0x202225);
+ assert.equal(view.group.getObjectByName('billy-back').material.color.getHex(),0x222426);
  const doorRight=document.roomFeatures.door.center+document.roomFeatures.door.width/2;
  assert.ok(bounds.min.x>doorRight+0.1);
  assert.ok(bounds.max.x<document.room.width);

@@ -10,7 +10,7 @@ import {computeFirstReflections} from './src/reflection-model.js';
 import {CEILING_PANEL,ceilingPanelPlacement,createCeilingPanelView,normalizeCeilingPanelSettings} from './src/ceiling-panel.js';
 import {acousticSurfaceCategory,defaultAcousticSettings,pathAcoustics} from './src/acoustic-simulation.js';
 
-test('100 × 50 × 11 cm panel is centered over all ceiling reflections in both axes',()=>{
+test('100 × 50 × 11 cm panel follows the requested default placement over ceiling reflections',()=>{
  const doc=createDocument(),room=createRoom(doc.room,doc.roomFeatures);
  const monitors=doc.objects.filter(record=>record.type==='studio-monitor').map(createStudioMonitor);
  const listener=createSeatedListener(doc.objects.find(record=>record.type==='seated-listener'));
@@ -21,7 +21,7 @@ test('100 × 50 × 11 cm panel is centered over all ceiling reflections in both 
  assert.equal(placement.reflectionPoints.length,20);
  const bounds={minX:Math.min(...placement.reflectionPoints.map(point=>point.x)),maxX:Math.max(...placement.reflectionPoints.map(point=>point.x)),minZ:Math.min(...placement.reflectionPoints.map(point=>point.z)),maxZ:Math.max(...placement.reflectionPoints.map(point=>point.z))};
  assert.ok(Math.abs(placement.center.x-(bounds.minX+bounds.maxX)/2)<1e-9);
- assert.ok(Math.abs(placement.center.z-(bounds.minZ+bounds.maxZ)/2)<1e-9);
+ assert.ok(Math.abs(placement.center.z-(bounds.minZ+bounds.maxZ)/2-.01)<1e-9);
  assert.ok(Math.abs(placement.yaw)<1e-6,'long 100 cm side follows the wider reflection spread');
  const body=new THREE.Box3().setFromObject(panel.group.getObjectByName('absorber'));
  assert.equal(panel.group.getObjectByName('absorber').material.color.getHex(),0xfffff0);
@@ -60,7 +60,7 @@ test('panel centers on extremes rather than the mean when reflections are uneven
  ],{width:2.5,length:3,height:2.6});
  assert.equal(placement.reflectionPoints.length,4);
  assert.ok(Math.abs(placement.center.x-1.2)<1e-9);
- assert.ok(Math.abs(placement.center.z-.8)<1e-9);
+ assert.ok(Math.abs(placement.center.z-.81)<1e-9);
 });
 
 test('ceiling gap and longitudinal offset move the actual panel and all corner markers',()=>{
@@ -69,10 +69,10 @@ test('ceiling gap and longitudinal offset move the actual panel and all corner m
  const moved=ceilingPanelPlacement(paths,room,{drop:.15,zOffset:-.12});
  const panel=createCeilingPanelView(moved),body=new THREE.Box3().setFromObject(panel.group.getObjectByName('absorber'));
  assert.ok(Math.abs(moved.center.y-(initial.center.y-.15))<1e-9);
- assert.ok(Math.abs(moved.center.z-(initial.center.z-.12))<1e-9);
+ assert.ok(Math.abs(moved.center.z-(initial.center.z-.13))<1e-9);
  assert.ok(Math.abs(body.max.y-(room.height-.15))<1e-9);
  for(let i=0;i<4;i++){
-  assert.ok(Math.abs(moved.corners[i].z-(initial.corners[i].z-.12))<1e-9);
+  assert.ok(Math.abs(moved.corners[i].z-(initial.corners[i].z-.13))<1e-9);
   assert.ok(Math.abs(panel.group.getObjectByName('corner-'+(i+1)).position.y-(room.height-.15-CEILING_PANEL.thickness-.012))<1e-9);
  }
  assert.deepEqual(moved.settings,{drop:.15,zOffset:-.12});
@@ -81,7 +81,7 @@ test('ceiling gap and longitudinal offset move the actual panel and all corner m
 
 test('panel settings validate, default old documents, and limit travel to the room',()=>{
  const room={width:2.5,length:3,height:2.6};
- assert.deepEqual(normalizeCeilingPanelSettings(undefined,room),{drop:0,zOffset:0});
+ assert.deepEqual(normalizeCeilingPanelSettings(undefined,room),{drop:0,zOffset:.01});
  assert.throws(()=>normalizeCeilingPanelSettings({drop:-.01,zOffset:0},room));
  assert.throws(()=>normalizeCeilingPanelSettings({drop:2.6,zOffset:0},room));
  assert.throws(()=>normalizeCeilingPanelSettings({drop:0,zOffset:Infinity},room));
@@ -92,5 +92,5 @@ test('panel settings validate, default old documents, and limit travel to the ro
  const document=createDocument();document.ceilingPanel={drop:.15,zOffset:-.12};
  assert.deepEqual(parseRoomDocument(JSON.stringify(document)).ceilingPanel,document.ceilingPanel);
  delete document.ceilingPanel;
- assert.deepEqual(parseRoomDocument(JSON.stringify(document)).ceilingPanel,{drop:0,zOffset:0});
+ assert.deepEqual(parseRoomDocument(JSON.stringify(document)).ceilingPanel,{drop:0,zOffset:.01});
 });
