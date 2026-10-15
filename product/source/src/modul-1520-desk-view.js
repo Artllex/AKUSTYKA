@@ -17,12 +17,11 @@ function woodTexture(){
  texture.generateMipmaps=true;texture.needsUpdate=true;return texture;
 }
 
-// Three real levels: worktop, open rack shelf, and the pull-out keyboard tray.
+// Main worktop and the recessed pull-out keyboard tray.
 export function createModul1520DeskView(record){
  const group=new THREE.Group();group.name=record.id;group.userData.recordId=record.id;
  const texture=woodTexture();
  const wood=new THREE.MeshStandardMaterial({map:texture,roughness:.76});
- const dark=new THREE.MeshStandardMaterial({color:0x16191a,roughness:.8});
  const rail=new THREE.MeshStandardMaterial({color:0x262a2c,metalness:.7,roughness:.46});
  const geometries=[];
  function mesh(name,geometry,material,x=0,y=0,z=0){const item=new THREE.Mesh(geometry,material);item.name=name;item.position.set(x,y,z);group.add(item);geometries.push(geometry);return item;}
@@ -33,20 +32,6 @@ export function createModul1520DeskView(record){
  const mainGeometry=new THREE.ExtrudeGeometry(mainTop,{depth:D.worktop.thickness,bevelEnabled:false,curveSegments:24});
  mainGeometry.rotateX(-Math.PI/2);
  mesh('main-worktop',mainGeometry,wood,0,D.worktopHeight-D.worktop.thickness,0);
- // The upper shelf spans both 19-inch bays above the main work surface.
- const shelfY=D.height-D.upperShelf.thickness/2,shelfZ=-D.worktop.depth/2+D.upperShelf.depth/2;
- box('upper-rack-shelf',D.upperShelf.width,D.upperShelf.thickness,D.upperShelf.depth,0,shelfY,shelfZ);
- const wallY=(D.worktopHeight+D.height)/2-D.upperShelf.thickness/2;
- const wallHeight=D.height-D.worktopHeight-D.upperShelf.thickness;
- for(const x of [-.65,-.14,.14,.65]){
-  box('rack-divider',D.sideThickness,wallHeight,D.upperShelf.depth,x,wallY,shelfZ);
-  const inner=x<0?x+D.sideThickness/2+.001:x-D.sideThickness/2-.001;
-  box('rack-rail',.005,wallHeight-.009,.013,inner,wallY,-.052,rail);
-  for(let i=0;i<6;i++){
-   const slot=box('rack-rail-slot',.006,.006,.002,inner,wallY-.065+i*.026,-.044,dark);
-   slot.userData.collision=false;
-  }
- }
  // Two MDF gables have the arched toe clearance shown in the side elevation.
  for(const sign of [-1,1]){
   const profile=new THREE.Shape();
@@ -75,5 +60,5 @@ export function createModul1520DeskView(record){
  const ring=mesh('cable-grommet-ring',new THREE.RingGeometry(.020,.030,24),rail,0,D.worktopHeight+.0007,-.18);
  ring.rotation.x=-Math.PI/2;ring.userData.collision=false;
  group.position.set(record.position.x,record.position.y,record.position.z);group.rotation.y=record.yaw;group.updateMatrixWorld(true);
- return {group,dispose(){for(const geometry of geometries)geometry.dispose();for(const material of [wood,dark,rail])material.dispose();texture.dispose();}};
+ return {group,dispose(){for(const geometry of geometries)geometry.dispose();for(const material of [wood,rail])material.dispose();texture.dispose();}};
 }

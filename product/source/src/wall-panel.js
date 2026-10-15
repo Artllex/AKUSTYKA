@@ -23,7 +23,7 @@ export function wallPanelPlacement(paths,room,side){
 
 export function createWallPanelView(placement){
  const group=new THREE.Group();group.name=`wall-panel-${placement.side}`;group.userData.recordId=group.name;
- const material=new THREE.MeshStandardMaterial({color:0x343a3c,roughness:1});
+ const material=new THREE.MeshStandardMaterial({color:0xfffff0,roughness:1});
  const panel=new THREE.Mesh(new THREE.BoxGeometry(placement.width,placement.height,placement.length),material);
  panel.name='absorber';panel.position.set(placement.center.x,placement.center.y,placement.center.z);group.add(panel);
  return {group,placement,dispose(){panel.geometry.dispose();material.dispose();}};

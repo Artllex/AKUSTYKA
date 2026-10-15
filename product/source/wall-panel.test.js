@@ -24,6 +24,7 @@ test('a 100 × 50 × 11 cm absorber is centered over the separate left and right
   assert.ok(Math.abs(placement.center.y-(Math.min(...ys)+Math.max(...ys))/2)<1e-9);
   assert.ok(Math.abs(placement.center.z-(Math.min(...zs)+Math.max(...zs))/2)<1e-9);
   const body=new THREE.Box3().setFromObject(view.group.getObjectByName('absorber'));
+  assert.equal(view.group.getObjectByName('absorber').material.color.getHex(),0xfffff0);
   assert.ok(Math.abs(body.max.y-body.min.y-WALL_PANEL.depth)<1e-9);
   assert.ok(Math.abs(body.max.z-body.min.z-WALL_PANEL.width)<1e-9);
   assert.ok(Math.abs(body.max.x-body.min.x-WALL_PANEL.thickness)<1e-9);

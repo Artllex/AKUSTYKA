@@ -12,30 +12,27 @@ import {displayPlacement} from './src/alienware-display.js';
 import {deskPeripheralPlacement} from './src/studio-peripherals.js';
 import {parseRoomDocument} from './src/bench.js';
 
-test('the 1520 mm desk has the supplied three levels, two rack bays and arched side panels',()=>{
+test('desk type C keeps the worktop, recessed tray and shaped base without the upper shelf',()=>{
  const doc=createDocument(),first=doc.objects.find(o=>o.id===THOMANN_DESK_ID),firstView=createDeskView(first);
  const firstFront=new THREE.Box3().setFromObject(firstView.group.getObjectByName('worktop')).max.z;
  chooseDesk(doc,MODUL_1520_DESK_ID);
  const record=doc.objects.find(o=>o.type==='studio-desk'),view=createModul1520DeskView(record),group=view.group;
  const overall=new THREE.Box3().setFromObject(group),top=new THREE.Box3().setFromObject(group.getObjectByName('main-worktop'));
- const shelf=new THREE.Box3().setFromObject(group.getObjectByName('upper-rack-shelf'));
  assert.equal(record.id,MODUL_1520_DESK_ID);
  assert.equal(doc.objects.filter(o=>o.type==='studio-desk').length,1);
  assert.ok(Math.abs(top.max.z-firstFront)<1e-6,'the main worktop must have the same front edge as A');
  assert.ok(Math.abs(overall.max.x-overall.min.x-D.width)<1e-6);
+ assert.ok(Math.abs(overall.max.z-overall.min.z-D.depth)<1e-6);
  assert.ok(Math.abs(top.max.x-top.min.x-D.worktop.width)<1e-6);
- assert.ok(Math.abs(shelf.max.x-shelf.min.x-D.upperShelf.width)<1e-6);
- assert.ok(Math.abs((shelf.max.x-top.max.x)-.08)<1e-6,'upper shelf overhangs the main top by 8 cm on each side');
- assert.ok(Math.abs(overall.max.y-D.height)<1e-6);
+ assert.ok(overall.max.y<=D.height+.002,'no structure remains above the worktop');
  assert.ok(Math.abs(top.max.y-D.worktopHeight)<1e-6);
- assert.equal(group.getObjectsByProperty('name','rack-divider').length,4);
+ for(const name of ['upper-rack-shelf','rack-divider','rack-rail','rack-rail-slot'])assert.equal(group.getObjectsByProperty('name',name).length,0,`${name} was removed`);
  assert.equal(group.getObjectsByProperty('name','arched-side-panel').length,2);
  const sidePositions=group.getObjectByName('arched-side-panel').geometry.attributes.position;
  const sideVertices=Array.from({length:sidePositions.count},(_,i)=>({y:sidePositions.getY(i),z:sidePositions.getZ(i)}));
  assert.ok(sideVertices.some(p=>Math.abs(p.y)<1e-6&&Math.abs(p.z-.275)<1e-6));
  assert.ok(sideVertices.some(p=>Math.abs(p.y-(D.worktopHeight-D.worktop.thickness))<1e-6&&Math.abs(p.z-.205)<1e-6));
  assert.ok(sideVertices.every(p=>p.y<.07||Math.abs(p.y-(D.worktopHeight-D.worktop.thickness))<1e-6),'front side edge is one straight slope above the toe cutout');
- assert.equal(group.getObjectsByProperty('name','upper-rack-shelf').length,1);
  assert.equal(group.getObjectsByProperty('name','pull-out-keyboard-tray').length,1);
  const tray=new THREE.Box3().setFromObject(group.getObjectByName('pull-out-keyboard-tray'));
  const trayLip=new THREE.Box3().setFromObject(group.getObjectByName('tray-front-edge'));
@@ -45,7 +42,7 @@ test('the 1520 mm desk has the supplied three levels, two rack bays and arched s
  assert.ok(finish[0]<60&&Math.abs(finish[0]-finish[1])<5&&Math.abs(finish[1]-finish[2])<5,'all wood uses a near-black finish');
  const monitor=displayPlacement(record),peripherals=deskPeripheralPlacement(record);
  assert.equal(monitor.y,D.worktopHeight);
- assert.ok(monitor.z>-.035,'monitor stand must stay in front of the high shelf');
+ assert.ok(monitor.z>-.035,'monitor stand remains on the main worktop');
  assert.equal(peripherals.top,D.worktopHeight);
  firstView.dispose();view.dispose();
 });

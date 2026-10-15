@@ -35,7 +35,7 @@ export function ceilingPanelPlacement(paths,room,settings=DEFAULT_CEILING_PANEL_
 
 export function createCeilingPanelView(placement){
  const group=new THREE.Group();group.name='ceiling-panel';group.userData.recordId='ceiling-panel';
- const fabric=new THREE.MeshStandardMaterial({color:0x343a3c,roughness:1});
+ const fabric=new THREE.MeshStandardMaterial({color:0xfffff0,roughness:1});
  const markerMaterial=new THREE.MeshBasicMaterial({color:0xffd470,depthTest:false});
  const panel=new THREE.Mesh(new THREE.BoxGeometry(CEILING_PANEL.width,CEILING_PANEL.thickness,CEILING_PANEL.depth),fabric);
  panel.name='absorber';panel.position.set(placement.center.x,placement.center.y,placement.center.z);panel.rotation.y=placement.yaw;group.add(panel);

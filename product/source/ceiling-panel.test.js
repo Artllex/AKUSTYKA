@@ -24,6 +24,7 @@ test('100 × 50 × 11 cm panel is centered over all ceiling reflections in both 
  assert.ok(Math.abs(placement.center.z-(bounds.minZ+bounds.maxZ)/2)<1e-9);
  assert.ok(Math.abs(placement.yaw)<1e-6,'long 100 cm side follows the wider reflection spread');
  const body=new THREE.Box3().setFromObject(panel.group.getObjectByName('absorber'));
+ assert.equal(panel.group.getObjectByName('absorber').material.color.getHex(),0xfffff0);
  assert.ok(Math.abs(body.max.x-body.min.x-CEILING_PANEL.width)<1e-6);
  assert.ok(Math.abs(body.max.z-body.min.z-CEILING_PANEL.depth)<1e-6);
  assert.ok(Math.abs(body.max.y-doc.room.height)<1e-6,'panel top touches the ceiling');
