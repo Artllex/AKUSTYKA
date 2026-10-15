@@ -93,7 +93,7 @@ import './style.css';
 
 const $=id=>document.getElementById(id),host=$('viewport');
 
-const doc=createDocument();const history=createDocumentHistory(doc);let bench,listenerPanel,monitorPanel,reflectionPanel,featuresPanel,objectPanel,surfacePanel,viewportEditor,fieldHistory,rackAddButton,billyAddButton;const orientation=createOrientation($('orientation'));let renderer;
+const doc=createDocument();chooseDesk(doc,MODUL_1520_DESK_ID);const history=createDocumentHistory(doc);let bench,listenerPanel,monitorPanel,reflectionPanel,featuresPanel,objectPanel,surfacePanel,viewportEditor,fieldHistory,rackAddButton,billyAddButton;const orientation=createOrientation($('orientation'));let renderer;
 
 try{renderer=new THREE.WebGLRenderer({antialias:true});}catch(error){$('error').hidden=false;$('error').textContent='Nie można uruchomić widoku 3D. Sprawdź obsługę WebGL w przeglądarce.';throw error;}
 
@@ -325,7 +325,7 @@ function loadDocument(text,name){const data=parseRoomDocument(text);Object.assig
 
 async function openDocument(){try{if(window.desktop){const result=await window.desktop.open();if(result)loadDocument(result.text,result.name);}else{const input=document.createElement('input');input.type='file';input.accept='.json';input.onchange=async()=>{try{if(input.files[0].size>1024*1024)throw new Error('Plik jest zbyt duży.');loadDocument(await input.files[0].text(),input.files[0].name);}catch(error){showError(error);}};input.click();}}catch(error){showError(error);}}
 
-bench=setupBench({new(){Object.assign(doc,createDocument());history.reset(doc);restore(doc.room);$('file-status').textContent='Nowy pokój';$('error').hidden=true;},open:openDocument,save:saveDocument,exit:()=>window.desktop?.exit(),undo:()=>{fieldHistory?.flush();applySnapshot(history.undo());},redo:()=>{fieldHistory?.flush();applySnapshot(history.redo());},three:()=>frame(),top:()=>frame(true),pov:enterListenerPov});
+bench=setupBench({new(){const next=createDocument();chooseDesk(next,MODUL_1520_DESK_ID);Object.assign(doc,next);history.reset(doc);restore(doc.room);$('file-status').textContent='Nowy pokój';$('error').hidden=true;},open:openDocument,save:saveDocument,exit:()=>window.desktop?.exit(),undo:()=>{fieldHistory?.flush();applySnapshot(history.undo());},redo:()=>{fieldHistory?.flush();applySnapshot(history.redo());},three:()=>frame(),top:()=>frame(true),pov:enterListenerPov});
 
 listenerPanel=setupListenerPanel({read:()=>doc.objects.find(o=>o.type==='seated-listener'),preview(patch){try{const record=doc.objects.find(o=>o.type==='seated-listener');Object.assign(record,patchListener(record,patch));refreshListeners();$('error').hidden=true;}catch(error){showError(error);listenerPanel.sync(listenerViews[0]?.getEarHeight());}},commit(){history.push(doc);bench.refresh(history);},cancel(start){Object.assign(doc.objects.find(o=>o.type==='seated-listener'),start);refreshListeners();}});
 

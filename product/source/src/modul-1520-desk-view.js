@@ -4,12 +4,12 @@ import {MODUL_1520_DESK as D} from './modul-1520-desk-model.js';
 function woodTexture(){
  const w=128,h=128,pixels=new Uint8Array(w*h*4);
  for(let y=0;y<h;y++)for(let x=0;x<w;x++){
-  const grain=Math.sin(x*.32+Math.sin(y*.11)*1.6)*6+Math.sin(x*.96+y*.06)*3+Math.sin(x*.075+y*.017)*10;
-  const knot=Math.sin((x-42)*.11)*Math.cos((y-75)*.057)*4;
+  const grain=Math.sin(x*.32+Math.sin(y*.11)*1.6)*3+Math.sin(x*.96+y*.06)*1.5+Math.sin(x*.075+y*.017)*5;
+  const knot=Math.sin((x-42)*.11)*Math.cos((y-75)*.057)*2;
   const i=(y*w+x)*4,shade=grain+knot;
-  pixels[i]=Math.max(0,Math.min(255,91+shade));
-  pixels[i+1]=Math.max(0,Math.min(255,60+shade*.75));
-  pixels[i+2]=Math.max(0,Math.min(255,43+shade*.55));pixels[i+3]=255;
+  pixels[i]=Math.max(0,Math.min(255,39+shade));
+  pixels[i+1]=Math.max(0,Math.min(255,41+shade));
+  pixels[i+2]=Math.max(0,Math.min(255,43+shade));pixels[i+3]=255;
  }
  const texture=new THREE.DataTexture(pixels,w,h,THREE.RGBAFormat);
  texture.colorSpace=THREE.SRGBColorSpace;texture.wrapS=texture.wrapT=THREE.RepeatWrapping;
@@ -59,11 +59,12 @@ export function createModul1520DeskView(record){
   const side=new THREE.ExtrudeGeometry(profile,{depth:D.sideThickness,bevelEnabled:false,curveSegments:16});
   side.rotateY(-Math.PI/2);
   mesh('arched-side-panel',side,wood,sign*.665+D.sideThickness/2,0,0);
-  box('keyboard-runner',.008,.015,.245,sign*.661,D.worktopHeight-D.tray.drop-.005,.315,rail);
+  box('keyboard-runner',.008,.015,.245,sign*.661,D.worktopHeight-D.tray.drop-.005,.145,rail);
  }
  const trayY=D.worktopHeight-D.tray.drop-D.tray.thickness/2;
- box('pull-out-keyboard-tray',D.tray.width,D.tray.thickness,D.tray.depth,0,trayY,.385);
- box('tray-front-edge',D.tray.width,.022,.012,0,trayY-.004,.511);
+ const trayFront=D.worktop.frontZ-.01;
+ box('pull-out-keyboard-tray',D.tray.width,D.tray.thickness,D.tray.depth,0,trayY,trayFront-D.tray.depth/2);
+ box('tray-front-edge',D.tray.width,.022,.012,0,trayY-.004,trayFront-.006);
  // The shaped rear modesty board and slim central floor brace are visible in rear and front views.
  const back=new THREE.Shape();back.moveTo(-.65,.725);back.lineTo(.65,.725);back.lineTo(.65,.33);
  back.quadraticCurveTo(.36,.43,0,.43);back.quadraticCurveTo(-.36,.43,-.65,.33);back.closePath();

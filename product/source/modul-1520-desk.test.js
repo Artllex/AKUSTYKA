@@ -37,7 +37,12 @@ test('the 1520 mm desk has the supplied three levels, two rack bays and arched s
  assert.ok(sideVertices.every(p=>p.y<.07||Math.abs(p.y-(D.worktopHeight-D.worktop.thickness))<1e-6),'front side edge is one straight slope above the toe cutout');
  assert.equal(group.getObjectsByProperty('name','upper-rack-shelf').length,1);
  assert.equal(group.getObjectsByProperty('name','pull-out-keyboard-tray').length,1);
- assert.ok(new THREE.Box3().setFromObject(group.getObjectByName('pull-out-keyboard-tray')).max.z>top.max.z);
+ const tray=new THREE.Box3().setFromObject(group.getObjectByName('pull-out-keyboard-tray'));
+ const trayLip=new THREE.Box3().setFromObject(group.getObjectByName('tray-front-edge'));
+ assert.ok(Math.abs(top.max.z-tray.max.z-.01)<1e-6,'keyboard tray front is recessed 1 cm behind the worktop');
+ assert.ok(trayLip.max.z<=tray.max.z+1e-6,'tray front lip stays behind the worktop');
+ const finish=group.getObjectByName('main-worktop').material.map.image.data;
+ assert.ok(finish[0]<60&&Math.abs(finish[0]-finish[1])<5&&Math.abs(finish[1]-finish[2])<5,'all wood uses a near-black finish');
  const monitor=displayPlacement(record),peripherals=deskPeripheralPlacement(record);
  assert.equal(monitor.y,D.worktopHeight);
  assert.ok(monitor.z>-.035,'monitor stand must stay in front of the high shelf');
