@@ -41,8 +41,8 @@ app.whenReady().then(async()=>{
   if(result.baseboardCount!==9||result.reflections<1||result.deskReflections<1||result.tweeterRays!==2||result.headHits!==2||!result.raysVisible||result.monitorCount!==2||result.monitorOptions!==2||!result.listenerPanel||!result.earHeight.includes('118,5')||!result.canvas||!result.desktop||!result.dimensions.includes('247,7')||result.bench.join(',')!=='File,Edit,View'||errors.length)throw new Error(JSON.stringify({result,errors}));
   const socketCheck=await window.webContents.executeJavaScript(`(()=>({modules:Number(document.getElementById('viewport').dataset.rightWallSocketModules)}))()`);
   if(socketCheck.modules!==4)throw new Error(JSON.stringify(socketCheck));result.socketCheck=socketCheck;
-  const bassTrapCheck=await window.webContents.executeJavaScript(`(()=>{const d=document.getElementById('viewport').dataset;return {total:Number(d.bassTrapCount),leftFront:Number(d.leftFrontBassTrapCount)};})()`);
-  if(bassTrapCheck.total!==4||bassTrapCheck.leftFront!==2)throw new Error(JSON.stringify(bassTrapCheck));result.bassTrapCheck=bassTrapCheck;
+  const bassTrapCheck=await window.webContents.executeJavaScript(`(()=>{const d=document.getElementById('viewport').dataset;return {total:Number(d.bassTrapCount),leftFront:Number(d.leftFrontBassTrapCount),rearRight:Number(d.rearRightBassTrapCount)};})()`);
+  if(bassTrapCheck.total!==5||bassTrapCheck.leftFront!==2||bassTrapCheck.rearRight!==2)throw new Error(JSON.stringify(bassTrapCheck));result.bassTrapCheck=bassTrapCheck;
   const diffuserCheck=await window.webContents.executeJavaScript(`(()=>{const d=document.getElementById('viewport').dataset;return {count:Number(d.rearDiffuserCount),depth:Number(d.rearDiffuserDepth)};})()`);
   if(diffuserCheck.count!==1||diffuserCheck.depth!==.11)throw new Error(JSON.stringify(diffuserCheck));result.diffuserCheck=diffuserCheck;
 

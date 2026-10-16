@@ -35,11 +35,25 @@ test('front-left traps are stacked, each with a 50 cm room-facing diagonal',()=>
 
 test('trap arrangement persists and old documents receive the default arrangement',()=>{
  const document=createDocument();
- assert.equal(document.bassTraps.length,4);
- assert.equal(parseRoomDocument(JSON.stringify(document)).bassTraps.length,4);
+ assert.equal(document.bassTraps.length,5);
+ assert.equal(parseRoomDocument(JSON.stringify(document)).bassTraps.length,5);
  delete document.bassTraps;
- assert.equal(parseRoomDocument(JSON.stringify(document)).bassTraps.length,4);
+ assert.equal(parseRoomDocument(JSON.stringify(document)).bassTraps.length,5);
  assert.throws(()=>normalizeBassTraps([{...createDocument().bassTraps[0],bottom:2}],document.room,document.roomFeatures));
+});
+
+test('rear-right trap stacks directly above the old one and migrates saved rooms',()=>{
+ const document=createDocument(),records=document.bassTraps.filter(trap=>trap.corner==='rear-right');
+ assert.equal(records.length,2);
+ const [lower,upper]=records.map(record=>bassTrapPlacement(record,document.room));
+ close(lower.bottom,0);close(lower.top,1);close(upper.bottom,1);close(upper.top,2);
+ assert.deepEqual(lower.triangle,upper.triangle);
+ close(lower.hypotenuse,upper.hypotenuse);
+ assert.ok(upper.top<document.room.height);
+ const older={...document,bassTraps:document.bassTraps.filter(trap=>trap.id!=='bass-trap-rear-right-upper')};
+ const loaded=parseRoomDocument(JSON.stringify(older));
+ assert.equal(loaded.bassTraps.filter(trap=>trap.corner==='rear-right').length,2);
+ assert.equal(parseRoomDocument(JSON.stringify(loaded)).bassTraps.filter(trap=>trap.corner==='rear-right').length,2);
 });
 
 test('fabric is acoustic panel material and wooden lids remain wood',()=>{
