@@ -11,8 +11,8 @@ import {bassTrapPlacement} from './src/bass-trap-model.js';
 
 test('BILLY has exact outer dimensions, five open shelves and clears the rear door',()=>{
  const document=createDocument(),record=document.objects.find(object=>object.id===BILLY_BOOKCASE_ID);
- assert.equal(BILLY_BOOKCASE.width,0.6);
- assert.equal(record.model,'ikea-billy-60x28x202');
+ assert.equal(BILLY_BOOKCASE.width,0.8);
+ assert.equal(record.model,'ikea-billy-80x28x202');
  const view=createBillyView(record),bounds=new THREE.Box3().setFromObject(view.group),size=bounds.getSize(new THREE.Vector3());
  const projectedWidth=BILLY_BOOKCASE.width*Math.abs(Math.cos(record.yaw))+BILLY_BOOKCASE.depth*Math.abs(Math.sin(record.yaw));
  const projectedDepth=BILLY_BOOKCASE.width*Math.abs(Math.sin(record.yaw))+BILLY_BOOKCASE.depth*Math.abs(Math.cos(record.yaw));
@@ -22,14 +22,14 @@ test('BILLY has exact outer dimensions, five open shelves and clears the rear do
  assert.equal(view.group.children.filter(part=>/^billy-shelf-\d+$/.test(part.name)).length,5);
  assert.equal(view.group.getObjectByName('billy-side').material.color.getHex(),0x27292b);
  assert.equal(view.group.getObjectByName('billy-shelf-front-1').material.color.getHex(),0x202225);
- assert.equal(view.group.getObjectByName('billy-back').material.color.getHex(),0x222426);
+ assert.equal(view.group.getObjectByName('billy-back'),undefined);
  const doorRight=document.roomFeatures.door.center+document.roomFeatures.door.width/2;
  assert.ok(bounds.min.x>doorRight+0.1);
  assert.ok(bounds.max.x<document.room.width);
  assert.ok(bounds.max.z<document.room.length);
  assert.ok(Math.abs(bounds.min.y)<1e-8);
  const reflecting=objectReflectingFaces([view.group]).faces;
- assert.ok(reflecting.some(face=>face.mesh.name==='billy-back'));
+ assert.ok(!reflecting.some(face=>face.mesh.name==='billy-back'));
  assert.ok(reflecting.some(face=>face.mesh.name==='billy-shelf-1'));
  assert.equal(acousticSurfaceCategory(reflecting[0].id),'bookcase');
  assert.equal(pathAcoustics({surface:reflecting[0].id,length:3},2,defaultAcousticSettings()).material,'wood');
@@ -71,19 +71,28 @@ test('untouched rear-wall BILLY documents migrate to the angled position',()=>{
  assert.equal(custom.yaw,0);
 });
 
-test('old 80 cm BILLY documents load as 60 cm without losing placement',()=>{
+test('old 60 cm BILLY documents load as 80 cm without losing custom placement',()=>{
  const document=createDocument(),record=document.objects.find(object=>object.id===BILLY_BOOKCASE_ID);
- record.id='bookcase-billy-80x28x202';
- record.model='ikea-billy-80x28x202';
+ record.id='bookcase-billy-60x28x202';
+ record.model='ikea-billy-60x28x202';
  record.position.x+=0.13;
- document.transforms={'bookcase-billy-80x28x202':{x:0.07,y:0,z:0,rx:0,ry:0,rz:0}};
+ document.transforms={'bookcase-billy-60x28x202':{x:0.07,y:0,z:0,rx:0,ry:0,rz:0}};
  const loaded=parseRoomDocument(JSON.stringify(document));
  const migrated=loaded.objects.find(object=>object.id===BILLY_BOOKCASE_ID);
- assert.equal(migrated.model,'ikea-billy-60x28x202');
+ assert.equal(migrated.model,'ikea-billy-80x28x202');
  assert.equal(migrated.position.x,record.position.x);
  assert.equal(loaded.transforms[BILLY_BOOKCASE_ID].x,0.07);
- assert.equal(loaded.transforms['bookcase-billy-80x28x202'],undefined);
+ assert.equal(loaded.transforms['bookcase-billy-60x28x202'],undefined);
  assert.equal(loaded.objects.filter(object=>object.type==='bookcase').length,1);
+});
+
+test('untouched 60 cm BILLY moves to a safe 80 cm corner position on load',()=>{
+ const document=createDocument(),record=document.objects.find(object=>object.id===BILLY_BOOKCASE_ID);
+ const oldCornerOffset=(0.6+BILLY_BOOKCASE.depth)/(2*Math.SQRT2)+0.02;
+ record.id='bookcase-billy-60x28x202';record.model='ikea-billy-60x28x202';
+ record.position={x:document.room.width-oldCornerOffset,y:0,z:document.room.length-oldCornerOffset};
+ const loaded=parseRoomDocument(JSON.stringify(document));
+ assert.deepEqual(loaded.objects.find(object=>object.id===BILLY_BOOKCASE_ID).position,createBillyRecord(document.room).position);
 });
 
 test('BILLY persists, follows default room length and can be added to an old document',()=>{
