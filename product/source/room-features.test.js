@@ -17,7 +17,7 @@ test('Govee H60A6 has a 38 cm opaque collar and a 36 by 1.5 cm luminous collar',
  const bounds=new THREE.Box3().setFromObject(lamp.group),center=bounds.getCenter(new THREE.Vector3()),size=bounds.getSize(new THREE.Vector3());
  assert.ok(Math.abs(center.x-DEFAULT_ROOM.width/2)<1e-8);assert.ok(Math.abs(center.z-DEFAULT_ROOM.length/2)<1e-8);
  assert.ok(Math.abs(size.x-.38)<1e-8);assert.ok(Math.abs(size.z-.38)<1e-8);assert.ok(Math.abs(bounds.max.y-DEFAULT_ROOM.height)<1e-8);assert.ok(Math.abs(size.y-.06)<1e-8);
- const body=lamp.group.getObjectByName('govee-h60a6-body'),ring=lamp.group.getObjectByName('govee-h60a6-glow-ring'),plate=lamp.group.getObjectByName('govee-h60a6-diffuser');
+ const body=lamp.group.getObjectByName('govee-h60a6-body'),ring=lamp.group.getObjectByName('govee-h60a6-glow-ring'),plate=lamp.group.getObjectByName('govee-h60a6-diffuser'),top=lamp.group.getObjectByName('govee-h60a6-top-cover');
  const bodyBounds=new THREE.Box3().setFromObject(body),ringBounds=new THREE.Box3().setFromObject(ring),plateBounds=new THREE.Box3().setFromObject(plate);
  const bodySize=bodyBounds.getSize(new THREE.Vector3()),ringSize=ringBounds.getSize(new THREE.Vector3());
  assert.ok(Math.abs(bodySize.x-.38)<1e-6&&Math.abs(bodySize.y-.045)<1e-6);
@@ -27,6 +27,10 @@ test('Govee H60A6 has a 38 cm opaque collar and a 36 by 1.5 cm luminous collar',
  assert.ok(Math.abs(bodyBounds.min.y-plateBounds.min.y)<1e-6,'the flat glowing plate closes the underside');
  assert.equal(body.material.emissive.getHex(),0);assert.ok(ring.material.emissive.getHex()>0&&plate.material.emissive.getHex()>0);
  assert.ok(plateBounds.getSize(new THREE.Vector3()).y<=.002001);
+ assert.ok(top&&top.material.transparent===false,'the lamp has an opaque upper wall');
+ const downward=new THREE.Raycaster(new THREE.Vector3(DEFAULT_ROOM.width/2,DEFAULT_ROOM.height+.01,DEFAULT_ROOM.length/2),new THREE.Vector3(0,-1,0));
+ assert.ok(downward.intersectObject(top).length>0,'the top closes the middle of the luminous ring');
+ assert.ok(new THREE.Box3().setFromObject(top).max.y<DEFAULT_ROOM.height,'the cover remains below the ceiling');
  assert.equal(lamp.group.getObjectByName('govee-h60a6-glow-lip'),undefined);
  for(const view of views)view.dispose();
 });

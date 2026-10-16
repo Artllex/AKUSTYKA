@@ -127,9 +127,10 @@ export function createRoomFeatureViews(room,features){
  S.box('switch-key',[s.width*.58,s.height*.58,0.003],[s.center,s.bottom+s.height/2,room.length-s.depth-0.0015],toggle);
  const L=create('ceiling-light'),housing=L.mat(0xe9ebea,{side:THREE.DoubleSide}),diffuser=L.mat(0xf7f8f5,{emissive:0xffffff,emissiveIntensity:0.8,toneMapped:false}),glow=L.mat(0xe0f8f3,{emissive:0xa8e9ed,emissiveIntensity:0.85,side:THREE.DoubleSide});
  function lampPart(name,geometry,material,y){const part=new THREE.Mesh(geometry,material);part.name=name;part.position.set(room.width/2,y,room.length/2);L.group.add(part);return part;}
- // The 36 cm illuminated collar touches the ceiling. Below it, the 38 cm
- // opaque collar surrounds a flat, luminous disk flush with its underside.
+ // The 36 cm illuminated collar touches the ceiling. An opaque top closes
+ // its center, while the 38 cm collar surrounds the luminous underside.
  lampPart('govee-h60a6-glow-ring',new THREE.CylinderGeometry(.18,.18,.015,64,1,true),glow,room.height-.0075);
+ lampPart('govee-h60a6-top-cover',new THREE.CylinderGeometry(.18,.18,.002,64),housing,room.height-.002);
  lampPart('govee-h60a6-body',new THREE.CylinderGeometry(.19,.19,.045,64,1,true),housing,room.height-.0375);
  lampPart('govee-h60a6-body-rim',new THREE.RingGeometry(.17,.19,64),housing,room.height-.06).rotation.x=Math.PI/2;
  lampPart('govee-h60a6-diffuser',new THREE.CylinderGeometry(.17,.17,.002,64),diffuser,room.height-.059);
