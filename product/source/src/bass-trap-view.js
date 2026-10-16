@@ -24,6 +24,7 @@ export function createBassTrapView(record,room){
  group.name=record.id;group.userData.recordId=record.id;
  const fabric=new THREE.MeshStandardMaterial({color:0xfffff0,roughness:1,side:THREE.DoubleSide});
  const wood=new THREE.MeshStandardMaterial({color:0x302b29,roughness:.82,side:THREE.DoubleSide});
+ const lid=new THREE.MeshStandardMaterial({color:0xe5e2d7,roughness:.82,side:THREE.DoubleSide});
  const geometries=[];
  const add=(name,geometry,material,physical=true)=>{
   const mesh=new THREE.Mesh(geometry,material);mesh.name=name;
@@ -35,6 +36,6 @@ export function createBassTrapView(record,room){
  add('wall-backing-a',sideGeometry(corner,first,placement.bottom,placement.top),wood,false);
  add('wall-backing-b',sideGeometry(second,corner,placement.bottom,placement.top),wood,false);
  add('cap-bottom',triangleGeometry(placement.triangle,placement.bottom),wood);
- add('cap-top',triangleGeometry(placement.triangle,placement.top),wood);
- return {group,placement,dispose(){for(const geometry of geometries)geometry.dispose();fabric.dispose();wood.dispose();}};
+ add('cap-top',triangleGeometry(placement.triangle,placement.top),lid);
+ return {group,placement,dispose(){for(const geometry of geometries)geometry.dispose();fabric.dispose();wood.dispose();lid.dispose();}};
 }
