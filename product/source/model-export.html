@@ -6,6 +6,8 @@ import {createRackRecord} from './src/rack-model.js';
 import {createAlienwareDisplay} from './src/alienware-display.js';
 import {createMoniconXL,createProArtP16,createStreamDeckXL,createGxt144Rexx,createMotu24Ai,createBehringerModelD,createBehringerKobolExpander} from './src/studio-peripherals.js';
 import {createRackView} from './src/rack-view.js';
+import {createPvm20m2eRecord} from './src/pvm-20m2e-model.js';
+import {createPvm20m2eView} from './src/pvm-20m2e-view.js';
 
 const room={width:2.477,length:3.715,height:2.605};
 const desk=createDeskRecord(room),rack=createRackRecord(room);
@@ -26,7 +28,8 @@ const models=[
  }],
  ['motu-24ai',()=>createMotu24Ai(rack)],
  ['behringer-model-d',()=>createBehringerModelD()],
- ['behringer-kobol-expander',()=>createBehringerKobolExpander()]
+ ['behringer-kobol-expander',()=>createBehringerKobolExpander()],
+ ['sony-pvm-20m2e',()=>createPvm20m2eView(createPvm20m2eRecord(room),{mount:false})]
 ];
 const base64=arrayBuffer=>new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result.split(',')[1]);reader.onerror=()=>reject(reader.error);reader.readAsDataURL(new Blob([arrayBuffer]));});
 window.exportModels=async()=>{

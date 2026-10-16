@@ -9,8 +9,8 @@ export const ACOUSTIC_MATERIALS=Object.freeze({
  metal:{label:'Metal · założenie',absorption:[.03,.03,.02,.02,.02,.03]},
  absorber:{label:'Panel pochłaniający · przykład',absorption:[.20,.42,.72,.88,.92,.92]}
 });
-export const ACOUSTIC_SURFACES=Object.freeze({walls:'Ściany i wnęka',ceiling:'Sufit',panel:'Panele akustyczne',diffuser:'Dyfuzor (rozpraszanie nieobliczane)',floor:'Podłoga',window:'Okno',door:'Drzwi',radiator:'Grzejnik',desk:'Biurko',bookcase:'Regał',rack:'Rack'});
-export const DEFAULT_ACOUSTIC_MATERIALS=Object.freeze({walls:'painted',ceiling:'painted',panel:'absorber',diffuser:'wood',floor:'laminate',window:'glass',door:'wood',radiator:'metal',desk:'wood',bookcase:'wood',rack:'metal'});
+export const ACOUSTIC_SURFACES=Object.freeze({walls:'Ściany i wnęka',ceiling:'Sufit',panel:'Panele akustyczne',diffuser:'Dyfuzor (rozpraszanie nieobliczane)',floor:'Podłoga',window:'Okno',door:'Drzwi',radiator:'Grzejnik',desk:'Biurko',bookcase:'Regał',television:'Telewizor CRT',rack:'Rack'});
+export const DEFAULT_ACOUSTIC_MATERIALS=Object.freeze({walls:'painted',ceiling:'painted',panel:'absorber',diffuser:'wood',floor:'laminate',window:'glass',door:'wood',radiator:'metal',desk:'wood',bookcase:'wood',television:'wood',rack:'metal'});
 export const DEFAULT_SOUND_SPEED=343.2; // m/s, about 20 °C
 
 export function defaultAcousticSettings(){return {materials:{...DEFAULT_ACOUSTIC_MATERIALS},includeHiddenRack:false,includeHiddenDeskEquipment:false,band:1000};}
@@ -39,6 +39,7 @@ export function acousticSurfaceCategory(id){
  if(id.startsWith('object:radiator:'))return 'radiator';
  if(id.startsWith('object:desk-'))return 'desk';
  if(id.startsWith('object:bookcase-'))return 'bookcase';
+ if(id.startsWith('object:television-sony-pvm-20m2e:'))return 'television';
  if(id.startsWith('object:rack-'))return 'rack';
  return 'walls';
 }

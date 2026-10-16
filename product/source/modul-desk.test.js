@@ -54,7 +54,7 @@ test('choice persists through save and undo; prior two-desk rooms migrate to one
  assert.equal(parseRoomDocument(JSON.stringify(previousDefault)).objects.find(o=>o.id===MODUL_DESK_ID).position.z,previousDefault.objects.find(o=>o.id===MODUL_DESK_ID).position.z);
  const next={...DEFAULT_ROOM,width:3,length:4};moveDefaultModulDeskWithRoom(moved,next);
  assert.deepEqual(moved.objects.find(o=>o.id===MODUL_DESK_ID).position,createModulDeskRecord(next).position);
- const bare=parseRoomDocument(JSON.stringify({schemaVersion:1,units:'m',room:DEFAULT_ROOM,objects:[]}));assert.equal(bare.objects.length,0);
+ const bare=parseRoomDocument(JSON.stringify({schemaVersion:1,units:'m',room:DEFAULT_ROOM,objects:[]}));assert.deepEqual(bare.objects.map(object=>object.type),['crt-television']);
 });
 
 test('removed Millenium desk cannot be selected and saved rooms replace it with Thomann',()=>{

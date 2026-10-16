@@ -18,4 +18,8 @@ Tylny rack:
 - `behringer-model-d.glb`
 - `behringer-kobol-expander.glb`
 
+Telewizor CRT:
+
+- `sony-pvm-20m2e.glb` — korpus 45 × 45,8 × 50,3 cm, ekran i złącza z przodu i z tyłu.
+
 Modele można wygenerować ponownie poleceniem `npm run export:models` w katalogu `product/source`.

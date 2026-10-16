@@ -48,6 +48,8 @@ app.whenReady().then(async()=>{
 
   const billyCheck=await window.webContents.executeJavaScript(`(()=>{const viewport=document.getElementById('viewport');return {count:Number(viewport.dataset.billyCount),canAdd:!![...document.querySelectorAll('#object-panel button')].find(button=>button.textContent.includes('IKEA BILLY'))};})()`);
   if(billyCheck.count!==1||!billyCheck.canAdd)throw new Error(JSON.stringify(billyCheck));result.billyCheck=billyCheck;
+  const pvmCheck=await window.webContents.executeJavaScript(`(()=>{const viewport=document.getElementById('viewport');return {count:Number(viewport.dataset.pvmCount),canAdd:!![...document.querySelectorAll('#object-panel button')].find(button=>button.textContent.includes('PVM-20M2E'))};})()`);
+  if(pvmCheck.count!==1||!pvmCheck.canAdd)throw new Error(JSON.stringify(pvmCheck));result.pvmCheck=pvmCheck;
   const peripheralCheck=await window.webContents.executeJavaScript(`(()=>{const d=document.getElementById('viewport').dataset;return {streamDeck:Number(d.streamDeckXLCount),mouse:Number(d.gxt144RexxCount),modelD:Number(d.modelDCount),kobol:Number(d.kobolExpanderCount),motu:Number(d.motu24AiCount)};})()`);
   if(Object.values(peripheralCheck).some(count=>count!==1))throw new Error(JSON.stringify(peripheralCheck));result.peripheralCheck=peripheralCheck;
 
