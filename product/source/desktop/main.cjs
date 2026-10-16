@@ -44,7 +44,7 @@ app.whenReady().then(async()=>{
   const bassTrapCheck=await window.webContents.executeJavaScript(`(()=>{const d=document.getElementById('viewport').dataset;return {total:Number(d.bassTrapCount),leftFront:Number(d.leftFrontBassTrapCount)};})()`);
   if(bassTrapCheck.total!==4||bassTrapCheck.leftFront!==2)throw new Error(JSON.stringify(bassTrapCheck));result.bassTrapCheck=bassTrapCheck;
   const diffuserCheck=await window.webContents.executeJavaScript(`(()=>{const d=document.getElementById('viewport').dataset;return {count:Number(d.rearDiffuserCount),depth:Number(d.rearDiffuserDepth)};})()`);
-  if(diffuserCheck.count!==1||diffuserCheck.depth!==.15)throw new Error(JSON.stringify(diffuserCheck));result.diffuserCheck=diffuserCheck;
+  if(diffuserCheck.count!==1||diffuserCheck.depth!==.11)throw new Error(JSON.stringify(diffuserCheck));result.diffuserCheck=diffuserCheck;
 
   const billyCheck=await window.webContents.executeJavaScript(`(()=>{const viewport=document.getElementById('viewport');return {count:Number(viewport.dataset.billyCount),canAdd:!![...document.querySelectorAll('#object-panel button')].find(button=>button.textContent.includes('IKEA BILLY'))};})()`);
   if(billyCheck.count!==1||!billyCheck.canAdd)throw new Error(JSON.stringify(billyCheck));result.billyCheck=billyCheck;

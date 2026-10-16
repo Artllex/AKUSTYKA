@@ -31,7 +31,7 @@ export function normalizeAcousticSettings(input){
 export function acousticSurfaceCategory(id){
  if(id==='floor')return 'floor';
  if(id==='ceiling')return 'ceiling';
- if(id.startsWith('object:rear-diffuser-skyline-city:'))return 'diffuser';
+ if(id.startsWith('object:rear-diffuser-binary:'))return 'diffuser';
  if(id.startsWith('object:bass-trap-'))return id.includes(':cap-')?'wood':'panel';
  if(id.startsWith('object:ceiling-panel:')||id.startsWith('object:wall-panel-left:')||id.startsWith('object:wall-panel-right:'))return 'panel';
  if(id==='niche-back'||id.startsWith('object:window:'))return 'window';
